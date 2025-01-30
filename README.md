@@ -2,14 +2,14 @@
 
 ## Team Members
 
-| Name        | CCID   | GitHub Username |
-| ----------- | ------ | --------------- |
-| [Full Name] | [CCID] | [@username]     |
-| [Full Name] | [CCID] | [@username]     |
-| [Full Name] | [CCID] | [@username]     |
-| [Full Name] | [CCID] | [@username]     |
-| [Full Name] | [CCID] | [@username]     |
-| [Full Name] | [CCID] | [@username]     |
+| Name        | CCID   | GitHub Username           | 
+| ----------- | ------ | ------------------------- |
+| [Johanns Bibit] | [bibit] | [@clayno8]           |
+| [Savio Doraiswamy] | [Doraiswa] | [@Saviho3]     |
+| [Chloe Haynes] | [chloehay] | [@Chloe-lh]        |
+| [Kallie Huynh] | [kallie1] | [@seagulley]        |
+| [Bhavya Jain] | [bjain1] | [@b1805]              |
+| [Harshit Kumar] | [hsaini3] | [@Wyngs]           |
 
 ## Project Description
 
