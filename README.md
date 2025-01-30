@@ -8,7 +8,7 @@
 | [Savio Doraiswamy] | [Doraiswa] | [@Saviho3]     |
 | [Chloe Haynes] | [chloehay] | [@Chloe-lh]        |
 | [Kallie Huynh] | [kallie1] | [@seagulley]        |
-| [Bhavya Jain] | [bjain1] | [b1805]              |
+| [Bhavya Jain] | [bjain1] | [@b1805]              |
 | [Harshit Kumar] | [hsaini3] | [@Wyngs]           |
 
 ## Project Description
