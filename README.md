@@ -13,7 +13,7 @@
 
 ## Project Description
 
-[Brief description of the project in your own words]
+[Brief description of the project in your own words] Facebook Clone?
 
 ## Key Features
 
