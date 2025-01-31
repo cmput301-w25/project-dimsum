@@ -1,19 +1,19 @@
-# CMPUT 301 W25 - Team [dimsum]
+# CMPUT 301 W25 - Team dimsum
 
 ## Team Members
 
 | Name        | CCID   | GitHub Username           | 
 | ----------- | ------ | ------------------------- |
-| [Johanns Bibit] | [bibit] | [@clayno8]           |
-| [Savio Doraiswamy] | [Doraiswa] | [@Saviho3]     |
-| [Chloe Haynes] | [chloehay] | [@Chloe-lh]        |
-| [Kallie Huynh] | [kallie1] | [@seagulley]        |
-| [Bhavya Jain] | [bjain1] | [@b1805]              |
-| [Harshit Kumar Saini] | [hsaini3] | [@Wyngs]           |
+| Johanns Bibit | bibit | @clayno8           |
+| Savio Doraiswamy | Doraiswa | @Saviho3     |
+| Chloe Haynes | chloehay | @Chloe-lh        |
+| Kallie Huynh | kallie1 | @seagulley        |
+| Bhavya Jain | bjain1 | @b1805              |
+| Harshit Kumar Saini | hsaini3 | @Wyngs           |
 
 ## Project Description
 
-[Brief description of the project in your own words] Facebook Clone?
+Facebook Clone?
 
 ## Key Features
 
@@ -29,7 +29,7 @@
 
 ## Documentation
 
-- [Wiki Link]
-- [Scrum Board]
+- [[Wiki Link]](https://github.com/cmput301-w25/project-dimsum/wiki)
+- [[Scrum Board]](https://github.com/orgs/cmput301-w25/projects/50)
 - [UI Mockups]
 - [UML]
