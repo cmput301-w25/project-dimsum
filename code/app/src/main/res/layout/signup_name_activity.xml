@@ -21,6 +21,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center">
+        <!-- first name input -->
         <EditText
             android:id="@+id/FNInput"
             android:layout_width="0dp"
@@ -31,6 +32,7 @@
             android:inputType="textPersonName"
             android:minHeight="48dp"
         />
+        <!-- last name input -->
         <EditText
             android:id="@+id/LNInput"
             android:layout_width="0dp"
@@ -44,13 +46,13 @@
     </LinearLayout>
     <!-- next button -->
     <!-- For some reason the Next text is not centered in the button. -->
-    <Button
-        android:id="@+id/button"
+    <androidx.appcompat.widget.AppCompatButton
+        android:background="@drawable/button_gradient"
+        android:textColor="@color/white"
+        android:id="@+id/Next_button"
         android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
         android:text="@string/Next"
         android:layout_marginTop="30dp"
-        android:gravity="center"
-        android:padding="0dp"
-        android:includeFontPadding="false"/>
+        />
 </LinearLayout>

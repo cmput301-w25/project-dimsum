@@ -1,4 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="16dp">
+    <!-- log in button-->
+    <androidx.appcompat.widget.AppCompatButton
+        android:background="@drawable/button_gradient"
+        android:textColor="@color/white"
+        android:id="@+id/LoginButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/Login"
+        />
+    <!-- sign in button-->
+    <androidx.appcompat.widget.AppCompatButton
+        android:background="@drawable/button_gradient"
+        android:textColor="@color/white"
+        android:id="@+id/SignUpButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/Sign_Up"
+        android:layout_marginTop="16dp"/>
+</LinearLayout>
 
-</PreferenceScreen>
+
+
