@@ -1,27 +1,20 @@
 package com.example.baobook;
 
+import java.io.Serializable;
 import java.sql.Time;
 import java.util.Date;
 
-public class MoodEvent {
-    private Date date;
-    private Time time; // Use java.sql.Time consistently
-    private String description;
+public class MoodEvent implements Serializable {
     private String state;
+    private Date date;
+    private Time time;
+    private String description;
 
     public MoodEvent(String state, Date date, Time time, String description) {
         this.state = state;
         this.date = date;
         this.time = time;
         this.description = description;
-    }
-
-    public Date getDate() {
-        return date;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
     }
 
     public String getState() {
@@ -32,19 +25,27 @@ public class MoodEvent {
         this.state = state;
     }
 
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
+    public Time getTime() {
+        return time;
+    }
+
+    public void setTime(Time time) {
+        this.time = time;
+    }
+
     public String getDescription() {
         return description;
     }
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public Time getTime() { // Return java.sql.Time
-        return time;
-    }
-
-    public void setTime(Time time) { // Accept java.sql.Time
-        this.time = time;
     }
 }

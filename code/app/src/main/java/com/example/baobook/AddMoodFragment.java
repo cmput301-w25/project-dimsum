@@ -22,7 +22,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 
-public class AddFragment extends DialogFragment {
+public class AddMoodFragment extends DialogFragment {
 
     interface AddMoodEventDialogListener {
         void addMoodEvent(MoodEvent mood);
