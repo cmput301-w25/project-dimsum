@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">BaoBook</string>
+
     <string name="Login">Login</string>
     <string name="Sign_Up">Sign Up</string>
     <string name="username">Username</string>
@@ -9,4 +10,13 @@
     <string name="Next">Next\n</string>
     <string name="Password">Password</string>
     <string name="no_account">Don\'t have an account?</string>
+  
+    <string-array name="mood_options">
+        <item>Happy</item>
+        <item>Sad</item>
+        <item>Excited</item>
+        <item>Angry</item>
+        <item>Neutral</item>
+    </string-array>
+
 </resources>
