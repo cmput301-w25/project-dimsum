@@ -48,4 +48,20 @@ public class MoodEvent implements Serializable {
     public void setDescription(String description) {
         this.description = description;
     }
+
+
+    /**
+     * Edits the current mood event with new details.
+     *
+     * @param newState       The new mood state (e.g., "Happy", "Sad", etc.).
+     * @param newDate        The new date for the event.
+     * @param newTime        The new time for the event.
+     * @param newDescription The new description for the event.
+     */
+    public void editMoodEvent(String newState, Date newDate, Time newTime, String newDescription) {
+        setState(newState);
+        setDate(newDate);
+        setTime(newTime);
+        setDescription(newDescription);
+    }
 }
