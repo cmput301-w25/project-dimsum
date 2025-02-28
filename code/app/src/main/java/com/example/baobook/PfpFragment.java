@@ -1,4 +1,4 @@
-package com.example;
+package com.example.baobook;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,17 +10,24 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
+import com.example.baobook.MainActivity;
+
+
 public class PfpFragment extends Fragment {
-    public View OnCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
-        View view = inflater.inflate(R.layout.signup_pfp_fragment, container, false);
-        Button nextButton = view.findViewById(R.id.button);
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
+        View view = inflater.inflate(R.layout.pfp_fragment, container, false);
+        Button addImage = view.findViewById(R.id.selectImageButton);
+        Button nextButton = view.findViewById(R.id.next_button);
         nextButton.setOnClickListener(v -> {
             // check input
             // move to home activity
-            Toast.makeText(getActivity(),"Signup Successful", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(getActivity(), MainActivity.class);
             startActivity(intent);
             getActivity().finish();
+        });
+        addImage.setOnClickListener(v -> {
+            Toast.makeText(getActivity(), "Add Image", Toast.LENGTH_SHORT).show();
         });
         return view;
     }
