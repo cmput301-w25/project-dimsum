@@ -13,7 +13,7 @@
         android:id="@+id/NameText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Choose your unique username and password"
+        android:text="@string/choose_your_unique_username_and_password"
         android:textColor="@color/black"
         android:textSize="24sp"
         android:padding="16dp"
@@ -23,7 +23,7 @@
 
     <!-- Username Input -->
     <EditText
-        android:id="@+id/Username_Input"
+        android:id="@+id/signup_username_input"
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:hint="@string/username"
@@ -34,7 +34,7 @@
 
     <!-- Password Input -->
     <EditText
-        android:id="@+id/Password_Input"
+        android:id="@+id/signup_password_input"
         android:layout_width="match_parent"
         android:layout_height="48dp"
         android:hint="@string/Password"

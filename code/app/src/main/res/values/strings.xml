@@ -10,7 +10,11 @@
     <string name="Next">Next\n</string>
     <string name="Password">Password</string>
     <string name="no_account">Don\'t have an account?</string>
-  
+    <string name="confirm_logout">Confirm logout?</string>
+    <string name="no">No</string>
+    <string name="yes">Yes</string>
+    <string name="choose_your_unique_username_and_password">Choose your unique username and password</string>
+
     <string-array name="mood_options">
         <item>Happy</item>
         <item>Sad</item>
