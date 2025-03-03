@@ -1,9 +1,12 @@
 package com.example.baobook;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -11,6 +14,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 
@@ -24,8 +29,9 @@ public class UserProfileActivity extends AppCompatActivity implements
 {
 
     // Static list to store moods across activities
-    private static final ArrayList<MoodEvent> dataList = new ArrayList<>();
+    private final ArrayList<MoodEvent> dataList = new ArrayList<>();
     private MoodEventArrayAdapter moodArrayAdapter;
+    private FirebaseFirestore db;
 
     @Override
     public void onEditMoodEvent(MoodEvent mood) {
@@ -62,7 +68,7 @@ public class UserProfileActivity extends AppCompatActivity implements
                     MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("moodEvent");
                     if (mood != null) {
                         // Add mood to static list
-                        getDataList().add(mood);
+                        MoodHistory.getDataList().add(mood);
                         // Notify adapter to refresh ListView
                         moodArrayAdapter.notifyDataSetChanged();
                         Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
@@ -74,6 +80,18 @@ public class UserProfileActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.profile);
+        db = FirebaseFirestore.getInstance();
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String username = prefs.getString("Username", null);
+        if(username == null){
+            Intent intent = new Intent(this, LoginSignupSelectActivity.class);
+            startActivity(intent);
+            finish();
+            return;
+        }
+        TextView usernameText = findViewById(R.id.username_text);
+        usernameText.setText(username);
 
         // Initialize ListView and Adapter
         ListView moodList = findViewById(R.id.mood_history_list);
@@ -82,6 +100,9 @@ public class UserProfileActivity extends AppCompatActivity implements
 
         // Notify adapter of any new moods (useful when returning to this activity)
         moodArrayAdapter.notifyDataSetChanged();
+
+        // get the logged in user's moods and display their mood history
+        FirestoreHelper.loadUserMoods(username, dataList, moodArrayAdapter, this);
 
         // Floating Action Button to add a new mood
         FloatingActionButton addButton = findViewById(R.id.add_button);
@@ -97,17 +118,13 @@ public class UserProfileActivity extends AppCompatActivity implements
             fragment.show(getSupportFragmentManager(), "MovieOptionsDialog");
         });
         //logout option
-//        Button logout = findViewById(R.id.logout_button);
-//        logout.setOnClickListener(v->{
-//            //launch logout activity
-//            Intent intent = new Intent(UserProfileActivity.this, LogoutActivity);
-//        });
-
-    }
-
-    // Getter method to access dataList from Home or other activities
-    public static ArrayList<MoodEvent> getDataList() {
-        return dataList;
+        Button logout = findViewById(R.id.logout_button);
+        logout.setOnClickListener(v->{
+            //launch logout activity
+            Intent intent = new Intent(UserProfileActivity.this, LogoutActivity.class);
+            startActivity(intent);
+            finish();
+        });
     }
 }
 
