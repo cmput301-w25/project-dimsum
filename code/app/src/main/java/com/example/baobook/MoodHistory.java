@@ -13,7 +13,10 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 
-public class MoodHistory extends AppCompatActivity {
+public class MoodHistory extends AppCompatActivity implements
+        MoodEventOptionsFragment.MoodEventOptionsDialogListener,
+        EditFragment.EditMoodEventDialogListener
+{
 
     private FloatingActionButton addButton;
 
@@ -21,6 +24,33 @@ public class MoodHistory extends AppCompatActivity {
     private static final ArrayList<MoodEvent> dataList = new ArrayList<>();
     private MoodEventArrayAdapter moodArrayAdapter;
     private ListView moodList;
+
+    @Override
+    public void onEditMoodEvent(MoodEvent mood) {
+        EditFragment fragment = new EditFragment(mood);
+        fragment.show(getSupportFragmentManager(), "Edit Mood");
+    }
+
+    @Override
+    public void onMoodEdited(MoodEvent updatedMoodEvent) {
+        for (int i = 0; i < dataList.size(); i++) {
+            MoodEvent mood = dataList.get(i);
+            if (mood.getDate().equals(updatedMoodEvent.getDate()) &&
+                    mood.getTime().equals(updatedMoodEvent.getTime())) {
+                dataList.set(i, updatedMoodEvent);
+                moodArrayAdapter.notifyDataSetChanged();
+                Toast.makeText(this, "Mood Event updated!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+    }
+
+    @Override
+    public void onDeleteMoodEvent(MoodEvent mood) {
+        dataList.remove(mood);
+        moodArrayAdapter.notifyDataSetChanged();
+        Toast.makeText(this, "Mood deleted!", Toast.LENGTH_SHORT).show();
+    }
 
     private final ActivityResultLauncher<Intent> addMoodLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -58,6 +88,13 @@ public class MoodHistory extends AppCompatActivity {
             Intent intent = new Intent(MoodHistory.this, AddMoodActivity.class);
             addMoodLauncher.launch(intent);
         });
+
+        moodList.setOnItemClickListener((parent, view, position, id) -> {
+            MoodEvent selectedMoodEvent = dataList.get(position);
+            MoodEventOptionsFragment fragment = new MoodEventOptionsFragment(selectedMoodEvent);
+            fragment.show(getSupportFragmentManager(), "MovieOptionsDialog");
+        });
+
     }
 
     // Getter method to access dataList from Home or other activities
