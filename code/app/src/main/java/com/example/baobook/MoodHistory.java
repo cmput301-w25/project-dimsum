@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class MoodHistory extends AppCompatActivity implements
         MoodEventOptionsFragment.MoodEventOptionsDialogListener,
@@ -52,6 +53,17 @@ public class MoodHistory extends AppCompatActivity implements
         Toast.makeText(this, "Mood deleted!", Toast.LENGTH_SHORT).show();
     }
 
+    private void sortMoodHistoryByDate() {
+        Collections.sort(dataList, (mood1, mood2) -> {
+            int dateComparison = mood2.getDate().compareTo(mood1.getDate());
+            if (dateComparison != 0) {
+                return dateComparison;
+            }
+            // If dates are equal, compare times
+            return mood2.getTime().compareTo(mood1.getTime());
+        });
+    }
+
     private final ActivityResultLauncher<Intent> addMoodLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
@@ -61,6 +73,8 @@ public class MoodHistory extends AppCompatActivity implements
                     if (mood != null) {
                         // Add mood to static list
                         getDataList().add(mood);
+                        // Sort the list in reverse chronological order
+                        sortMoodHistoryByDate();
                         // Notify adapter to refresh ListView
                         moodArrayAdapter.notifyDataSetChanged();
                         Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
@@ -77,6 +91,9 @@ public class MoodHistory extends AppCompatActivity implements
         moodList = findViewById(R.id.mood_history_list);
         moodArrayAdapter = new MoodEventArrayAdapter(this, dataList);
         moodList.setAdapter(moodArrayAdapter);
+
+        // Sort the mood history before displaying
+        sortMoodHistoryByDate();
 
         // Notify adapter of any new moods (useful when returning to this activity)
         moodArrayAdapter.notifyDataSetChanged();
