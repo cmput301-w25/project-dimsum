@@ -59,7 +59,7 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
 
             GradientDrawable drawable = (GradientDrawable) rootLayout.getBackground();
             if (drawable != null) {
-                drawable.setStroke(2, MoodUtils.getMoodColor(state)); // Set border color
+                drawable.setStroke(5, MoodUtils.getMoodColor(state)); // Set border color
             }
 
 
