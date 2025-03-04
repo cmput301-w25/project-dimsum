@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Source;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.List;
  * Helper class for Firestore operations.
  */
 public class FirestoreHelper {
-    private static final FirebaseFirestore db = FirebaseFirestore.getInstance();
+    private static FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     /**
      * Callback interface for user addition result.
@@ -63,7 +64,7 @@ public class FirestoreHelper {
 
     // Check if username and password match an existing user (for login)
     public static void checkUsernamePassword(String username, String password, FirestoreHelper.UsernamePasswordCallback callback) {
-        db.collection("users")
+        db.collection("Users")
                 .whereEqualTo("username", username)
                 .whereEqualTo("password", password)
                 .get()
@@ -81,7 +82,7 @@ public class FirestoreHelper {
 
     // Check if a username already exists (for signup validation)
     public static void checkIfUsernameExists(String username, UsernameExistsCallback callback) {
-        db.collection("users")
+        db.collection("Users")
                 .whereEqualTo("username", username)
                 .get()
                 .addOnCompleteListener(task -> {
@@ -97,7 +98,7 @@ public class FirestoreHelper {
 
     // Add a new user to Firestore
     public static void addUser(User user, UserCallback callback) {
-        db.collection("users")
+        db.collection("Users")
                 .document(user.getUsername()) // Use username as document ID
                 .set(user)
                 .addOnCompleteListener(task -> {
@@ -117,8 +118,7 @@ public class FirestoreHelper {
      * @param isFollowing true if getting followers, false if getting following
      */
     public static void loadFollow(String username, FollowCallback callback, boolean isFollowing) {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        db.collection("users")
+        db.collection("Users")
                 .document(username)
                 .get()
                 .addOnSuccessListener(document -> {
@@ -136,7 +136,7 @@ public class FirestoreHelper {
                         }
                         ArrayList<User> followers = new ArrayList<>();
                         for (String fu : followUsernames) {
-                            db.collection("users").document(username).get()
+                            db.collection("Users").document(username).get()
                                     .addOnSuccessListener(userDoc -> {
                                         if (userDoc.exists()) {
                                             User user = userDoc.toObject(User.class);
@@ -156,19 +156,39 @@ public class FirestoreHelper {
                     callback.onCallback(null);  // Return null if an error occurs
                 });
     }
-    public static void loadUserMoods(String username, List<MoodEvent> dataList, MoodEventArrayAdapter adapter, Context context) {
-        CollectionReference moodsRef = db.collection("MoodEvents");
-        moodsRef.whereEqualTo("username", username)
+    public static void loadUserMoods(List<MoodEvent> dataList, MoodEventArrayAdapter adapter, Context context) {
+        SharedPreferences prefs = context.getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String username = prefs.getString("Username", null);
+        db = FirebaseFirestore.getInstance();
+        db.collection("Users").document(username).collection("MoodEvents")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    dataList.clear(); // Prevent duplicates
                     for (com.google.firebase.firestore.DocumentSnapshot document : queryDocumentSnapshots) {
                         MoodEvent mood = document.toObject(MoodEvent.class);
-                        dataList.add(mood);
+                        if (mood != null) {
+                            dataList.add(mood);
+                        }
                     }
-                    adapter.notifyDataSetChanged(); //refresh UI
+                    adapter.notifyDataSetChanged(); // Refresh UI
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(context, "Failed to load moods", Toast.LENGTH_SHORT).show();
+                });
+    }
+    public static void firestoreMood(MoodEvent mood, Context context) {
+        db = FirebaseFirestore.getInstance();
+        SharedPreferences prefs = context.getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String username = prefs.getString("Username", null);
+        db.collection("Users")
+                .document(username)
+                .collection("MoodEvents")
+                .add(mood)
+                .addOnSuccessListener(documentReference -> {
+                    Toast.makeText(context, "Mood added!", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(context, "Failed to add mood", Toast.LENGTH_SHORT).show();
                 });
     }
 }
