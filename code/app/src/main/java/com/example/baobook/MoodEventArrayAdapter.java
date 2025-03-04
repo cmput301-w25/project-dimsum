@@ -1,6 +1,7 @@
 package com.example.baobook;
 
 import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Locale;
 
 public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
+
     public MoodEventArrayAdapter(Context context, ArrayList<MoodEvent> moods) {
         super(context, 0, moods);
     }
@@ -38,15 +40,29 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
         TextView moodDate = view.findViewById(R.id.mood_date);
         TextView moodTime = view.findViewById(R.id.mood_time);
         TextView moodDescription = view.findViewById(R.id.mood_description);
+        View rootLayout = view.findViewById(R.id.mood_item_root);
 
         if (mood != null) {
+            // Format date and time
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
 
-            moodState.setText(mood.getState());
-            moodDate.setText(dateFormat.format(mood.getDate())); // Format date
-            moodTime.setText(timeFormat.format(mood.getTime())); // Format time
-            moodDescription.setText(mood.getDescription());
+            // Set mood state with emoji and color using MoodUtils
+            String state = mood.getState();
+            moodState.setText(MoodUtils.getMoodEmoji(state) + " " + state); // Add emoji
+            moodState.setTextColor(MoodUtils.getMoodColor(state)); // Set color
+
+            // Set date, time, and description
+            moodDate.setText("Date: " + dateFormat.format(mood.getDate()));
+            moodTime.setText("Time: " + timeFormat.format(mood.getTime()));
+            moodDescription.setText("Description: " + mood.getDescription());
+
+            GradientDrawable drawable = (GradientDrawable) rootLayout.getBackground();
+            if (drawable != null) {
+                drawable.setStroke(2, MoodUtils.getMoodColor(state)); // Set border color
+            }
+
+
         }
 
         return view;
