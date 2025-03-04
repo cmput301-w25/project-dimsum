@@ -16,6 +16,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.baobook.FirestoreHelper;
 import com.example.baobook.Home;
+import com.example.baobook.model.User;
 
 public class SignupUsernameFragment extends Fragment {
     @Override

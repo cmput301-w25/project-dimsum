@@ -1,4 +1,4 @@
-package com.example.baobook;
+package com.example.baobook.model;
 
 import java.util.ArrayList;
 

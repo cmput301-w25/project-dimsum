@@ -16,6 +16,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
+import com.example.baobook.model.Mood;
+import com.example.baobook.model.MoodEvent;
+
 import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -51,7 +54,7 @@ public class AddMoodFragment extends DialogFragment {
         }
 
         View view = LayoutInflater.from(context).inflate(R.layout.add_mood_event_fragment, null);
-        Spinner editStates = view.findViewById(R.id.spinner_states);
+        Spinner moodSpinner = view.findViewById(R.id.mood_spinner);
         TextView textDate = view.findViewById(R.id.text_date);
         TextView textTime = view.findViewById(R.id.text_time);
         TextView editDescription = view.findViewById(R.id.edit_description);
@@ -96,7 +99,7 @@ public class AddMoodFragment extends DialogFragment {
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Add", (dialog, which) -> {
                     try {
-                        String state = editStates.getSelectedItem().toString();
+                        Mood mood = Mood.fromString(moodSpinner.getSelectedItem().toString());
                         String dateStr = textDate.getText().toString().trim();
                         String timeStr = textTime.getText().toString().trim();
                         String description = editDescription.getText().toString().trim();
@@ -109,8 +112,8 @@ public class AddMoodFragment extends DialogFragment {
                         Date date = selectedDate.getTime();
                         Time time = new Time(selectedTime.getTimeInMillis());
 
-                        MoodEvent mood = new MoodEvent(state, date, time, description);
-                        listener.addMoodEvent(mood);
+                        MoodEvent moodEvent = new MoodEvent(mood, date, time, description);
+                        listener.addMoodEvent(moodEvent);
 
                     } catch (Exception e) {
                         e.printStackTrace();

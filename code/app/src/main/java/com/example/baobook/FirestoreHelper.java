@@ -8,6 +8,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 
+import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.User;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Source;
@@ -148,7 +150,7 @@ public class FirestoreHelper {
                                     });
                         }
                     } else {
-                        callback.onCallback(new ArrayList<>());  // Return empty list if user not found
+                        callback.onCallback(new ArrayList<User>());  // Return empty list if user not found
                     }
                 })
                 .addOnFailureListener(e -> {

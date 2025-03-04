@@ -14,10 +14,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
+import com.example.baobook.model.MoodEvent;
+
 public class MoodEventOptionsFragment extends DialogFragment {
     private static final String TAG = "MoodOptionsFragment";
 
-    private MoodEvent mood;
+    private final MoodEvent moodEvent;
     private MoodEventOptionsDialogListener listener;
 
     public interface MoodEventOptionsDialogListener {
@@ -26,7 +28,7 @@ public class MoodEventOptionsFragment extends DialogFragment {
     }
 
     public MoodEventOptionsFragment(MoodEvent clickedMood) {
-        this.mood = clickedMood;
+        this.moodEvent = clickedMood;
     }
 
     @Override
@@ -57,7 +59,7 @@ public class MoodEventOptionsFragment extends DialogFragment {
 
             editButton.setOnClickListener(v -> {
                 if (listener != null) {
-                    listener.onEditMoodEvent(mood);
+                    listener.onEditMoodEvent(moodEvent);
                     dismiss();
                 } else {
                     Log.e(TAG, "Listener is null");
@@ -67,7 +69,7 @@ public class MoodEventOptionsFragment extends DialogFragment {
 
             deleteButton.setOnClickListener(v -> {
                 if (listener != null) {
-                    listener.onDeleteMoodEvent(mood);
+                    listener.onDeleteMoodEvent(moodEvent);
                     dismiss();
                 } else {
                     Log.e(TAG, "Listener is null");
