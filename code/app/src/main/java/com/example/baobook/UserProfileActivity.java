@@ -34,7 +34,7 @@ public class UserProfileActivity extends AppCompatActivity implements
     private final ArrayList<MoodEvent> dataList = new ArrayList<>();
     private MoodEventArrayAdapter moodArrayAdapter;
     private FirebaseFirestore db;
-
+    private String username;
     @Override
     public void onEditMoodEvent(MoodEvent mood) {
         EditFragment fragment = new EditFragment(mood);
@@ -67,13 +67,13 @@ public class UserProfileActivity extends AppCompatActivity implements
             result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     // Get the new mood event from AddMoodActivity
-                    MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("moodEvent");
+                    MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("MoodEvent");
                     if (mood != null) {
                         // Add mood to static list
                         dataList.add(mood);
                         // Notify adapter to refresh ListView
                         moodArrayAdapter.notifyDataSetChanged();
-                        Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
+                        FirestoreHelper.firestoreMood(mood, this);
                     }
                 }
             });
@@ -82,11 +82,10 @@ public class UserProfileActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.profile);
-        db = FirebaseFirestore.getInstance();
 
-        //get current usernamer from shared preferences
+        //get current username from shared preferences
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        String username = prefs.getString("Username", null);
+        username = prefs.getString("Username", null);
         TextView usernameText = findViewById(R.id.username_text);
         usernameText.setText(username);//set username
 
@@ -95,10 +94,8 @@ public class UserProfileActivity extends AppCompatActivity implements
         moodArrayAdapter = new MoodEventArrayAdapter(this, dataList);
         moodList.setAdapter(moodArrayAdapter);
 
-        moodArrayAdapter.notifyDataSetChanged();
-
-        // get the logged in user's moods and display their mood history
-        FirestoreHelper.loadUserMoods(username, dataList, moodArrayAdapter, this);
+// Load user moods after setting adapter
+//        FirestoreHelper.loadUserMoods(dataList, moodArrayAdapter, this);
 
         // Floating Action Button to add a new mood
         FloatingActionButton addButton = findViewById(R.id.add_button);
@@ -129,5 +126,10 @@ public class UserProfileActivity extends AppCompatActivity implements
             finish();
         });
     }
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        FirestoreHelper.loadUserMoods(username, dataList, moodArrayAdapter, this);
+//    }
 }
 
