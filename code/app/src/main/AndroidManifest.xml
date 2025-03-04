@@ -36,6 +36,10 @@
             android:exported="true" />
         <activity android:name=".SignupActivity"
             android:exported="true" />
+        <activity android:name=".UserProfileActivity"
+            android:exported="true" />
+        <activity android:name=".LogoutActivity"
+            android:exported="true" />
 
     </application>
 

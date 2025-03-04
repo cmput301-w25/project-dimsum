@@ -20,9 +20,6 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class Home extends AppCompatActivity {
 
-    private Button profile;
-    private FloatingActionButton addButton;
-
     // ActivityResultLauncher to handle the result from AddMoodActivity
     private final ActivityResultLauncher<Intent> addMoodLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
@@ -62,17 +59,17 @@ public class Home extends AppCompatActivity {
             return insets;
         });
 
-        addButton = findViewById(R.id.add_button);
+        FloatingActionButton addButton = findViewById(R.id.add_button);
         addButton.setOnClickListener(v -> {
             // Launch AddMoodActivity
             Intent intent = new Intent(Home.this, AddMoodActivity.class);
             addMoodLauncher.launch(intent);
         });
 
-        profile = findViewById(R.id.profile_button);
+        Button profile = findViewById(R.id.profile_button);
         profile.setOnClickListener(v -> {
             // Handle profile button click
-            Intent intent = new Intent(Home.this, MoodHistory.class);
+            Intent intent = new Intent(Home.this, UserProfileActivity.class);
             startActivity(intent);
         });
     }

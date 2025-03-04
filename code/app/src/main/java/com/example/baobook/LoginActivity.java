@@ -34,27 +34,25 @@ public class LoginActivity extends AppCompatActivity {
             FirestoreHelper.checkUsernamePassword(usernameText, passwordText, success -> {
                 if (!success) {
                     Toast.makeText(LoginActivity.this, "Invalid username or password", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+                // saveLogin
+                saveLogin(usernameText);
+                // Navigate to home screen
+                Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(LoginActivity.this, Home.class);
+                startActivity(intent);
             });
-            // saveLogin
-            saveLogin(usernameText);
-            // Navigate to home screen
-            Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_LONG).show();
-            Intent intent = new Intent(LoginActivity.this, Home.class);
+        });
+        SignupButton.setOnClickListener(v-> {
+            Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
             startActivity(intent);
         });
-        SignupButton.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v){
-                Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
-                startActivity(intent);
-            }
-        });
     }
-    private void saveLogin(String userId){
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+    public void saveLogin(String userId){
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         SharedPreferences.Editor editor = prefs.edit();
-        editor.putString("userId", userId);
+        editor.putString("username", userId);
         editor.putBoolean("isLoggedIn", true);
         editor.apply();
     }

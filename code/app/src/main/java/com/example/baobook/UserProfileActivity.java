@@ -1,5 +1,7 @@
 package com.example.baobook;
 
+import static com.example.baobook.MoodHistory.getDataList;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -68,7 +70,7 @@ public class UserProfileActivity extends AppCompatActivity implements
                     MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("moodEvent");
                     if (mood != null) {
                         // Add mood to static list
-                        MoodHistory.getDataList().add(mood);
+                        dataList.add(mood);
                         // Notify adapter to refresh ListView
                         moodArrayAdapter.notifyDataSetChanged();
                         Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
@@ -82,23 +84,17 @@ public class UserProfileActivity extends AppCompatActivity implements
         setContentView(R.layout.profile);
         db = FirebaseFirestore.getInstance();
 
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        //get current usernamer from shared preferences
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         String username = prefs.getString("Username", null);
-        if(username == null){
-            Intent intent = new Intent(this, LoginSignupSelectActivity.class);
-            startActivity(intent);
-            finish();
-            return;
-        }
         TextView usernameText = findViewById(R.id.username_text);
-        usernameText.setText(username);
+        usernameText.setText(username);//set username
 
         // Initialize ListView and Adapter
         ListView moodList = findViewById(R.id.mood_history_list);
         moodArrayAdapter = new MoodEventArrayAdapter(this, dataList);
         moodList.setAdapter(moodArrayAdapter);
 
-        // Notify adapter of any new moods (useful when returning to this activity)
         moodArrayAdapter.notifyDataSetChanged();
 
         // get the logged in user's moods and display their mood history
@@ -122,6 +118,13 @@ public class UserProfileActivity extends AppCompatActivity implements
         logout.setOnClickListener(v->{
             //launch logout activity
             Intent intent = new Intent(UserProfileActivity.this, LogoutActivity.class);
+            startActivity(intent);
+            finish();
+        });
+        Button home = findViewById(R.id.home_button);
+        home.setOnClickListener(v-> {
+            //launch home activity
+            Intent intent = new Intent(UserProfileActivity.this, Home.class);
             startActivity(intent);
             finish();
         });
