@@ -11,7 +11,7 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
-import com.example.baobook.MainActivity;
+import com.example.baobook.model.User;
 
 public class SignupUsernameFragment extends Fragment {
     @Override

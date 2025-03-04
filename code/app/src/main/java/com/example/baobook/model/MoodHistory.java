@@ -1,4 +1,4 @@
-package com.example.baobook;
+package com.example.baobook.model;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -9,6 +9,11 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.baobook.AddMoodActivity;
+import com.example.baobook.EditFragment;
+import com.example.baobook.MoodEventArrayAdapter;
+import com.example.baobook.MoodEventOptionsFragment;
+import com.example.baobook.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;

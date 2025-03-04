@@ -1,28 +1,28 @@
-package com.example.baobook;
+package com.example.baobook.model;
 
 import java.io.Serializable;
 import java.sql.Time;
 import java.util.Date;
 
 public class MoodEvent implements Serializable {
-    private String state;
+    private Mood mood;
     private Date date;
     private Time time;
     private String description;
 
-    public MoodEvent(String state, Date date, Time time, String description) {
-        this.state = state;
+    public MoodEvent(Mood mood, Date date, Time time, String description) {
+        this.mood = mood;
         this.date = date;
         this.time = time;
         this.description = description;
     }
 
-    public String getState() {
-        return state;
+    public Mood getMood() {
+        return mood;
     }
 
-    public void setState(String state) {
-        this.state = state;
+    public void setMood(Mood mood) {
+        this.mood = mood;
     }
 
     public Date getDate() {
@@ -53,13 +53,13 @@ public class MoodEvent implements Serializable {
     /**
      * Edits the current mood event with new details.
      *
-     * @param newState       The new mood state (e.g., "Happy", "Sad", etc.).
+     * @param newMood       The new mood (e.g., "Happy", "Sad", etc.).
      * @param newDate        The new date for the event.
      * @param newTime        The new time for the event.
      * @param newDescription The new description for the event.
      */
-    public void editMoodEvent(String newState, Date newDate, Time newTime, String newDescription) {
-        setState(newState);
+    public void editMoodEvent(Mood newMood, Date newDate, Time newTime, String newDescription) {
+        setMood(newMood);
         setDate(newDate);
         setTime(newTime);
         setDescription(newDescription);
