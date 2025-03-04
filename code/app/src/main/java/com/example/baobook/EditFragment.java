@@ -7,7 +7,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -19,6 +18,7 @@ import androidx.fragment.app.DialogFragment;
 
 import java.sql.Time;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Locale;
 
@@ -67,14 +67,22 @@ public class EditFragment extends DialogFragment {
         TextView editTime = view.findViewById(R.id.text_time);
         EditText editDescription = view.findViewById(R.id.edit_description);
 
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(context,
-                R.array.mood_options, android.R.layout.simple_spinner_item);
+        // Initialize the Spinner with MoodUtils
+        MoodSpinnerAdapter adapter = new MoodSpinnerAdapter(
+                context,
+                android.R.layout.simple_spinner_item,
+                Arrays.asList(MoodUtils.MOOD_OPTIONS), // Convert String[] to List<String>
+                MoodUtils.MOOD_COLORS,
+                MoodUtils.MOOD_EMOJIS
+        );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         editStates.setAdapter(adapter);
 
+        // Set initial values if editing an existing MoodEvent
         if (moodEvent != null) {
             int position = adapter.getPosition(moodEvent.getState());
             editStates.setSelection(position);
+
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
             editDate.setText(dateFormat.format(moodEvent.getDate()));
@@ -82,6 +90,7 @@ public class EditFragment extends DialogFragment {
             editDescription.setText(moodEvent.getDescription());
         }
 
+        // Date Picker
         editDate.setOnClickListener(v -> {
             DatePickerDialog datePickerDialog = new DatePickerDialog(
                     context,
@@ -97,6 +106,7 @@ public class EditFragment extends DialogFragment {
             datePickerDialog.show();
         });
 
+        // Time Picker
         editTime.setOnClickListener(v -> {
             TimePickerDialog timePickerDialog = new TimePickerDialog(
                     context,
@@ -113,6 +123,7 @@ public class EditFragment extends DialogFragment {
             timePickerDialog.show();
         });
 
+        // Build and return the dialog
         return new AlertDialog.Builder(context)
                 .setView(view)
                 .setTitle("Edit Mood Event")
@@ -120,8 +131,15 @@ public class EditFragment extends DialogFragment {
                     String newState = editStates.getSelectedItem().toString();
                     String newDescription = editDescription.getText().toString();
 
-                    MoodEvent updatedMood = new MoodEvent(newState, selectedDate.getTime(), new Time(selectedTime.getTimeInMillis()), newDescription);
+                    // Create an updated MoodEvent
+                    MoodEvent updatedMood = new MoodEvent(
+                            newState,
+                            selectedDate.getTime(),
+                            new Time(selectedTime.getTimeInMillis()),
+                            newDescription
+                    );
 
+                    // Notify the listener
                     listener.onMoodEdited(updatedMood);
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
