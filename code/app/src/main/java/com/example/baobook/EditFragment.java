@@ -16,6 +16,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
+import com.example.baobook.model.Mood;
+import com.example.baobook.model.MoodEvent;
+
 import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -62,7 +65,7 @@ public class EditFragment extends DialogFragment {
         }
 
         View view = LayoutInflater.from(context).inflate(R.layout.edit_fragment, null);
-        Spinner editStates = view.findViewById(R.id.spinner_states);
+        Spinner editMood = view.findViewById(R.id.mood_spinner);
         TextView editDate = view.findViewById(R.id.text_date);
         TextView editTime = view.findViewById(R.id.text_time);
         EditText editDescription = view.findViewById(R.id.edit_description);
@@ -76,13 +79,12 @@ public class EditFragment extends DialogFragment {
                 MoodUtils.MOOD_EMOJIS
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        editStates.setAdapter(adapter);
+        editMood.setAdapter(adapter);
 
         // Set initial values if editing an existing MoodEvent
         if (moodEvent != null) {
-            int position = adapter.getPosition(moodEvent.getState());
-            editStates.setSelection(position);
-
+            int position = adapter.getPosition(moodEvent.getMood().toString());
+            editMood.setSelection(position);
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
             editDate.setText(dateFormat.format(moodEvent.getDate()));
@@ -128,19 +130,14 @@ public class EditFragment extends DialogFragment {
                 .setView(view)
                 .setTitle("Edit Mood Event")
                 .setPositiveButton("Save", (dialog, which) -> {
-                    String newState = editStates.getSelectedItem().toString();
+                    Mood newMood = Mood.fromString(editMood.getSelectedItem().toString());
                     String newDescription = editDescription.getText().toString();
 
-                    // Create an updated MoodEvent
-                    MoodEvent updatedMood = new MoodEvent(
-                            newState,
-                            selectedDate.getTime(),
-                            new Time(selectedTime.getTimeInMillis()),
-                            newDescription
-                    );
+                    // Update the mood Event
+                    moodEvent.editMoodEvent(newMood, selectedDate.getTime(), new Time(selectedTime.getTimeInMillis()), newDescription);
 
                     // Notify the listener
-                    listener.onMoodEdited(updatedMood);
+                    listener.onMoodEdited(moodEvent);
                 })
                 .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
                 .create();

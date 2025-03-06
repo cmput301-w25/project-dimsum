@@ -19,7 +19,7 @@
             android:exported="true">
         </activity>
         <activity
-            android:name=".MoodHistory"
+            android:name=".model.MoodHistory"
             android:exported="false" />
         <activity
             android:name=".Home"
@@ -35,6 +35,10 @@
         <activity android:name=".LoginActivity"
             android:exported="true" />
         <activity android:name=".SignupActivity"
+            android:exported="true" />
+        <activity android:name=".UserProfileActivity"
+            android:exported="true" />
+        <activity android:name=".LogoutActivity"
             android:exported="true" />
 
     </application>

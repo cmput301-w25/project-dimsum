@@ -1,7 +1,9 @@
 package com.example.baobook;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -29,18 +31,29 @@ public class LoginActivity extends AppCompatActivity {
                 return;
             }
             // check if username and password match existing user
-
-            // Navigate to home screen
-            Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_LONG).show();
-            Intent intent = new Intent(LoginActivity.this, Home.class);
+            FirestoreHelper.checkUsernamePassword(usernameText, passwordText, success -> {
+                if (!success) {
+                    Toast.makeText(LoginActivity.this, "Invalid username or password", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                // saveLogin
+                saveLogin(usernameText);
+                // Navigate to home screen
+                Toast.makeText(LoginActivity.this, "Login Successful", Toast.LENGTH_LONG).show();
+                Intent intent = new Intent(LoginActivity.this, Home.class);
+                startActivity(intent);
+            });
+        });
+        SignupButton.setOnClickListener(v-> {
+            Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
             startActivity(intent);
         });
-        SignupButton.setOnClickListener(new View.OnClickListener(){
-            @Override
-            public void onClick(View v){
-                Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
-                startActivity(intent);
-            }
-        });
+    }
+    public void saveLogin(String userId){
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putString("username", userId);
+        editor.putBoolean("isLoggedIn", true);
+        editor.apply();
     }
 }

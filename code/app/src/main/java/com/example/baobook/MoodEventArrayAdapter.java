@@ -12,6 +12,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.baobook.model.MoodEvent;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -34,35 +35,37 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
             view = convertView;
         }
 
-        MoodEvent mood = getItem(position);
+        MoodEvent moodEvent = getItem(position);
 
-        TextView moodState = view.findViewById(R.id.mood_state);
-        TextView moodDate = view.findViewById(R.id.mood_date);
-        TextView moodTime = view.findViewById(R.id.mood_time);
-        TextView moodDescription = view.findViewById(R.id.mood_description);
+        TextView moodText = view.findViewById(R.id.mood_state);
+        TextView dateText = view.findViewById(R.id.mood_date);
+        TextView timeText = view.findViewById(R.id.mood_time);
+        TextView descriptionText = view.findViewById(R.id.mood_description);
         View rootLayout = view.findViewById(R.id.mood_item_root);
 
-        if (mood != null) {
+        if (moodEvent != null) {
             // Format date and time
             SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
             SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
 
             // Set mood state with emoji and color using MoodUtils
-            String state = mood.getState();
-            moodState.setText(MoodUtils.getMoodEmoji(state) + " " + state); // Add emoji
-            moodState.setTextColor(MoodUtils.getMoodColor(state)); // Set color
+            String moodString = moodEvent.getMood().toString();
+            moodText.setText(MoodUtils.getMoodEmoji(moodString) + " " + moodString); // Add emoji
+            moodText.setTextColor(MoodUtils.getMoodColor(moodString)); // Set color
 
             // Set date, time, and description
-            moodDate.setText("Date: " + dateFormat.format(mood.getDate()));
-            moodTime.setText("Time: " + timeFormat.format(mood.getTime()));
-            moodDescription.setText("Description: " + mood.getDescription());
+            dateText.setText("Date: " + dateFormat.format(moodEvent.getDate()));
+            timeText.setText("Time: " + timeFormat.format(moodEvent.getTime()));
+            descriptionText.setText("Description: " + moodEvent.getDescription());
 
             GradientDrawable drawable = (GradientDrawable) rootLayout.getBackground();
             if (drawable != null) {
+
                 drawable.setStroke(5, MoodUtils.getMoodColor(state)); // Set border color
+=======
+                drawable.setStroke(2, MoodUtils.getMoodColor(moodString)); // Set border color
+
             }
-
-
         }
 
         return view;

@@ -10,6 +10,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.baobook.model.Mood;
+import com.example.baobook.model.MoodEvent;
+
 import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -28,7 +31,7 @@ public class AddMoodActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_mood_event_fragment); // Use the same layout as the fragment
 
-        Spinner editStates = findViewById(R.id.spinner_states);
+        Spinner editMood = findViewById(R.id.mood_spinner);
         TextView textDate = findViewById(R.id.text_date);
         TextView textTime = findViewById(R.id.text_time);
         TextView editDescription = findViewById(R.id.edit_description);
@@ -69,7 +72,7 @@ public class AddMoodActivity extends AppCompatActivity {
         // Save Button
         findViewById(R.id.save_button).setOnClickListener(v -> {
             try {
-                String state = editStates.getSelectedItem().toString();
+                Mood mood = Mood.fromString(editMood.getSelectedItem().toString());
                 String dateStr = textDate.getText().toString().trim();
                 String timeStr = textTime.getText().toString().trim();
                 String description = editDescription.getText().toString().trim();
@@ -82,18 +85,18 @@ public class AddMoodActivity extends AppCompatActivity {
                 Date date = selectedDate.getTime();
                 Time time = new Time(selectedTime.getTimeInMillis());
 
-                // Create MoodEvent with state, date, time, and description
-                MoodEvent mood = new MoodEvent(state, date, time, description);
+                // Create MoodEvent
+                MoodEvent moodEvent = new MoodEvent(mood, date, time, description);
 
                 // Return the MoodEvent to the calling activity
                 Intent resultIntent = new Intent();
-                resultIntent.putExtra("moodEvent", mood);
+                resultIntent.putExtra("moodEvent", moodEvent);
                 setResult(RESULT_OK, resultIntent);
                 finish();
 
             } catch (Exception e) {
                 e.printStackTrace();
-                Toast.makeText(this, "Invalid data!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -101,7 +104,7 @@ public class AddMoodActivity extends AppCompatActivity {
         findViewById(R.id.cancel_button).setOnClickListener(v -> finish());
 
         // Initialize the Spinner with MoodUtils
-        initializeSpinner(editStates);
+        initializeSpinner(editMood);
     }
 
     // Helper method to initialize the Spinner with MoodUtils data
