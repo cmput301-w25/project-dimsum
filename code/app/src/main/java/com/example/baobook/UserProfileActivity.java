@@ -126,6 +126,14 @@ public class UserProfileActivity extends AppCompatActivity implements
             startActivity(intent);
             finish();
         });
+
+        // Add click handler for mood history button
+        Button moodHistoryButton = findViewById(R.id.mood_history_button);
+        moodHistoryButton.setOnClickListener(v -> {
+            // Launch MoodHistory activity
+            Intent intent = new Intent(UserProfileActivity.this, com.example.baobook.model.MoodHistory.class);
+            startActivity(intent);
+        });
     }
 //    @Override
 //    protected void onResume() {
