@@ -4,7 +4,6 @@ import static com.example.baobook.model.MoodHistory.getDataList;
 import com.example.baobook.model.MoodEvent;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.ListView;
@@ -74,7 +73,7 @@ public class UserProfileActivity extends AppCompatActivity implements
                         dataList.add(mood);
                         // Notify adapter to refresh ListView
                         moodArrayAdapter.notifyDataSetChanged();
-//                        FirestoreHelper.firestoreMood(mood, this);
+                        FirestoreHelper.firestoreMood(mood, this);
                     }
                 }
             });
@@ -94,7 +93,7 @@ public class UserProfileActivity extends AppCompatActivity implements
         moodArrayAdapter = new MoodEventArrayAdapter(this, dataList);
         moodList.setAdapter(moodArrayAdapter);
 
-        // Load user moods after setting adapter
+// Load user moods after setting adapter
 //        FirestoreHelper.loadUserMoods(dataList, moodArrayAdapter, this);
 
         // Floating Action Button to add a new mood
