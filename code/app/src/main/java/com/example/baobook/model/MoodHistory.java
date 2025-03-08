@@ -3,7 +3,10 @@ package com.example.baobook.model;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.Toast;
+import android.widget.Button;
+import android.widget.ArrayAdapter;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -30,6 +33,7 @@ public class MoodHistory extends AppCompatActivity implements
     private static final ArrayList<MoodEvent> dataList = new ArrayList<>();
     private MoodEventArrayAdapter moodArrayAdapter;
     private ListView moodList;
+    private ArrayList<MoodEvent> filteredList; // To store filtered moods
 
     @Override
     public void onEditMoodEvent(MoodEvent mood) {
@@ -94,8 +98,36 @@ public class MoodHistory extends AppCompatActivity implements
 
         // Initialize ListView and Adapter
         moodList = findViewById(R.id.mood_history_list);
-        moodArrayAdapter = new MoodEventArrayAdapter(this, dataList);
+        filteredList = new ArrayList<>(dataList); // Initialize with all moods
+        moodArrayAdapter = new MoodEventArrayAdapter(this, filteredList);
         moodList.setAdapter(moodArrayAdapter);
+
+        // Set up the mood filter spinner
+        Spinner moodFilterSpinner = findViewById(R.id.mood_filter_spinner);
+        ArrayAdapter<Mood> spinnerAdapter = new ArrayAdapter<>(this, 
+            android.R.layout.simple_spinner_item, Mood.values());
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        moodFilterSpinner.setAdapter(spinnerAdapter);
+
+        // Set up filter button
+        Button applyFilterButton = findViewById(R.id.apply_filter_button);
+        applyFilterButton.setOnClickListener(v -> {
+            Mood selectedMood = (Mood) moodFilterSpinner.getSelectedItem();
+            filteredList = filterByMood(selectedMood);
+            moodArrayAdapter = new MoodEventArrayAdapter(this, filteredList);
+            moodList.setAdapter(moodArrayAdapter);
+            Toast.makeText(this, "Filtered by " + selectedMood.toString(), Toast.LENGTH_SHORT).show();
+        });
+
+        // Set up clear filter button
+        Button clearFilterButton = findViewById(R.id.clear_filter_button);
+        clearFilterButton.setOnClickListener(v -> {
+            filteredList = new ArrayList<>(dataList);
+            moodArrayAdapter = new MoodEventArrayAdapter(this, filteredList);
+            moodList.setAdapter(moodArrayAdapter);
+            moodFilterSpinner.setSelection(0);
+            Toast.makeText(this, "Filter cleared", Toast.LENGTH_SHORT).show();
+        });
 
         // Sort the mood history before displaying
         sortMoodHistoryByDate();
@@ -122,5 +154,16 @@ public class MoodHistory extends AppCompatActivity implements
     // Getter method to access dataList from Home or other activities
     public static ArrayList<MoodEvent> getDataList() {
         return dataList;
+    }
+
+    //Filters the mood list to show only moods of a specific type.
+    public ArrayList<MoodEvent> filterByMood(Mood moodType) {
+        ArrayList<MoodEvent> filteredList = new ArrayList<>();
+        for (MoodEvent mood : dataList) {
+            if (mood.getMood() == moodType) {
+                filteredList.add(mood);
+            }
+        }
+        return filteredList;
     }
 }
