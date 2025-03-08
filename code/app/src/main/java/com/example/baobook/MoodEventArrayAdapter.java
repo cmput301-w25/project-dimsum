@@ -57,7 +57,7 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
             // Set date, time, and description
             dateText.setText("Date: " + dateFormat.format(moodEvent.getDate()));
             timeText.setText("Time: " + timeFormat.format(moodEvent.getTime()));
-            descriptionText.setText("Description: " + moodEvent.getDescription());
+            descriptionText.setText("Trigger: " + moodEvent.getDescription());
             social.setText("Social: " + moodEvent.getSocial());
 
 

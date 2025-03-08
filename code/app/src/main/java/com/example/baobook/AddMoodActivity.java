@@ -23,9 +23,8 @@ import java.util.Locale;
 
 public class AddMoodActivity extends AppCompatActivity {
 
-    private Calendar selectedDate = Calendar.getInstance();
-    private Calendar selectedTime = Calendar.getInstance();
-    private final Calendar currentDateTime = Calendar.getInstance();
+    private final Calendar selectedDateTime = Calendar.getInstance(); // Combines date and time
+    private final Calendar currentDateTime = Calendar.getInstance(); // Stores the current time at launch
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,22 +37,28 @@ public class AddMoodActivity extends AppCompatActivity {
         TextView editDescription = findViewById(R.id.edit_description);
         Spinner editSocial = findViewById(R.id.social_situation);
 
+        // Pre-fill Date & Time fields
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+        textDate.setText(dateFormat.format(selectedDateTime.getTime()));
+        textTime.setText(timeFormat.format(selectedDateTime.getTime()));
+
         // Date Picker
         textDate.setOnClickListener(v -> {
             DatePickerDialog datePickerDialog = new DatePickerDialog(
                     this,
                     (view, year, month, dayOfMonth) -> {
-                        selectedDate.set(year, month, dayOfMonth);
-                        if (selectedDate.after(currentDateTime)) {
+                        selectedDateTime.set(year, month, dayOfMonth);
+                        if (selectedDateTime.after(currentDateTime)) {
                             Toast.makeText(this, "Cannot select a future date", Toast.LENGTH_SHORT).show();
-                            selectedDate.setTime(currentDateTime.getTime());
+                            selectedDateTime.setTime(currentDateTime.getTime());
                         }
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                        textDate.setText(dateFormat.format(selectedDate.getTime()));
+                        textDate.setText(dateFormat.format(selectedDateTime.getTime()));
                     },
-                    selectedDate.get(Calendar.YEAR),
-                    selectedDate.get(Calendar.MONTH),
-                    selectedDate.get(Calendar.DAY_OF_MONTH)
+                    selectedDateTime.get(Calendar.YEAR),
+                    selectedDateTime.get(Calendar.MONTH),
+                    selectedDateTime.get(Calendar.DAY_OF_MONTH)
             );
             datePickerDialog.getDatePicker().setMaxDate(currentDateTime.getTimeInMillis());
             datePickerDialog.show();
@@ -64,19 +69,17 @@ public class AddMoodActivity extends AppCompatActivity {
             TimePickerDialog timePickerDialog = new TimePickerDialog(
                     this,
                     (view, hourOfDay, minute) -> {
-                        selectedTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                        selectedTime.set(Calendar.MINUTE, minute);
+                        selectedDateTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                        selectedDateTime.set(Calendar.MINUTE, minute);
 
-                        // Ensure selected time is not in the future
-                        if (selectedTime.after(currentDateTime)) {
+                        if (selectedDateTime.after(currentDateTime)) {
                             Toast.makeText(this, "Cannot select a future time", Toast.LENGTH_SHORT).show();
-                            selectedTime.setTime(currentDateTime.getTime());
+                            selectedDateTime.setTime(currentDateTime.getTime());
                         }
-                        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                        textTime.setText(timeFormat.format(selectedTime.getTime()));
+                        textTime.setText(timeFormat.format(selectedDateTime.getTime()));
                     },
-                    selectedTime.get(Calendar.HOUR_OF_DAY),
-                    selectedTime.get(Calendar.MINUTE),
+                    selectedDateTime.get(Calendar.HOUR_OF_DAY),
+                    selectedDateTime.get(Calendar.MINUTE),
                     true
             );
             timePickerDialog.show();
@@ -96,11 +99,10 @@ public class AddMoodActivity extends AppCompatActivity {
                     return;
                 }
 
-                Date date = selectedDate.getTime();
-                Time time = new Time(selectedTime.getTimeInMillis());
+                Date date = selectedDateTime.getTime();
+                Time time = new Time(selectedDateTime.getTimeInMillis());
 
-                // Final check to ensure no future date/time is selected
-                if (selectedDate.after(currentDateTime) || selectedTime.after(currentDateTime)) {
+                if (selectedDateTime.after(currentDateTime)) {
                     Toast.makeText(this, "Date and time cannot be in the future", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -133,5 +135,10 @@ public class AddMoodActivity extends AppCompatActivity {
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
+
+        // Set default selection
+        if (!moodOptionsList.isEmpty()) {
+            spinner.setSelection(0);
+        }
     }
 }
