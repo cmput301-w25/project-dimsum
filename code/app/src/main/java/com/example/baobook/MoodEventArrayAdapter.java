@@ -41,6 +41,7 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
         TextView dateText = view.findViewById(R.id.mood_date);
         TextView timeText = view.findViewById(R.id.mood_time);
         TextView descriptionText = view.findViewById(R.id.mood_description);
+        TextView social = view.findViewById(R.id.social_situation);
         View rootLayout = view.findViewById(R.id.mood_item_root);
 
         if (moodEvent != null) {
@@ -56,7 +57,9 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
             // Set date, time, and description
             dateText.setText("Date: " + dateFormat.format(moodEvent.getDate()));
             timeText.setText("Time: " + timeFormat.format(moodEvent.getTime()));
-            descriptionText.setText("Description: " + moodEvent.getDescription());
+            descriptionText.setText("Trigger: " + moodEvent.getDescription());
+            social.setText("Social: " + moodEvent.getSocial());
+
 
             GradientDrawable drawable = (GradientDrawable) rootLayout.getBackground();
             if (drawable != null) {

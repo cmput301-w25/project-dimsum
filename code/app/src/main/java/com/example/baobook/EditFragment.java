@@ -69,6 +69,7 @@ public class EditFragment extends DialogFragment {
         TextView editDate = view.findViewById(R.id.text_date);
         TextView editTime = view.findViewById(R.id.text_time);
         EditText editDescription = view.findViewById(R.id.edit_description);
+        Spinner editSocial = view.findViewById(R.id.social_spinner);
 
         // Initialize the Spinner with MoodUtils
         MoodSpinnerAdapter adapter = new MoodSpinnerAdapter(
@@ -132,9 +133,10 @@ public class EditFragment extends DialogFragment {
                 .setPositiveButton("Save", (dialog, which) -> {
                     Mood newMood = Mood.fromString(editMood.getSelectedItem().toString());
                     String newDescription = editDescription.getText().toString();
+                    String newSocial = editSocial.getSelectedItem().toString();
 
                     // Update the mood Event
-                    moodEvent.editMoodEvent(newMood, selectedDate.getTime(), new Time(selectedTime.getTimeInMillis()), newDescription);
+                    moodEvent.editMoodEvent(newMood, selectedDate.getTime(), new Time(selectedTime.getTimeInMillis()), newDescription, newSocial);
 
                     // Notify the listener
                     listener.onMoodEdited(moodEvent);
