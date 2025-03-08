@@ -15,6 +15,7 @@ public class MoodEvent implements Serializable {
         this.date = date;
         this.time = time;
         this.description = description;
+
     }
 
     public Mood getMood() {
