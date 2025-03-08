@@ -9,13 +9,16 @@ public class MoodEvent implements Serializable {
     private Date date;
     private Time time;
     private String description;
+    private String trigger;
+    private String social;
 
-    public MoodEvent(Mood mood, Date date, Time time, String description) {
+    public MoodEvent(Mood mood, Date date, Time time, String description, String social) {
         this.mood = mood;
         this.date = date;
         this.time = time;
         this.description = description;
-
+        this.trigger = trigger;
+        this.social = social;
     }
 
     public Mood getMood() {
@@ -59,10 +62,20 @@ public class MoodEvent implements Serializable {
      * @param newTime        The new time for the event.
      * @param newDescription The new description for the event.
      */
-    public void editMoodEvent(Mood newMood, Date newDate, Time newTime, String newDescription) {
+    public void editMoodEvent(Mood newMood, Date newDate, Time newTime, String newDescription, String newSocial) {
         setMood(newMood);
         setDate(newDate);
         setTime(newTime);
         setDescription(newDescription);
+        setSocial(newSocial);
     }
+
+    public String getSocial() {
+        return social;
+    }
+
+    public void setSocial(String social) {
+        this.social = social;
+    }
+
 }

@@ -25,23 +25,29 @@ public class AddMoodActivity extends AppCompatActivity {
 
     private Calendar selectedDate = Calendar.getInstance();
     private Calendar selectedTime = Calendar.getInstance();
+    private final Calendar currentDateTime = Calendar.getInstance();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.add_mood_event_fragment); // Use the same layout as the fragment
+        setContentView(R.layout.add_mood_event_fragment);
 
         Spinner editMood = findViewById(R.id.mood_spinner);
         TextView textDate = findViewById(R.id.text_date);
         TextView textTime = findViewById(R.id.text_time);
         TextView editDescription = findViewById(R.id.edit_description);
+        Spinner editSocial = findViewById(R.id.social_situation);
 
         // Date Picker
         textDate.setOnClickListener(v -> {
             DatePickerDialog datePickerDialog = new DatePickerDialog(
                     this,
-                    (view1, year, month, dayOfMonth) -> {
+                    (view, year, month, dayOfMonth) -> {
                         selectedDate.set(year, month, dayOfMonth);
+                        if (selectedDate.after(currentDateTime)) {
+                            Toast.makeText(this, "Cannot select a future date", Toast.LENGTH_SHORT).show();
+                            selectedDate.setTime(currentDateTime.getTime());
+                        }
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                         textDate.setText(dateFormat.format(selectedDate.getTime()));
                     },
@@ -49,6 +55,7 @@ public class AddMoodActivity extends AppCompatActivity {
                     selectedDate.get(Calendar.MONTH),
                     selectedDate.get(Calendar.DAY_OF_MONTH)
             );
+            datePickerDialog.getDatePicker().setMaxDate(currentDateTime.getTimeInMillis());
             datePickerDialog.show();
         });
 
@@ -56,9 +63,15 @@ public class AddMoodActivity extends AppCompatActivity {
         textTime.setOnClickListener(v -> {
             TimePickerDialog timePickerDialog = new TimePickerDialog(
                     this,
-                    (view12, hourOfDay, minute) -> {
+                    (view, hourOfDay, minute) -> {
                         selectedTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
                         selectedTime.set(Calendar.MINUTE, minute);
+
+                        // Ensure selected time is not in the future
+                        if (selectedTime.after(currentDateTime)) {
+                            Toast.makeText(this, "Cannot select a future time", Toast.LENGTH_SHORT).show();
+                            selectedTime.setTime(currentDateTime.getTime());
+                        }
                         SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
                         textTime.setText(timeFormat.format(selectedTime.getTime()));
                     },
@@ -76,6 +89,7 @@ public class AddMoodActivity extends AppCompatActivity {
                 String dateStr = textDate.getText().toString().trim();
                 String timeStr = textTime.getText().toString().trim();
                 String description = editDescription.getText().toString().trim();
+                String social = editSocial.getSelectedItem().toString();
 
                 if (dateStr.equals("Select Date") || timeStr.equals("Select Time")) {
                     Toast.makeText(this, "Please select date and time", Toast.LENGTH_SHORT).show();
@@ -85,43 +99,39 @@ public class AddMoodActivity extends AppCompatActivity {
                 Date date = selectedDate.getTime();
                 Time time = new Time(selectedTime.getTimeInMillis());
 
-                // Create MoodEvent
-                MoodEvent moodEvent = new MoodEvent(mood, date, time, description);
+                // Final check to ensure no future date/time is selected
+                if (selectedDate.after(currentDateTime) || selectedTime.after(currentDateTime)) {
+                    Toast.makeText(this, "Date and time cannot be in the future", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-                // Return the MoodEvent to the calling activity
+                MoodEvent moodEvent = new MoodEvent(mood, date, time, description, social);
+
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra("moodEvent", moodEvent);
                 setResult(RESULT_OK, resultIntent);
                 finish();
-
             } catch (Exception e) {
                 e.printStackTrace();
                 Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Cancel Button
         findViewById(R.id.cancel_button).setOnClickListener(v -> finish());
 
-        // Initialize the Spinner with MoodUtils
         initializeSpinner(editMood);
     }
 
-    // Helper method to initialize the Spinner with MoodUtils data
     private void initializeSpinner(Spinner spinner) {
-        // Convert the String[] array to a List<String>
         List<String> moodOptionsList = Arrays.asList(MoodUtils.MOOD_OPTIONS);
-
-        // Create and set the custom adapter
         MoodSpinnerAdapter adapter = new MoodSpinnerAdapter(
                 this,
                 android.R.layout.simple_spinner_item,
-                moodOptionsList, // Pass the List<String> instead of the array
+                moodOptionsList,
                 MoodUtils.MOOD_COLORS,
                 MoodUtils.MOOD_EMOJIS
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
     }
-
 }
