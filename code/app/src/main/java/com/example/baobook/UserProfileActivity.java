@@ -6,7 +6,6 @@ import com.example.baobook.model.MoodEvent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -16,8 +15,9 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.baobook.model.MoodEvent;
+import com.example.baobook.util.UserSession;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
@@ -74,7 +74,7 @@ public class UserProfileActivity extends AppCompatActivity implements
                         dataList.add(mood);
                         // Notify adapter to refresh ListView
                         moodArrayAdapter.notifyDataSetChanged();
-                        FirestoreHelper.firestoreMood(mood, this);
+//                        FirestoreHelper.firestoreMood(mood, this);
                     }
                 }
             });
@@ -84,9 +84,8 @@ public class UserProfileActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.profile);
 
-        //get current username from shared preferences
-        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        username = prefs.getString("Username", null);
+        UserSession session = new UserSession(this);
+        username = session.getUsername();
         TextView usernameText = findViewById(R.id.username_text);
         usernameText.setText(username);//set username
 
@@ -95,7 +94,7 @@ public class UserProfileActivity extends AppCompatActivity implements
         moodArrayAdapter = new MoodEventArrayAdapter(this, dataList);
         moodList.setAdapter(moodArrayAdapter);
 
-// Load user moods after setting adapter
+        // Load user moods after setting adapter
 //        FirestoreHelper.loadUserMoods(dataList, moodArrayAdapter, this);
 
         // Floating Action Button to add a new mood

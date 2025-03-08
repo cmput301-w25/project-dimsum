@@ -14,6 +14,7 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
+import com.example.baobook.Home;
 import com.example.baobook.model.User;
 
 public class SignupUsernameFragment extends Fragment {
@@ -34,39 +35,39 @@ public class SignupUsernameFragment extends Fragment {
             }
 
             // Check if username exists
-            FirestoreHelper.checkIfUsernameExists(username, new FirestoreHelper.UsernameExistsCallback() {
-                @Override
-                public void onResult(boolean exists) {
-                    if (exists) {
-                        Toast.makeText(requireActivity(), "Username already exists", Toast.LENGTH_SHORT).show();
-                        return;  //  Stop execution here if username exists
-                    }
-
-                    // If username is unique, create the user
-                    User user = new User(username, password);
-
-                    // Save username in SharedPreferences
-                    SharedPreferences prefs = requireActivity().getSharedPreferences("UserPrefs", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putString("Username", username);
-                    editor.apply();
+//            FirestoreHelper.checkIfUsernameExists(username, new FirestoreHelper.UsernameExistsCallback() {
+//                @Override
+//                public void onResult(boolean exists) {
+//                    if (exists) {
+//                        Toast.makeText(requireActivity(), "Username already exists", Toast.LENGTH_SHORT).show();
+//                        return;  //  Stop execution here if username exists
+//                    }
+//
+//                    // If username is unique, create the user
+//                    User user = new User(username, password);
+//
+//                    // Save username in SharedPreferences
+//                    SharedPreferences prefs = requireActivity().getSharedPreferences("UserPrefs", MODE_PRIVATE);
+//                    SharedPreferences.Editor editor = prefs.edit();
+//                    editor.putString("Username", username);
+//                    editor.apply();
 
                     // Add user to Firestore
-                    FirestoreHelper.addUser(user, new FirestoreHelper.UserCallback() {
-                        @Override
-                        public void onResult(boolean success) {
-                            if (success) {
-                                Toast.makeText(getActivity(), "Signup Successful", Toast.LENGTH_LONG).show();
-                                Intent intent = new Intent(getActivity(), Home.class);
-                                startActivity(intent);
-                                requireActivity().finish();
-                            } else {
-                                Toast.makeText(getActivity(), "Signup Failed. Try Again.", Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
-                }
-            });
+//                    FirestoreHelper.addUser(user, new FirestoreHelper.UserCallback() {
+//                        @Override
+//                        public void onResult(boolean success) {
+//                            if (success) {
+//                                Toast.makeText(getActivity(), "Signup Successful", Toast.LENGTH_LONG).show();
+//                                Intent intent = new Intent(getActivity(), Home.class);
+//                                startActivity(intent);
+//                                requireActivity().finish();
+//                            } else {
+//                                Toast.makeText(getActivity(), "Signup Failed. Try Again.", Toast.LENGTH_LONG).show();
+//                            }
+//                        }
+//                    });
+//                }
+//            });
         });
 
         return rootView;

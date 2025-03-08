@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.util.UserSession;
 
 import java.sql.Time;
 import java.text.SimpleDateFormat;
@@ -29,7 +30,10 @@ public class AddMoodActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.add_mood_event_fragment);
+        setContentView(R.layout.add_mood_event_fragment); // Use the same layout as the fragment
+
+        UserSession session = new UserSession(this);
+        String username = session.getUsername();
 
         Spinner editMood = findViewById(R.id.mood_spinner);
         TextView textDate = findViewById(R.id.text_date);
@@ -107,7 +111,8 @@ public class AddMoodActivity extends AppCompatActivity {
                     return;
                 }
 
-                MoodEvent moodEvent = new MoodEvent(mood, date, time, description, social);
+                // Create MoodEvent
+                MoodEvent moodEvent = new MoodEvent(username, mood, date, time, description, social);
 
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra("moodEvent", moodEvent);

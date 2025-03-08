@@ -5,6 +5,7 @@ import java.sql.Time;
 import java.util.Date;
 
 public class MoodEvent implements Serializable {
+    private String username;
     private Mood mood;
     private Date date;
     private Time time;
@@ -12,13 +13,21 @@ public class MoodEvent implements Serializable {
     private String trigger;
     private String social;
 
-    public MoodEvent(Mood mood, Date date, Time time, String description, String social) {
+    public MoodEvent(String username, Mood mood, Date date, Time time, String description, String social) {
+        this.username = username;
         this.mood = mood;
         this.date = date;
         this.time = time;
         this.description = description;
         this.trigger = trigger;
         this.social = social;
+    }
+
+    // Empty constructor for Firebase.
+    public MoodEvent() {}
+
+    public String getUsername() {
+        return username;
     }
 
     public Mood getMood() {
@@ -56,6 +65,7 @@ public class MoodEvent implements Serializable {
 
     /**
      * Edits the current mood event with new details.
+     * Username cannot be edited.
      *
      * @param newMood       The new mood (e.g., "Happy", "Sad", etc.).
      * @param newDate        The new date for the event.

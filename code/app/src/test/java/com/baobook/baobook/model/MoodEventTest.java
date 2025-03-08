@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.SocialSetting;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -22,6 +23,7 @@ import java.util.Date;
 @RunWith(JUnitParamsRunner.class)
 public class MoodEventTest {
 
+    private static final String username = "username";
     private static final Mood mood = Mood.HAPPINESS;
     private static final Date date = new Date("July 20, 2012");
     private static final Time time = Time.valueOf("00:00:00");
@@ -31,15 +33,14 @@ public class MoodEventTest {
     @Test
     @Parameters(method="getMoods")
     public void getMood_shouldReturnExpectedMood(Mood mood) {
-        MoodEvent cut = new MoodEvent(mood, date, time, description);
-        Mood actual = cut.getMood();
-        assertEquals(mood, actual);
+        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
+        assertEquals(mood, cut.getMood());
     }
 
     @Test
     @Parameters(method="getMoodTransitions")
     public void setMood_shouldChangeMood(Mood mood, Mood newMood) {
-        MoodEvent cut = new MoodEvent(mood, date, time, description);
+        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
         assertEquals(mood, cut.getMood());
 
         cut.setMood(newMood);
@@ -48,7 +49,7 @@ public class MoodEventTest {
 
     @Test
     public void getDate_shouldReturnExpectedDate() {
-        MoodEvent cut = new MoodEvent(mood, date, time, description);
+        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
         assertEquals(date, cut.getDate());
     }
 
@@ -56,7 +57,7 @@ public class MoodEventTest {
     public void setDate_shouldChangeDate() {
         Date newDate = new Date("March 4, 2025");
 
-        MoodEvent cut = new MoodEvent(mood, date, time, description);
+        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
         assertEquals(date, cut.getDate());
 
         cut.setDate(newDate);
@@ -65,7 +66,7 @@ public class MoodEventTest {
 
     @Test
     public void getTime_shouldReturnExpectedTime() {
-        MoodEvent cut = new MoodEvent(mood, date, time, description);
+        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
         assertEquals(time, cut.getTime());
     }
 
@@ -73,7 +74,7 @@ public class MoodEventTest {
     public void setTime_shouldChangeTime() {
         Time newTime = Time.valueOf("12:34:56");
 
-        MoodEvent cut = new MoodEvent(mood, date, time, description);
+        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
         assertEquals(time, cut.getTime());
 
         cut.setTime(newTime);
@@ -82,7 +83,7 @@ public class MoodEventTest {
 
     @Test
     public void getDescription_shouldReturnExpectedDescription() {
-        MoodEvent cut = new MoodEvent(mood, date, time, description);
+        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
         assertEquals(description, cut.getDescription());
     }
 
@@ -90,7 +91,7 @@ public class MoodEventTest {
     public void setDescription_shouldChangeDescription() {
         String newDescription = "i'm hungry";
 
-        MoodEvent cut = new MoodEvent(mood, date, time, description);
+        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
         assertEquals(description, cut.getDescription());
 
         cut.setDescription(newDescription);
@@ -99,7 +100,7 @@ public class MoodEventTest {
 
     @Test
     public void editMoodEvent_shouldChangeAllAttributes() {
-        MoodEvent cut = new MoodEvent(mood, date, time, description);
+        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
         assertEquals(mood, cut.getMood());
         assertEquals(date, cut.getDate());
         assertEquals(time, cut.getTime());
