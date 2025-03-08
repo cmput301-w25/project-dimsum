@@ -9,7 +9,6 @@ public class MoodEvent implements Serializable {
     private Date date;
     private Time time;
     private String description;
-    private String trigger;
     private String social;
 
     public MoodEvent(Mood mood, Date date, Time time, String description, String social) {
@@ -17,7 +16,6 @@ public class MoodEvent implements Serializable {
         this.date = date;
         this.time = time;
         this.description = description;
-        this.trigger = trigger;
         this.social = social;
     }
 
