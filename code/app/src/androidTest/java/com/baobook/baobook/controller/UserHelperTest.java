@@ -1,9 +1,6 @@
 package com.baobook.baobook.controller;
 
 import static org.junit.Assert.assertEquals;
-
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
@@ -11,7 +8,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.controller.UserHelper;
 import com.example.baobook.model.User;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.junit.After;
@@ -19,17 +15,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @RunWith(AndroidJUnit4.class)
 public class UserHelperTest {
     private UserHelper userHelper;
-    FirebaseFirestore db;
-
+    private FirebaseFirestore db;
     private static final String username1 = "username1";
     private static final String username2 = "username2";
 
@@ -38,160 +34,152 @@ public class UserHelperTest {
         userHelper = new UserHelper();
         db = FirebaseFirestore.getInstance();
         try {
-            // 10.0.2.2 is the special IP address to connect to the 'localhost' of
-            // the host computer from an Android emulator.
             db.useEmulator("10.0.2.2", 8080);
 
             FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS);
-            List<User> testUsers = new ArrayList<>(Arrays.asList(
+            List<User> testUsers = Arrays.asList(
                     new User(username1, "password"),
-                    new User(username2, "password"))
+                    new User(username2, "password")
             );
 
-            for (User u : testUsers) {
-                setUserInUsersCollection(u,
-                        e -> {
-                            throw new RuntimeException("Failed to instantiate test users.");
-                        });
+            for (User user : testUsers) {
+                setUserInUsersCollection(user).join();
             }
         } catch (IllegalStateException e) {
             // pass
         } catch (Exception e) {
-            fail("Failed to setup Firebase emulator.\n Is the emulator running? Use 'firebase emulators:start' to start the emulator.");
+            fail("Failed to setup Firebase emulator. Start it with 'firebase emulators:start'.");
         }
     }
 
     @After
-    public void tearDown() throws RuntimeException, InterruptedException {
+    public void tearDown() {
         FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS);
     }
 
     @Test
-    public void getUser_whenUserExists_shouldGetUser() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
+    public void getUser_whenUserExists_shouldGetUser() throws ExecutionException, InterruptedException, TimeoutException {
+        CompletableFuture<User> future = new CompletableFuture<>();
 
-        userHelper.getUser(username1,
-                user -> {
-                    assertEquals(user.getUsername(), username1);
-                    latch.countDown();
-                },
-                e -> {
-                    fail(e.getMessage());
-                    latch.countDown();
-                });
+        userHelper.getUser(username1, future::complete, future::completeExceptionally);
 
-        assertTrue("Test timed out", latch.await(5, TimeUnit.SECONDS));
+        User user = future.get(5, TimeUnit.SECONDS);
+        assertEquals(username1, user.getUsername());
     }
 
     @Test
-    public void getUser_whenUserDoesNotExist_shouldThrowRuntimeException() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-
+    public void getUser_whenUserDoesNotExist_shouldThrowRuntimeException() {
+        CompletableFuture<Exception> future = new CompletableFuture<>();
         String testUser = "not in users";
+
         userHelper.getUser(testUser,
-                user -> {
-                    fail("Error should have been thrown when getting a non-existent user.");
-                    latch.countDown();
-                },
-                e -> {
-                    assertEquals(e.getMessage(), "User not found: " + testUser);
-                    assertEquals(e.getClass(), RuntimeException.class);
-                    latch.countDown();
-                });
+                user -> future.completeExceptionally(new RuntimeException("User should not exist")),
+                future::complete
+        );
 
-        assertTrue("Test timed out", latch.await(5, TimeUnit.SECONDS));
+        try {
+            Exception e = future.get(5, TimeUnit.SECONDS);
+            assertEquals("User not found: " + testUser, e.getMessage());
+            assertEquals(RuntimeException.class, e.getClass());
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            fail(e.getMessage());
+        }
     }
 
     @Test
-    public void followUser_whenNotFollowingYet_shouldUpdateFollowingsAndFollowers() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(2);
+    public void followUser_whenNotFollowingYet_shouldUpdateFollowingsAndFollowers() throws ExecutionException, InterruptedException, TimeoutException {
+        CompletableFuture<Void> future = new CompletableFuture<>();
 
         userHelper.followUser(username1, username2,
                 aVoid -> {
-                    // Verify that:
-                    // - username2 is in username1's followings list
-                    // - username1 is in username2's followers list
-                    verifyUserInList(username2, username1, FirestoreConstants.FIELD_FOLLOWINGS, latch);
-                    verifyUserInList(username1, username2, FirestoreConstants.FIELD_FOLLOWERS, latch);
+                    CompletableFuture<Void> verify = verifyUserInList(username2, username1, FirestoreConstants.FIELD_FOLLOWINGS)
+                            .thenCombine(verifyUserInList(username1, username2, FirestoreConstants.FIELD_FOLLOWERS), (a, b) -> null);
+
+                    verify.whenComplete((result, ex) -> {
+                        if (ex != null) future.completeExceptionally(ex);
+                        else future.complete(null);
+                    });
                 },
-                e -> {
-                    fail(e.getMessage());
-                    latch.countDown();
-                    latch.countDown();
-                }
+                future::completeExceptionally
         );
 
-        assertTrue("Test timed out", latch.await(5, TimeUnit.SECONDS));
+        future.get(5, TimeUnit.SECONDS);
     }
 
     @Test
-    public void unfollowUser_whenFollowing_shouldUpdateFollowingsAndFollowers() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(4);
+    public void unfollowUser_whenFollowing_shouldUpdateFollowingsAndFollowers() throws ExecutionException, InterruptedException, TimeoutException {
+        CompletableFuture<Void> future = new CompletableFuture<>();
 
         userHelper.followUser(username1, username2,
                 aVoid -> {
-                    // Setup: Assert that username1 follows username2
-                    verifyUserInList(username1, username2, FirestoreConstants.FIELD_FOLLOWERS, latch);
-                    verifyUserInList(username2, username1, FirestoreConstants.FIELD_FOLLOWINGS, latch);
+                    CompletableFuture<Void> verifyBeforeUnfollow = verifyUserInList(username1, username2, FirestoreConstants.FIELD_FOLLOWERS)
+                            .thenCombine(verifyUserInList(username2, username1, FirestoreConstants.FIELD_FOLLOWINGS), (a, b) -> null);
 
-                    // Unfollow
-                    userHelper.unfollowUser(username1, username2,
-                            aVoid2 -> {
-                                // Assert that:
-                                // - username2 is not in username1's followings list
-                                // - username1 is not in username2's followers list
-                                db.collection(FirestoreConstants.COLLECTION_USERS).document(username1).get()
-                                        .addOnSuccessListener(documentSnapshot -> {
-                                            verifyUserNotInList(username2, username1, FirestoreConstants.FIELD_FOLLOWINGS, latch);
-                                            verifyUserNotInList(username1, username2, FirestoreConstants.FIELD_FOLLOWERS, latch);
-                                        })
-                                        .addOnFailureListener(e -> {
-                                            fail(e.getMessage());
-                                            latch.countDown();
-                                            latch.countDown();
-                                            latch.countDown();
-                                            latch.countDown();
-                                        });
-                            },
-                            e -> fail(e.getMessage()));
+                    verifyBeforeUnfollow.thenRun(() -> {
+                        userHelper.unfollowUser(username1, username2,
+                                aVoid2 -> {
+                                    CompletableFuture<Void> verifyAfterUnfollow = verifyUserNotInList(username2, username1, FirestoreConstants.FIELD_FOLLOWINGS)
+                                            .thenCombine(verifyUserNotInList(username1, username2, FirestoreConstants.FIELD_FOLLOWERS), (a, b) -> null);
+
+                                    verifyAfterUnfollow.whenComplete((result, ex) -> {
+                                        if (ex != null) future.completeExceptionally(ex);
+                                        else future.complete(null);
+                                    });
+                                },
+                                future::completeExceptionally);
+                    }).exceptionally(ex -> {
+                        future.completeExceptionally(ex);
+                        return null;
+                    });
                 },
-                e -> fail(e.getMessage())
+                future::completeExceptionally
         );
 
-        assertTrue("Test timed out", latch.await(10, TimeUnit.SECONDS));
+        future.get(10, TimeUnit.SECONDS);
     }
 
-    private void verifyUserInList(String currentUser, String targetUser, String targetField, CountDownLatch latch) {
+    private CompletableFuture<Void> verifyUserInList(String currentUser, String targetUser, String targetField) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
         db.collection(FirestoreConstants.COLLECTION_USERS).document(targetUser).get()
                 .addOnSuccessListener(documentSnapshot -> {
-                    // Assert that currentUser is present in targetUser's targetField array.
                     List<String> targetList = (List<String>) documentSnapshot.get(targetField);
-                    assertTrue(targetList.contains(currentUser));
-                    latch.countDown();
+                    if (targetList.contains(currentUser)) {
+                        future.complete(null);
+                    } else {
+                        future.completeExceptionally(new AssertionError("User not found in list"));
+                    }
                 })
-                .addOnFailureListener(e -> {
-                    fail(e.getMessage());
-                    latch.countDown();
-                });
+                .addOnFailureListener(future::completeExceptionally);
+
+        return future;
     }
 
-    private void verifyUserNotInList(String currentUser, String targetUser, String targetField, CountDownLatch latch) {
+    private CompletableFuture<Void> verifyUserNotInList(String currentUser, String targetUser, String targetField) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
         db.collection(FirestoreConstants.COLLECTION_USERS).document(targetUser).get()
                 .addOnSuccessListener(documentSnapshot -> {
-                    // Assert that currentUser is present in targetUser's targetField array.
                     List<String> targetList = (List<String>) documentSnapshot.get(targetField);
-                    assertFalse(targetList.contains(currentUser));
-                    latch.countDown();
+                    if (!targetList.contains(currentUser)) {
+                        future.complete(null);
+                    } else {
+                        future.completeExceptionally(new AssertionError("User should not be in the list"));
+                    }
                 })
-                .addOnFailureListener(e -> {
-                    fail(e.getMessage());
-                    latch.countDown();
-                });
+                .addOnFailureListener(future::completeExceptionally);
+
+        return future;
     }
 
-    private void setUserInUsersCollection(User user, OnFailureListener onFailure) {
+    private CompletableFuture<Void> setUserInUsersCollection(User user) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
         db.collection(FirestoreConstants.COLLECTION_USERS).document(user.getUsername())
                 .set(user)
-                .addOnFailureListener(onFailure);
+                .addOnSuccessListener(aVoid -> future.complete(null))
+                .addOnFailureListener(future::completeExceptionally);
+
+        return future;
     }
 }

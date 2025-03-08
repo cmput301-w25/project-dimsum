@@ -11,7 +11,7 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.List;
 
 /**
- * helps retrive user profiles, followers, following
+ * Handles users and user interactions, following and unfollowing users.
  */
 public class UserHelper {
     private final FirebaseFirestore db;
@@ -20,6 +20,12 @@ public class UserHelper {
         this.db = FirebaseFirestore.getInstance();
     }
 
+    /**
+     * Gets a User.
+     * @param username  The username of the User to get.
+     * @param onSuccess  Callback that is triggered when retrieval is successful.
+     * @param onFailure  Callback that is triggered when an error occurs.
+     */
     public void getUser(String username, OnSuccessListener<User> onSuccess, OnFailureListener onFailure) {
         db.collection(FirestoreConstants.COLLECTION_USERS).document(username).get()
                 .addOnSuccessListener(documentSnapshot -> {
@@ -35,6 +41,16 @@ public class UserHelper {
                 });
     }
 
+    /**
+     * Allows a user to follow another user by updating the "followings" and "followers" lists in Firestore.
+     *
+     * @param currentUser The username of the user who wants to follow another user.
+     * @param targetUser The username of the user being followed.
+     * @param onSuccess Callback that is triggered when the operation completes successfully.
+     * @param onFailure Callback that is triggered when an error occurs.
+     *
+     * @throws RuntimeException if one or both users do not exist in Firestore.
+     */
     public void followUser(String currentUser, String targetUser, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
         DocumentReference currentUserRef = db.collection(FirestoreConstants.COLLECTION_USERS).document(currentUser);
         DocumentReference targetUserRef = db.collection(FirestoreConstants.COLLECTION_USERS).document(targetUser);
@@ -66,6 +82,16 @@ public class UserHelper {
         }).addOnFailureListener(onFailure);
     }
 
+    /**
+     * Allows a user to unfollow another user by updating the "followings" and "followers" lists in Firestore.
+     *
+     * @param currentUser The username of the user who wants to unfollow another user.
+     * @param targetUser The username of the user being unfollowed.
+     * @param onSuccess Callback that is triggered when the operation completes successfully.
+     * @param onFailure Callback that is triggered when an error occurs.
+     *
+     * @throws RuntimeException if one or both users do not exist in Firestore.
+     */
     public void unfollowUser(String currentUser, String targetUser, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
         DocumentReference currentUserRef = db.collection(FirestoreConstants.COLLECTION_USERS).document(currentUser);
         DocumentReference targetUserRef = db.collection(FirestoreConstants.COLLECTION_USERS).document(targetUser);

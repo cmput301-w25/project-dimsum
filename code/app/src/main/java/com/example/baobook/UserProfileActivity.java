@@ -2,6 +2,7 @@ package com.example.baobook;
 
 import static com.example.baobook.model.MoodHistory.getDataList;
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.MoodEvent;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,7 +15,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.baobook.model.MoodEvent;
 import com.example.baobook.util.UserSession;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -73,7 +73,7 @@ public class UserProfileActivity extends AppCompatActivity implements
                         dataList.add(mood);
                         // Notify adapter to refresh ListView
                         moodArrayAdapter.notifyDataSetChanged();
-                        FirestoreHelper.firestoreMood(mood, this);
+//                        FirestoreHelper.firestoreMood(mood, this);
                     }
                 }
             });

@@ -13,6 +13,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.example.baobook.constant.SharedPreferencesConstants;
 import com.example.baobook.controller.AuthHelper;
 import com.example.baobook.constant.FirestoreConstants;
+import com.example.baobook.exception.AuthenticationException;
+import com.example.baobook.exception.UsernameAlreadyExistsException;
 import com.example.baobook.model.User;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -21,7 +23,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @RunWith(AndroidJUnit4.class)
@@ -56,8 +58,33 @@ public class AuthHelperTest {
     }
 
     @Test
-    public void registerUser_shouldStoreInFirestoreAndSharedPreferences() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
+    public void userExists_shouldReturnFalse_whenUserDoesNotExist() throws Exception {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        String username = "notregistered";
+
+        authHelper.userExists(username, future::complete, future::completeExceptionally);
+
+        assertFalse(future.get(5, TimeUnit.SECONDS));
+    }
+
+    @Test
+    public void userExists_shouldReturnTrue_whenUserExists() throws Exception {
+        CompletableFuture<Boolean> future = new CompletableFuture<>();
+        String username = "registered";
+        String password = "password";
+
+        authHelper.registerUser(username, password,
+                aVoid -> authHelper.userExists(username, future::complete, future::completeExceptionally),
+                future::completeExceptionally
+        );
+
+        assertTrue(future.get(5, TimeUnit.SECONDS));
+    }
+
+
+    @Test
+    public void registerUser_shouldStoreInFirestoreAndSharedPreferences() throws Exception {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         String testUsername = "user";
         String testPassword = "password";
 
@@ -73,87 +100,88 @@ public class AuthHelperTest {
                                 // Verify that UserSession is updated accordingly in SharedPreferences.
                                 assertEquals(testUsername, sharedPreferences.getString(SharedPreferencesConstants.USERNAME, null));
                                 assertTrue(sharedPreferences.getBoolean(SharedPreferencesConstants.IS_LOGGED_IN, false));
-                                latch.countDown();
+                                future.complete(null);
                             })
-                            .addOnFailureListener(e -> {
-                                fail(e.getMessage());
-                                latch.countDown();
-                            });
+                            .addOnFailureListener(future::completeExceptionally);
                 },
-                e -> {
-                    fail(e.getMessage());
-                    latch.countDown();
-                }
+                future::completeExceptionally
         );
-        assertTrue("Test timed out", latch.await(5, TimeUnit.SECONDS));
+
+        future.get(5, TimeUnit.SECONDS);
     }
 
     @Test
-    public void registerUser_shouldFailForDuplicateUsername() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
-        String testUsername = "existingUser";
-        String testPassword = "password";
+    public void registerUser_shouldFail_whenDuplicateUsername() throws Exception {
+        CompletableFuture<Exception> future = new CompletableFuture<>();
+        String username = "existingUser";
+        String password = "password";
 
         // Add the user to Firestore.
-        db.collection(FirestoreConstants.COLLECTION_USERS).document(testUsername)
-                .set(new User(testUsername, testPassword))
+        db.collection(FirestoreConstants.COLLECTION_USERS).document(username)
+                .set(new User(username, password))
                 .addOnSuccessListener(aVoid -> {
                     // Attempt to register a user with the same username.
-                    authHelper.registerUser(testUsername, "differentPassword",
-                            aVoid2 -> fail("User registration should have failed for duplicate username."),
-                            e -> assertEquals("Attempted to register a user with a taken username", e.getMessage())
+                    authHelper.registerUser(username, "differentPassword",
+                            aVoid2 -> future.completeExceptionally(new AssertionError("User registration should have failed for duplicate username.")),
+                            future::complete
                     );
-                    latch.countDown();
-                });
+                })
+                .addOnFailureListener(future::completeExceptionally);
 
-        assertTrue("Test timed out", latch.await(5, TimeUnit.SECONDS));
+        Exception e = future.get(5, TimeUnit.SECONDS);
+        assertEquals("Attempted to register a user with a taken username: " + username, e.getMessage());
+        assertEquals(UsernameAlreadyExistsException.class, e.getClass());
     }
 
+
     @Test
-    public void loginUser_shouldSucceedForCorrectLoginAndStoreInSharedPreferences() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
+    public void loginUser_shouldSucceedForCorrectLoginAndStoreInSharedPreferences() throws Exception {
+        CompletableFuture<Void> future = new CompletableFuture<>();
         String username = "user";
         String password = "password";
 
-        // Add the user to Firestore.
+        // Add the user to Firestore
         db.collection(FirestoreConstants.COLLECTION_USERS).document(username)
                 .set(new User(username, password))
                 .addOnSuccessListener(aVoid -> {
-                    // Log in with the same login.
+                    // Log in with correct credentials
                     authHelper.loginUser(username, password,
                             aVoid2 -> {
-                                // Verify that UserSession is updated accordingly in SharedPreferences.
+                                // Verify SharedPreferences is updated
                                 assertEquals(username, sharedPreferences.getString(SharedPreferencesConstants.USERNAME, null));
                                 assertTrue(sharedPreferences.getBoolean(SharedPreferencesConstants.IS_LOGGED_IN, false));
+                                future.complete(null);
                             },
-                            e -> fail(e.getMessage())
+                            e -> future.completeExceptionally(new AssertionError("Login failed: " + e.getMessage()))
                     );
-                    latch.countDown();
                 });
 
-        assertTrue("Test timed out", latch.await(5, TimeUnit.SECONDS));
+        future.get(5, TimeUnit.SECONDS);
     }
 
+
     @Test
-    public void loginUser_shouldFailForIncorrectPassword() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
+    public void loginUser_shouldFail_whenIncorrectPassword() throws Exception {
+        CompletableFuture<Exception> future = new CompletableFuture<>();
         String username = "user";
         String password = "password";
 
-        // Add the user to Firestore.
+        // Add the user to Firestore
         db.collection(FirestoreConstants.COLLECTION_USERS).document(username)
                 .set(new User(username, password))
                 .addOnSuccessListener(aVoid -> {
-                    // Log in with the same login.
+                    // Attempt to log in with the wrong password
                     authHelper.loginUser(username, "differentPassword",
-                            aVoid2 -> fail("Login succeeded for incorrect password."),
-                            e -> assertEquals("Incorrect password for user: " + username, e.getMessage())
-                    );
-                    latch.countDown();
+                            aVoid2 -> future.completeExceptionally(new AssertionError("Login succeeded for incorrect password.")),
+                            future::complete);
                 });
 
-        assertTrue("Test timed out", latch.await(5, TimeUnit.SECONDS));
+        // Wait for the Firestore operation & assert the error message
+        Exception e = future.get(5, TimeUnit.SECONDS);
+        assertEquals("Incorrect password for user: " + username, e.getMessage());
+        assertEquals(AuthenticationException.class, e.getClass());
     }
+
 
     public void logoutUser_shouldEndUserSessionInSharedPreferences() {
         String username = "user";
