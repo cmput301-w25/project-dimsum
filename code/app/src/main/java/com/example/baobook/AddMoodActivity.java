@@ -36,6 +36,7 @@ public class AddMoodActivity extends AppCompatActivity {
     private Calendar selectedTime = Calendar.getInstance();
     private ImageView capImage;
     private ImageButton cameraButton;
+    private Bitmap capturedImage;
 
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -50,8 +51,8 @@ public class AddMoodActivity extends AppCompatActivity {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     Bundle extras = result.getData().getExtras();
                     if (extras != null) {
-                        Bitmap imageBitmap = (Bitmap) extras.get("data");
-                        capImage.setImageBitmap(imageBitmap);
+                        capturedImage = (Bitmap) extras.get("data"); // Store image
+                        capImage.setImageBitmap(capturedImage);  // Display image
                     } else {
                         Toast.makeText(this, "Failed to retrieve image", Toast.LENGTH_SHORT).show();
                     }
