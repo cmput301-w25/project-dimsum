@@ -218,11 +218,5 @@ public class AddMoodActivity extends AppCompatActivity {
         spinner.setAdapter(adapter);
 
     }
-}
 
-        // Set default selection
-        if (!moodOptionsList.isEmpty()) {
-            spinner.setSelection(0);
-        }
-    }
 }
