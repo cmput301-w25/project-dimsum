@@ -19,7 +19,6 @@ import androidx.fragment.app.DialogFragment;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 
-import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -135,8 +134,8 @@ public class EditFragment extends DialogFragment {
                     String newDescription = editDescription.getText().toString();
                     String newSocial = editSocial.getSelectedItem().toString();
 
-                    // Update the mood Event
-                    moodEvent.editMoodEvent(newMood, selectedDate.getTime(), new Time(selectedTime.getTimeInMillis()), newDescription, newSocial);
+                    // Update the MoodEvent
+                    moodEvent.editMoodEvent(newMood, selectedDate.getTime(), selectedTime.getTime(), newDescription, newSocial);
 
                     // Notify the listener
                     listener.onMoodEdited(moodEvent);

@@ -13,13 +13,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 
-import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 public class AddMoodActivity extends AppCompatActivity {
 
@@ -100,15 +100,20 @@ public class AddMoodActivity extends AppCompatActivity {
                 }
 
                 Date date = selectedDateTime.getTime();
-                Time time = new Time(selectedDateTime.getTimeInMillis());
+                Date time = selectedDateTime.getTime(); // Use java.util.Date for time
 
                 if (selectedDateTime.after(currentDateTime)) {
                     Toast.makeText(this, "Date and time cannot be in the future", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                MoodEvent moodEvent = new MoodEvent(mood, date, time, description, social);
+                // Generate a unique ID for the MoodEvent
+                String id = UUID.randomUUID().toString();
 
+                // Create the MoodEvent with the generated ID
+                MoodEvent moodEvent = new MoodEvent(id, mood, date, time, description, social);
+
+                // Pass the MoodEvent back to MoodHistory
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra("moodEvent", moodEvent);
                 setResult(RESULT_OK, resultIntent);
