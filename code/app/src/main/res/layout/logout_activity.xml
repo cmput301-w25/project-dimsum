@@ -27,6 +27,7 @@
         android:padding="16dp">
 
         <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/confirm_logout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/yes"
@@ -36,6 +37,7 @@
             />
 
         <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/reject_logout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/no"

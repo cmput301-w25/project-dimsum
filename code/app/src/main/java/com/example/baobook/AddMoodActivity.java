@@ -22,15 +22,19 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import java.sql.Time;
+import com.example.baobook.model.Mood;
+import com.example.baobook.model.MoodEvent;
+
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 public class AddMoodActivity extends AppCompatActivity {
+
 
     private Calendar selectedDate = Calendar.getInstance();
     private Calendar selectedTime = Calendar.getInstance();
@@ -61,15 +65,20 @@ public class AddMoodActivity extends AppCompatActivity {
                 }
             });
 
+    private final Calendar selectedDateTime = Calendar.getInstance(); // Combines date and time
+    private final Calendar currentDateTime = Calendar.getInstance(); // Stores the current time at launch
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.add_mood_event_fragment); // Use the same layout as the fragment
+        setContentView(R.layout.add_mood_event_fragment);
 
-        Spinner editStates = findViewById(R.id.spinner_states);
+        Spinner editMood = findViewById(R.id.mood_spinner);
         TextView textDate = findViewById(R.id.text_date);
         TextView textTime = findViewById(R.id.text_time);
         TextView editDescription = findViewById(R.id.edit_description);
+
         capImage = findViewById(R.id.captured_image);
         cameraButton = findViewById(R.id.openCamera);
 
@@ -101,19 +110,33 @@ public class AddMoodActivity extends AppCompatActivity {
         });
 
 
+        Spinner editSocial = findViewById(R.id.social_situation);
+
+        // Pre-fill Date & Time fields
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+
+        textDate.setText(dateFormat.format(selectedDateTime.getTime()));
+        textTime.setText(timeFormat.format(selectedDateTime.getTime()));
+
+
         // Date Picker
         textDate.setOnClickListener(v -> {
             DatePickerDialog datePickerDialog = new DatePickerDialog(
                     this,
-                    (view1, year, month, dayOfMonth) -> {
-                        selectedDate.set(year, month, dayOfMonth);
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                        textDate.setText(dateFormat.format(selectedDate.getTime()));
+                    (view, year, month, dayOfMonth) -> {
+                        selectedDateTime.set(year, month, dayOfMonth);
+                        if (selectedDateTime.after(currentDateTime)) {
+                            Toast.makeText(this, "Cannot select a future date", Toast.LENGTH_SHORT).show();
+                            selectedDateTime.setTime(currentDateTime.getTime());
+                        }
+                        textDate.setText(dateFormat.format(selectedDateTime.getTime()));
                     },
-                    selectedDate.get(Calendar.YEAR),
-                    selectedDate.get(Calendar.MONTH),
-                    selectedDate.get(Calendar.DAY_OF_MONTH)
+                    selectedDateTime.get(Calendar.YEAR),
+                    selectedDateTime.get(Calendar.MONTH),
+                    selectedDateTime.get(Calendar.DAY_OF_MONTH)
             );
+            datePickerDialog.getDatePicker().setMaxDate(currentDateTime.getTimeInMillis());
             datePickerDialog.show();
         });
 
@@ -121,14 +144,18 @@ public class AddMoodActivity extends AppCompatActivity {
         textTime.setOnClickListener(v -> {
             TimePickerDialog timePickerDialog = new TimePickerDialog(
                     this,
-                    (view12, hourOfDay, minute) -> {
-                        selectedTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                        selectedTime.set(Calendar.MINUTE, minute);
-                        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                        textTime.setText(timeFormat.format(selectedTime.getTime()));
+                    (view, hourOfDay, minute) -> {
+                        selectedDateTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
+                        selectedDateTime.set(Calendar.MINUTE, minute);
+
+                        if (selectedDateTime.after(currentDateTime)) {
+                            Toast.makeText(this, "Cannot select a future time", Toast.LENGTH_SHORT).show();
+                            selectedDateTime.setTime(currentDateTime.getTime());
+                        }
+                        textTime.setText(timeFormat.format(selectedDateTime.getTime()));
                     },
-                    selectedTime.get(Calendar.HOUR_OF_DAY),
-                    selectedTime.get(Calendar.MINUTE),
+                    selectedDateTime.get(Calendar.HOUR_OF_DAY),
+                    selectedDateTime.get(Calendar.MINUTE),
                     true
             );
             timePickerDialog.show();
@@ -137,55 +164,65 @@ public class AddMoodActivity extends AppCompatActivity {
         // Save Button
         findViewById(R.id.save_button).setOnClickListener(v -> {
             try {
-                String state = editStates.getSelectedItem().toString();
+                Mood mood = Mood.fromString(editMood.getSelectedItem().toString());
                 String dateStr = textDate.getText().toString().trim();
                 String timeStr = textTime.getText().toString().trim();
                 String description = editDescription.getText().toString().trim();
+                String social = editSocial.getSelectedItem().toString();
 
                 if (dateStr.equals("Select Date") || timeStr.equals("Select Time")) {
                     Toast.makeText(this, "Please select date and time", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                Date date = selectedDate.getTime();
-                Time time = new Time(selectedTime.getTimeInMillis());
+                Date date = selectedDateTime.getTime();
+                Date time = selectedDateTime.getTime(); // Use java.util.Date for time
 
-                // Create MoodEvent with state, date, time, and description
-                MoodEvent mood = new MoodEvent(state, date, time, description);
+                if (selectedDateTime.after(currentDateTime)) {
+                    Toast.makeText(this, "Date and time cannot be in the future", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
-                // Return the MoodEvent to the calling activity
+                // Generate a unique ID for the MoodEvent
+                String id = UUID.randomUUID().toString();
+
+                // Create the MoodEvent with the generated ID
+                MoodEvent moodEvent = new MoodEvent(id, mood, date, time, description, social);
+
+                // Pass the MoodEvent back to MoodHistory
                 Intent resultIntent = new Intent();
-                resultIntent.putExtra("moodEvent", mood);
+                resultIntent.putExtra("moodEvent", moodEvent);
                 setResult(RESULT_OK, resultIntent);
                 finish();
-
             } catch (Exception e) {
                 e.printStackTrace();
-                Toast.makeText(this, "Invalid data!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
 
-        // Cancel Button
         findViewById(R.id.cancel_button).setOnClickListener(v -> finish());
 
-        // Initialize the Spinner with MoodUtils
-        initializeSpinner(editStates);
+        initializeSpinner(editMood);
     }
 
-    // Helper method to initialize the Spinner with MoodUtils data
     private void initializeSpinner(Spinner spinner) {
-        // Convert the String[] array to a List<String>
         List<String> moodOptionsList = Arrays.asList(MoodUtils.MOOD_OPTIONS);
-
-        // Create and set the custom adapter
         MoodSpinnerAdapter adapter = new MoodSpinnerAdapter(
                 this,
                 android.R.layout.simple_spinner_item,
-                moodOptionsList, // Pass the List<String> instead of the array
+                moodOptionsList,
                 MoodUtils.MOOD_COLORS,
                 MoodUtils.MOOD_EMOJIS
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
+
+    }
+}
+
+        // Set default selection
+        if (!moodOptionsList.isEmpty()) {
+            spinner.setSelection(0);
+        }
     }
 }

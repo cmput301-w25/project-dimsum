@@ -1,8 +1,15 @@
 package com.example.baobook;
 
+import static com.example.baobook.model.MoodHistory.getDataList;
+import com.example.baobook.model.MoodEvent;
+
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.widget.Button;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -10,22 +17,25 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
-public class MoodHistory extends AppCompatActivity implements
+/**class where user can view their profile including their own mood history. Has options to view each mood,
+ * delete, and edit mood events. User can still add a mood, and go to the home moodHistory
+ *
+ */
+public class UserProfileActivity extends AppCompatActivity implements
         MoodEventOptionsFragment.MoodEventOptionsDialogListener,
         EditFragment.EditMoodEventDialogListener
 {
 
-    private FloatingActionButton addButton;
-
     // Static list to store moods across activities
-    private static final ArrayList<MoodEvent> dataList = new ArrayList<>();
+    private final ArrayList<MoodEvent> dataList = new ArrayList<>();
     private MoodEventArrayAdapter moodArrayAdapter;
-    private ListView moodList;
-
+    private FirebaseFirestore db;
+    private String username;
     @Override
     public void onEditMoodEvent(MoodEvent mood) {
         EditFragment fragment = new EditFragment(mood);
@@ -53,31 +63,18 @@ public class MoodHistory extends AppCompatActivity implements
         Toast.makeText(this, "Mood deleted!", Toast.LENGTH_SHORT).show();
     }
 
-    private void sortMoodHistoryByDate() {
-        Collections.sort(dataList, (mood1, mood2) -> {
-            int dateComparison = mood2.getDate().compareTo(mood1.getDate());
-            if (dateComparison != 0) {
-                return dateComparison;
-            }
-            // If dates are equal, compare times
-            return mood2.getTime().compareTo(mood1.getTime());
-        });
-    }
-
     private final ActivityResultLauncher<Intent> addMoodLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                     // Get the new mood event from AddMoodActivity
-                    MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("moodEvent");
+                    MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("MoodEvent");
                     if (mood != null) {
                         // Add mood to static list
-                        getDataList().add(mood);
-                        // Sort the list in reverse chronological order
-                        sortMoodHistoryByDate();
+                        dataList.add(mood);
                         // Notify adapter to refresh ListView
                         moodArrayAdapter.notifyDataSetChanged();
-                        Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
+                        FirestoreHelper.firestoreMood(mood, this);
                     }
                 }
             });
@@ -85,37 +82,63 @@ public class MoodHistory extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_mood_history);
+        setContentView(R.layout.profile);
+
+        //get current username from shared preferences
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        username = prefs.getString("Username", null);
+        TextView usernameText = findViewById(R.id.username_text);
+        usernameText.setText(username);//set username
 
         // Initialize ListView and Adapter
-        moodList = findViewById(R.id.mood_history_list);
+        ListView moodList = findViewById(R.id.mood_history_list);
         moodArrayAdapter = new MoodEventArrayAdapter(this, dataList);
         moodList.setAdapter(moodArrayAdapter);
 
-        // Sort the mood history before displaying
-        sortMoodHistoryByDate();
-
-        // Notify adapter of any new moods (useful when returning to this activity)
-        moodArrayAdapter.notifyDataSetChanged();
+// Load user moods after setting adapter
+//        FirestoreHelper.loadUserMoods(dataList, moodArrayAdapter, this);
 
         // Floating Action Button to add a new mood
-        addButton = findViewById(R.id.add_button);
+        FloatingActionButton addButton = findViewById(R.id.add_button);
         addButton.setOnClickListener(v -> {
             // Launch AddMoodActivity
-            Intent intent = new Intent(MoodHistory.this, AddMoodActivity.class);
+            Intent intent = new Intent(UserProfileActivity.this, AddMoodActivity.class);
             addMoodLauncher.launch(intent);
         });
-
+        //edit mood when mood is selected
         moodList.setOnItemClickListener((parent, view, position, id) -> {
             MoodEvent selectedMoodEvent = dataList.get(position);
             MoodEventOptionsFragment fragment = new MoodEventOptionsFragment(selectedMoodEvent);
             fragment.show(getSupportFragmentManager(), "MovieOptionsDialog");
         });
+        //logout option
+        Button logout = findViewById(R.id.logout_button);
+        logout.setOnClickListener(v->{
+            //launch logout activity
+            Intent intent = new Intent(UserProfileActivity.this, LogoutActivity.class);
+            startActivity(intent);
+            finish();
+        });
+        Button home = findViewById(R.id.home_button);
+        home.setOnClickListener(v-> {
+            //launch home activity
+            Intent intent = new Intent(UserProfileActivity.this, Home.class);
+            startActivity(intent);
+            finish();
+        });
 
+        // Add click handler for mood history button
+        Button moodHistoryButton = findViewById(R.id.mood_history_button);
+        moodHistoryButton.setOnClickListener(v -> {
+            // Launch MoodHistory activity
+            Intent intent = new Intent(UserProfileActivity.this, com.example.baobook.model.MoodHistory.class);
+            startActivity(intent);
+        });
     }
-
-    // Getter method to access dataList from Home or other activities
-    public static ArrayList<MoodEvent> getDataList() {
-        return dataList;
-    }
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        FirestoreHelper.loadUserMoods(username, dataList, moodArrayAdapter, this);
+//    }
 }
+

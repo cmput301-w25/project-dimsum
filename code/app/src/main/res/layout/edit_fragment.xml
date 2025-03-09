@@ -6,7 +6,7 @@
     android:padding="16dp">
 
     <Spinner
-        android:id="@+id/spinner_states"
+        android:id="@+id/mood_spinner"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:entries="@array/mood_options"/>
@@ -31,12 +31,18 @@
         android:gravity="center"
         android:textColor="@android:color/black" />
 
+    <Spinner
+        android:id="@+id/social_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:entries="@array/social_options"/>
+
 
     <EditText
         android:id="@+id/edit_description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter Description"
+        android:hint="Enter Trigger"
         android:inputType="text" />
 
 </LinearLayout>
