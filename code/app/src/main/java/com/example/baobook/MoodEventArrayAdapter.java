@@ -1,12 +1,16 @@
 package com.example.baobook;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.GradientDrawable;
+import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -22,7 +26,10 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
     public MoodEventArrayAdapter(Context context, ArrayList<MoodEvent> moods) {
         super(context, 0, moods);
     }
-
+    private Bitmap base64ToBitmap(String base64Image) {
+        byte[] decodedBytes = Base64.decode(base64Image, Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+    }
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -43,6 +50,7 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
         TextView descriptionText = view.findViewById(R.id.mood_description);
         TextView social = view.findViewById(R.id.social_situation);
         View rootLayout = view.findViewById(R.id.mood_item_root);
+        ImageView moodImage = view.findViewById(R.id.mood_image);
 
         if (moodEvent != null) {
             // Format date and time
@@ -60,6 +68,16 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
             descriptionText.setText("Trigger: " + moodEvent.getDescription());
             social.setText("Social: " + moodEvent.getSocial());
 
+
+
+            if (moodEvent.getBase64image() != null && !moodEvent.getBase64image().isEmpty()) {
+                Log.d("MoodEventArrayAdapter", "Base64 Image Found: " + moodEvent.getBase64image().substring(0, 30)); // Show only first 30 chars
+                Bitmap bitmap = base64ToBitmap(moodEvent.getBase64image());
+                moodImage.setImageBitmap(bitmap);
+            } else {
+                Log.d("MoodEventArrayAdapter", "No Image Found, using default.");
+                moodImage.setImageResource(R.drawable.cat_image);
+            }
 
             GradientDrawable drawable = (GradientDrawable) rootLayout.getBackground();
             if (drawable != null) {
