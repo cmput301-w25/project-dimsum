@@ -40,6 +40,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.activity)
     implementation(libs.constraintlayout)
+    implementation(libs.jackson.databind)
     testImplementation(libs.junit)
     testImplementation(libs.junit.params)
     testImplementation(libs.mockito.core)

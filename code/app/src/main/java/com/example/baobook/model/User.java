@@ -22,6 +22,13 @@ public class User {
         this.followings = new ArrayList<>();
     }
 
+    public User(String username, String password, ArrayList<String> followers, ArrayList<String> following) {
+        this.username = username;
+        this.password = password;
+        this.followers = followers;
+        this.followings = following;
+    }
+
     public void setUsername(String username) {
         this.username = username;
     }

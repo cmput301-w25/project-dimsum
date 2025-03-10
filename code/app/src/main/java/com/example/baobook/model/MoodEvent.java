@@ -1,9 +1,13 @@
 package com.example.baobook.model;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.Serializable;
 import java.util.Date;
 
 public class MoodEvent implements Serializable {
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private String username;
     private String id; // Unique ID for Firestore
     private Mood mood;
@@ -91,5 +95,23 @@ public class MoodEvent implements Serializable {
         setTime(newTime);
         setDescription(newDescription);
         setSocial(newSocial);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj.getClass() == MoodEvent.class) {
+            MoodEvent moodEvent = (MoodEvent) obj;
+            return this.getId().equals(moodEvent.getId());  // same MoodEvent id
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return objectMapper.writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to map MoodEvent to string.");
+        }
     }
 }
