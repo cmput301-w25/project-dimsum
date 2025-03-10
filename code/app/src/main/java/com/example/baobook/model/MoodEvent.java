@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.sql.Time;
+import java.util.UUID;
 
 public class MoodEvent implements Serializable {
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -27,6 +29,17 @@ public class MoodEvent implements Serializable {
         this.time = time;
         this.description = description;
         this.social = social;
+    }
+
+    // Constructor for testing - converts java.sql.Time to java.util.Date
+    public MoodEvent(String username, Mood mood, Date date, Time time, String description) {
+        this.username = username;
+        this.id = UUID.randomUUID().toString();
+        this.mood = mood;
+        this.date = date;
+        this.time = new Date(time.getTime()); // Convert sql.Time to util.Date
+        this.description = description;
+        this.social = "ALONE";
     }
 
     public String getId() {
@@ -89,10 +102,17 @@ public class MoodEvent implements Serializable {
      * @param newTime       The new time for the event.
      * @param newDescription The new description for the event.
      */
+    public void editMoodEvent(Mood newMood, Date newDate, Time newTime, String newDescription) {
+        setMood(newMood);
+        setDate(newDate);
+        setTime(new Date(newTime.getTime()));
+        setDescription(newDescription);
+    }
+
     public void editMoodEvent(Mood newMood, Date newDate, Date newTime, String newDescription, String newSocial) {
         setMood(newMood);
         setDate(newDate);
-        setTime(newTime);
+        setTime(new Date(newTime.getTime()));
         setDescription(newDescription);
         setSocial(newSocial);
     }
