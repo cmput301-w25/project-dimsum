@@ -1,5 +1,6 @@
 package com.example.baobook;
 
+import com.example.baobook.controller.FirestoreHelper;
 import com.example.baobook.model.MoodEvent;
 
 import android.content.Intent;
@@ -43,8 +44,7 @@ public class UserProfileActivity extends AppCompatActivity implements
     public void onMoodEdited(MoodEvent updatedMoodEvent) {
         for (int i = 0; i < dataList.size(); i++) {
             MoodEvent mood = dataList.get(i);
-            if (mood.getDate().equals(updatedMoodEvent.getDate()) &&
-                    mood.getTime().equals(updatedMoodEvent.getTime())) {
+            if (mood.getId().equals(updatedMoodEvent.getId())) {
                 dataList.set(i, updatedMoodEvent);
                 moodArrayAdapter.notifyDataSetChanged();
                 Toast.makeText(this, "Mood Event updated!", Toast.LENGTH_SHORT).show();
@@ -127,7 +127,7 @@ public class UserProfileActivity extends AppCompatActivity implements
         Button moodHistoryButton = findViewById(R.id.mood_history_button);
         moodHistoryButton.setOnClickListener(v -> {
             // Launch MoodHistory activity
-            Intent intent = new Intent(UserProfileActivity.this, com.example.baobook.model.MoodHistory.class);
+            Intent intent = new Intent(UserProfileActivity.this, MoodHistory.class);
             startActivity(intent);
         });
     }

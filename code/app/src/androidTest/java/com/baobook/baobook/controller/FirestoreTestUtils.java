@@ -10,11 +10,16 @@ import java.util.concurrent.TimeoutException;
 public class FirestoreTestUtils {
     private static final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    public static void clearFirestoreCollection(String collection) {
+    public static CompletableFuture<Void> clearFirestoreCollection(String collection) {
         CompletableFuture<Void> future = new CompletableFuture<>();
 
         db.collection(collection).get()
                 .addOnSuccessListener(querySnapshot -> {
+                    if (querySnapshot.isEmpty()) {
+                        future.complete(null);
+                        return;
+                    }
+
                     WriteBatch batch = db.batch();
                     querySnapshot.getDocuments().forEach(doc -> batch.delete(doc.getReference()));
 
@@ -24,10 +29,7 @@ public class FirestoreTestUtils {
                 })
                 .addOnFailureListener(future::completeExceptionally);
 
-        try {
-            future.get(10, TimeUnit.SECONDS); // Ensures Firestore clears before continuing
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            throw new RuntimeException("Failed to clear Firestore collection: " + collection, e);
-        }
+        return future;
     }
+
 }

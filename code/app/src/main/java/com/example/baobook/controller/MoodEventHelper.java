@@ -31,9 +31,7 @@ public class MoodEventHelper {
     public void getMoodEventsByUser(String username, OnSuccessListener<List<MoodEvent>> onSuccess, OnFailureListener onFailure) {
         db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
                 .whereEqualTo(FirestoreConstants.FIELD_USERNAME, username)
-                // Todo: Currently, we store date and time in separate fields.
-                //  Store this in one field so that we can easily sort MoodEvents by "timestamp" (date and time).
-                .orderBy("date", Query.Direction.DESCENDING) // Order by newest date first
+                .orderBy("timestamp", Query.Direction.DESCENDING) // Order by newest date first
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     List<MoodEvent> moodEvents = new ArrayList<>();
@@ -54,7 +52,7 @@ public class MoodEventHelper {
      * @param onFailure  Callback triggered on failure.
      */
     public void getMoodEventsByFollowing(String username, OnSuccessListener<List<MoodEvent>> onSuccess, OnFailureListener onFailure) {
-        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
+        db.collection(FirestoreConstants.COLLECTION_USERS)
                 .document(username)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
@@ -70,7 +68,7 @@ public class MoodEventHelper {
                         // Get mood events from all followed users.
                         db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
                                 .whereIn(FirestoreConstants.FIELD_USERNAME, followingList)
-                                 .orderBy("date", Query.Direction.DESCENDING) // Order by newest date first.
+                                 .orderBy("timestamp", Query.Direction.DESCENDING) // Order by newest date first.
                                 .get()
                                 .addOnSuccessListener(querySnapshot -> {
                                     List<MoodEvent> moodEvents = new ArrayList<>();
@@ -82,9 +80,78 @@ public class MoodEventHelper {
                                 })
                                 .addOnFailureListener(onFailure);
                     } else {
-                        onFailure.onFailure(new RuntimeException("User not found"));
+                        onFailure.onFailure(new RuntimeException("User not found: " + username));
                     }
                 })
+                .addOnFailureListener(onFailure);
+    }
+
+
+    /**
+     * Publishes a new MoodEvent to Firestore.
+     * Checks if the MoodEvent with the given ID already exists.
+     * If it exists, the operation fails. Otherwise, the MoodEvent is added to Firestore.
+     *
+     * @param moodEvent The {@link MoodEvent} to be published.
+     * @param onSuccess Callback triggered when the MoodEvent is successfully published.
+     * @param onFailure Callback triggered when publishing fails (e.g., MoodEvent already exists).
+     */
+    public void publishMood(MoodEvent moodEvent, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
+        String id = moodEvent.getId();
+        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS).document(id).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        onFailure.onFailure(new RuntimeException("Mood event already exists: " + documentSnapshot.toObject(MoodEvent.class)));
+                        return;
+                    }
+
+                    db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS).document(id)
+                            .set(moodEvent)
+                            .addOnSuccessListener(aVoid -> onSuccess.onSuccess(null))
+                            .addOnFailureListener(onFailure);
+                })
+                .addOnFailureListener(onFailure);
+    }
+
+    /**
+     * Updates an existing MoodEvent in Firestore.
+     * Checks if the MoodEvent exists in Firestore. If it does not exist,
+     * the operation fails. Otherwise, the existing MoodEvent is updated with new data.
+     *
+     * @param moodEvent The {@link MoodEvent} containing updated data.
+     * @param onSuccess Callback triggered when the MoodEvent is successfully updated.
+     * @param onFailure Callback triggered when updating fails (e.g., MoodEvent does not exist).
+     */
+    public void updateMood(MoodEvent moodEvent, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
+        String id = moodEvent.getId();
+        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS).document(id).get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (!documentSnapshot.exists()) {
+                        onFailure.onFailure(new RuntimeException("Mood event doesn't exist."));
+                        return;
+                    }
+
+                    db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS).document(id)
+                            .set(moodEvent)
+                            .addOnSuccessListener(aVoid -> onSuccess.onSuccess(null))
+                            .addOnFailureListener(onFailure);
+                })
+                .addOnFailureListener(onFailure);
+    }
+
+    /**
+     * Updates an existing MoodEvent in Firestore.
+     * Checks if the MoodEvent exists in Firestore. If it does not exist,
+     * the operation fails. Otherwise, the existing MoodEvent is updated with new data.
+     *
+     * @param moodEvent The {@link MoodEvent} containing updated data.
+     * @param onSuccess Callback triggered when the MoodEvent is successfully updated.
+     * @param onFailure Callback triggered when updating fails (e.g., MoodEvent does not exist).
+     */
+    public void deleteMood(MoodEvent moodEvent, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
+        String id = moodEvent.getId();
+        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS).document(id).delete()
+                .addOnSuccessListener(onSuccess)
                 .addOnFailureListener(onFailure);
     }
 }

@@ -1,8 +1,11 @@
 package com.example.baobook.model;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Manager class for handling mood history globally.
@@ -29,6 +32,11 @@ public class MoodHistoryManager {
         moodList.add(mood);
     }
 
+    // Add a single mood to the manager's list
+    public void addAllMoods(List<MoodEvent> moods) {
+        moodList.addAll(moods);
+    }
+
     // Return the raw list (unfiltered)
     public ArrayList<MoodEvent> getMoodList() {
         return moodList;
@@ -41,13 +49,7 @@ public class MoodHistoryManager {
 
     // Sort the manager's list in reverse chronological order
     public void sortByDate() {
-        Collections.sort(moodList, (m1, m2) -> {
-            int dateComparison = m2.getDate().compareTo(m1.getDate());
-            if (dateComparison != 0) {
-                return dateComparison;
-            }
-            return m2.getTime().compareTo(m1.getTime());
-        });
+        moodList.sort(Comparator.comparing(MoodEvent::getDateTime).reversed());
     }
 
     // Existing single-mood filter (optional)
@@ -88,11 +90,11 @@ public class MoodHistoryManager {
 
         // 2) Filter by last 7 days
         if (filterRecentWeek) {
-            long oneWeekAgo = System.currentTimeMillis() - (7L * 24 * 60 * 60 * 1000);
+            OffsetDateTime oneWeekAgo = OffsetDateTime.now().minusWeeks(1);
             ArrayList<MoodEvent> toRemove = new ArrayList<>();
             for (MoodEvent me : temp) {
-                Date dateTime = combineDateAndTime(me.getDate(), me.getTime());
-                if (dateTime.getTime() < oneWeekAgo) {
+                OffsetDateTime dateTime = me.getDateTime();
+                if (dateTime.isBefore(oneWeekAgo)) {
                     toRemove.add(me);
                 }
             }
@@ -114,11 +116,7 @@ public class MoodHistoryManager {
         }
 
         // Sort descending by date/time
-        Collections.sort(temp, (m1, m2) -> {
-            int dateComparison = m2.getDate().compareTo(m1.getDate());
-            if (dateComparison != 0) return dateComparison;
-            return m2.getTime().compareTo(m1.getTime());
-        });
+        temp.sort(Comparator.comparing(MoodEvent::getDateTime).reversed());
 
         return temp;
     }
@@ -167,13 +165,5 @@ public class MoodHistoryManager {
             }
         }
         return dp[len1][len2];
-    }
-
-    /**
-     * If your MoodEvent stores date and time separately,
-     * combine them here. For now, simply return the date.
-     */
-    private Date combineDateAndTime(Date date, Date time) {
-        return date;
     }
 }

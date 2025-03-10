@@ -14,8 +14,9 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.baobook.constant.FirestoreConstants;
+import com.example.baobook.controller.MoodEventHelper;
 import com.example.baobook.model.MoodEvent;
-import com.example.baobook.model.MoodHistory;
 import com.example.baobook.model.MoodHistoryManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.CollectionReference;
@@ -26,20 +27,20 @@ public class Home extends AppCompatActivity {
     // Firestore instance and reference
     private FirebaseFirestore db;
     private CollectionReference moodsRef;
+    private MoodEventHelper moodEventHelper = new MoodEventHelper();
 
     // ActivityResultLauncher to handle the result from AddMoodActivity
-    private final ActivityResultLauncher<Intent> addMoodLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    // Get the new mood event from AddMoodActivity
-                    MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("moodEvent");
-                    if (mood != null) {
-                        // Add the mood to Firestore
-                        Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
+    private final ActivityResultLauncher<Intent> addMoodLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                            MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("moodEvent");
+                            if (mood != null) {
+                                Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
+                            }
+                        }
                     }
-                }
-            });
+            );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +49,7 @@ public class Home extends AppCompatActivity {
 
         // Initialize Firestore
         db = FirebaseFirestore.getInstance();
-        moodsRef = db.collection("moodEvents");
+        moodsRef = db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS);
 
         // Enable edge-to-edge display
         EdgeToEdge.enable(this);

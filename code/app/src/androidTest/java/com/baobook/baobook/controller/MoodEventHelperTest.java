@@ -1,33 +1,29 @@
 package com.baobook.baobook.controller;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.controller.MoodEventHelper;
-import com.example.baobook.controller.UserHelper;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.SocialSetting;
 import com.example.baobook.model.User;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import org.json.JSONStringer;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.sql.Time;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -39,106 +35,83 @@ public class MoodEventHelperTest {
     private MoodEventHelper moodEventHelper;
     FirebaseFirestore db;
 
-    // have a user
-    // have the user's following: two users
-    // mood events hat belong to the user, mood events that belong to the following users
-
     private static final String username1 = "user1";
     private static final String followingUsername1 = "following1";
     private static final String followingUsername2 = "following2";
-
     private static final User following1 = new User(followingUsername1, "");
     private static final User following2 = new User(followingUsername2, "");
     private static final User user1 = new User(username1, "");
-
-    private static final UserHelper userHelper = new UserHelper();
-
-    MoodEvent moodEvent1 = new MoodEvent(
+    private static final MoodEvent moodEvent1 = new MoodEvent(
             username1,
             "1",
             Mood.HAPPINESS,
-            new Date("July 20, 2012"),
-            Time.valueOf("00:00:00"),
+            OffsetDateTime.of(2012, 7, 20, 3, 2, 0, 0, ZoneOffset.UTC),
             "",
-            "",
+            SocialSetting.ALONE,
             "");
 
-    MoodEvent moodEvent2 = new MoodEvent(
+    private static final MoodEvent moodEvent2 = new MoodEvent(
             followingUsername1,
             "2",
             Mood.ANGER,
-            new Date("August 20, 2012"),
-            Time.valueOf("00:00:00"),
-            "",
-            "",
-            "");
+            OffsetDateTime.of(2012, 8, 20, 3, 2, 0, 0, ZoneOffset.UTC),
 
-    MoodEvent moodEvent3 = new MoodEvent(
+            "",
+            SocialSetting.ALONE,
+            "");
+    private static final MoodEvent moodEvent3 = new MoodEvent(
             followingUsername2,
             "3",
             Mood.ANGER,
-            new Date("September 20, 2012"),
-            Time.valueOf("00:00:00"),
+            OffsetDateTime.of(2012, 9, 20, 3, 2, 0, 0, ZoneOffset.UTC),
             "",
-            "",
+            SocialSetting.ALONE,
             "");
-    MoodEvent moodEvent4 = new MoodEvent(
+    private static final MoodEvent moodEvent4 = new MoodEvent(
             username1,
             "4",
             Mood.ANGER,
-            new Date("September 20, 2012"),
-            Time.valueOf("00:00:00"),
+            OffsetDateTime.of(2012, 9, 20, 3, 2, 0, 0, ZoneOffset.UTC),
             "",
-            "",
+            SocialSetting.ALONE,
             "");
+
+    private static final List<User> testUsers = new ArrayList<>(Arrays.asList(
+            user1,
+            following1,
+            following2
+    ));
+    private static final List<MoodEvent> testMoodEvents = new ArrayList<>(Arrays.asList(
+            moodEvent1,
+            moodEvent2,
+            moodEvent3,
+            moodEvent4
+    ));
 
     @Before
     public void setUp() {
         moodEventHelper = new MoodEventHelper();
+
+        // Set up following relationships
+        user1.followUser(following1);
+        user1.followUser(following2);
+
         db = FirebaseFirestore.getInstance();
         try {
             // 10.0.2.2 is the special IP address to connect to the 'localhost' of
             // the host computer from an Android emulator.
             db.useEmulator("10.0.2.2", 8080);
-
-            FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS);
-            FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_MOOD_EVENTS);
-            List<User> testUsers = new ArrayList<>(Arrays.asList(
-                    user1,
-                    following1,
-                    following2
-            ));
-            List<MoodEvent> testMoodEvents = new ArrayList<>(Arrays.asList(
-                    moodEvent1,
-                    moodEvent2,
-                    moodEvent3,
-                    moodEvent4
-            ));
-
-            // Set up following relationships
-            user1.followUser(following1);
-            user1.followUser(following2);
-
-            // Initialize Firestore
-            for (User u : testUsers) {
-                addDocumentToCollection(u, FirestoreConstants.COLLECTION_USERS)
-                        .exceptionally(ex -> {
-                            System.err.println("Error initializing test environment: " + ex.getMessage());
-                            return null;
-                        });
-            }
-            for (MoodEvent m : testMoodEvents) {
-                addDocumentToCollection(m, FirestoreConstants.COLLECTION_MOOD_EVENTS)
-                        .exceptionally(ex -> {
-                            System.err.println("Error initializing test environment: " + ex.getMessage());
-                            return null;
-                        });
-            }
+            resetDatabase();
         } catch (IllegalStateException e) {
             // pass
         } catch (Exception e) {
             fail("Failed to setup Firebase emulator. Is the Firebase emulator is running?");
         }
+    }
+
+    @After
+    public void tearDown() {
+        resetDatabase();
     }
 
     @Test
@@ -179,14 +152,144 @@ public class MoodEventHelperTest {
         assertEquals(expected, moodEvents);
     }
 
-    private CompletableFuture<Void> addDocumentToCollection(Object document, String collectionName) {
+    @Test
+    public void publishMood_shouldPublishMoodToFirestore() throws ExecutionException, InterruptedException, TimeoutException {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
+        MoodEvent moodEvent = new MoodEvent(
+                "user1",
+                "5",
+                Mood.HAPPINESS,
+                OffsetDateTime.of(2025, 3, 10, 3, 2, 0, 0, ZoneOffset.UTC),
+                "",
+                SocialSetting.ALONE,
+                ""
+        );
+
+        moodEventHelper.publishMood(moodEvent,
+                aVoid -> {
+                    // Verify that the MoodEvent is published.
+                    db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS).document(moodEvent.getId()).get()
+                            .addOnSuccessListener(documentSnapshot -> {
+                                if (documentSnapshot.exists()) {
+                                    future.complete(null);
+                                }
+                                future.completeExceptionally(new AssertionError("MoodEvent not published to Firestore."));
+                            }).addOnFailureListener(future::completeExceptionally);
+                },
+                future::completeExceptionally
+        );
+
+        future.get(5, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void publishMood_whenMoodExists_shouldThrowRuntimeException() throws ExecutionException, InterruptedException, TimeoutException {
+        CompletableFuture<Exception> future = new CompletableFuture<>();
+
+        moodEventHelper.publishMood(moodEvent1,
+                aVoid -> future.completeExceptionally(new AssertionError("Publish mood succeeded for an already existing MoodEvent.")),
+                future::complete
+        );
+
+        assertEquals(future.get().getMessage(), "Mood event already exists: " + moodEvent1);
+        assertEquals(future.get().getClass(), RuntimeException.class);
+        future.get(5, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void updateMood_shouldUpdateMoodinFirestore() throws ExecutionException, InterruptedException, TimeoutException {
+        CompletableFuture<MoodEvent> future = new CompletableFuture<>();
+
+        MoodEvent moodEvent = moodEvent1;
+        moodEvent.setDescription("updated!");
+
+        moodEventHelper.updateMood(moodEvent,
+                aVoid -> {
+                    // Verify that the MoodEvent is published.
+                    db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS).document(moodEvent.getId()).get()
+                            .addOnSuccessListener(documentSnapshot -> {
+                                if (documentSnapshot.exists()) {
+                                    future.complete(documentSnapshot.toObject(MoodEvent.class));
+                                }
+                                future.completeExceptionally(new AssertionError("MoodEvent not published to Firestore."));
+                            }).addOnFailureListener(future::completeExceptionally);
+                },
+                future::completeExceptionally
+        );
+
+        assertEquals(moodEvent, future.get());
+        future.get(5, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void deleteMood_shouldRemoveMoodEventFromFirestore() throws Exception {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        String moodId = "testMood1";
+
+        MoodEvent moodEvent = new MoodEvent(
+                "user1",
+                moodId,
+                Mood.HAPPINESS,
+                OffsetDateTime.of(2025, 3, 10, 3, 2, 0, 0, ZoneOffset.UTC),
+                "Feeling happy!",
+                SocialSetting.ALONE,
+                ""
+        );
+
+        // Add the MoodEvent to Firestore first
+        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS).document(moodId)
+                .set(moodEvent)
+                .addOnSuccessListener(aVoid -> {
+                    // Delete the MoodEvent
+                    moodEventHelper.deleteMood(moodEvent,
+                            aVoid2 -> {
+                                // Verify the mood event is deleted
+                                db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS).document(moodId).get()
+                                        .addOnSuccessListener(documentSnapshot -> {
+                                            assertFalse("MoodEvent should be deleted", documentSnapshot.exists());
+                                            future.complete(null);
+                                        })
+                                        .addOnFailureListener(future::completeExceptionally);
+                            },
+                            future::completeExceptionally);
+                })
+                .addOnFailureListener(future::completeExceptionally);
+
+        future.get(5, TimeUnit.SECONDS);
+    }
+
+
+    private CompletableFuture<Void> addDocumentToCollection(Object document, String uniqueId, String collectionName) {
         CompletableFuture<Void> future = new CompletableFuture<>();
 
         db.collection(collectionName)
-                .add(document)
+                .document(uniqueId)
+                .set(document)
                 .addOnSuccessListener(aVoid -> future.complete(null)) // Complete successfully
                 .addOnFailureListener(future::completeExceptionally); // Complete with an exception
 
         return future;
+    }
+
+    private void resetDatabase() {
+        FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS).join();
+        FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_MOOD_EVENTS).join();
+
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        // Initialize Firestore
+        for (User u : testUsers) {
+            futures.add(addDocumentToCollection(u, u.getUsername(), FirestoreConstants.COLLECTION_USERS)
+                    .exceptionally(ex -> {
+                        throw new RuntimeException(ex.getMessage());
+                    }));
+        }
+        for (MoodEvent m : testMoodEvents) {
+            futures.add(addDocumentToCollection(m, m.getId(), FirestoreConstants.COLLECTION_MOOD_EVENTS)
+                    .exceptionally(ex -> {
+                        throw new RuntimeException(ex.getMessage());
+                    }));
+        }
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
 }

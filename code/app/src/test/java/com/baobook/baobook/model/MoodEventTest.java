@@ -6,41 +6,35 @@ import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.SocialSetting;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
-import org.junit.runners.Parameterized;
-import org.mockito.Mock;
-
-import java.sql.Time;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 
 @RunWith(JUnitParamsRunner.class)
 public class MoodEventTest {
-
+    private static final String id = "0";
     private static final String username = "username";
     private static final Mood mood = Mood.HAPPINESS;
-    private static final Date date = new Date("July 20, 2012");
-    private static final Time time = Time.valueOf("00:00:00");
+    private static final OffsetDateTime dateTime = OffsetDateTime.parse("2012-07-20T12:00:00Z");
     private static final String description = "just ate a pizza pop";
-
+    private static final SocialSetting socialSetting = SocialSetting.ALONE;
 
     @Test
     @Parameters(method="getMoods")
     public void getMood_shouldReturnExpectedMood(Mood mood) {
-        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
         assertEquals(mood, cut.getMood());
     }
 
     @Test
     @Parameters(method="getMoodTransitions")
     public void setMood_shouldChangeMood(Mood mood, Mood newMood) {
-        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
         assertEquals(mood, cut.getMood());
 
         cut.setMood(newMood);
@@ -48,42 +42,25 @@ public class MoodEventTest {
     }
 
     @Test
-    public void getDate_shouldReturnExpectedDate() {
-        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
-        assertEquals(date, cut.getDate());
+    public void getTimestamp_shouldReturnExpectedTimestamp() {
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
+        assertEquals(dateTime, cut.getDateTime());
     }
 
     @Test
-    public void setDate_shouldChangeDate() {
-        Date newDate = new Date("March 4, 2025");
+    public void setTimestamp_shouldChangeTimestamp() {
+        OffsetDateTime newTimestamp = OffsetDateTime.parse("2025-03-04T14:30:00Z");
 
-        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
-        assertEquals(date, cut.getDate());
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
+        assertEquals(dateTime, cut.getDateTime());
 
-        cut.setDate(newDate);
-        assertEquals(newDate, cut.getDate());
-    }
-
-    @Test
-    public void getTime_shouldReturnExpectedTime() {
-        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
-        assertEquals(time, cut.getTime());
-    }
-
-    @Test
-    public void setTime_shouldChangeTime() {
-        Time newTime = Time.valueOf("12:34:56");
-
-        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
-        assertEquals(time, cut.getTime());
-
-        cut.setTime(newTime);
-        assertEquals(newTime, cut.getTime());
+        cut.setDateTime(newTimestamp);
+        assertEquals(newTimestamp, cut.getDateTime());
     }
 
     @Test
     public void getDescription_shouldReturnExpectedDescription() {
-        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
         assertEquals(description, cut.getDescription());
     }
 
@@ -91,7 +68,7 @@ public class MoodEventTest {
     public void setDescription_shouldChangeDescription() {
         String newDescription = "i'm hungry";
 
-        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
         assertEquals(description, cut.getDescription());
 
         cut.setDescription(newDescription);
@@ -100,22 +77,21 @@ public class MoodEventTest {
 
     @Test
     public void editMoodEvent_shouldChangeAllAttributes() {
-        MoodEvent cut = new MoodEvent(username, mood, date, time, description);
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
         assertEquals(mood, cut.getMood());
-        assertEquals(date, cut.getDate());
-        assertEquals(time, cut.getTime());
+        assertEquals(dateTime, cut.getDateTime());
         assertEquals(description, cut.getDescription());
 
         Mood newMood = Mood.ANGER;
-        Date newDate = new Date("March 4, 2025");
-        Time newTime = Time.valueOf("12:34:56");
+        OffsetDateTime newTimestamp = OffsetDateTime.parse("2025-03-04T14:30:00Z");
         String newDescription = "i'm hungry";
+        SocialSetting newSocial = SocialSetting.DUO;
 
-        cut.editMoodEvent(newMood, newDate, newTime, newDescription);
+        cut.editMoodEvent(newMood, newTimestamp, newDescription, newSocial);
         assertEquals(newMood, cut.getMood());
-        assertEquals(newDate, cut.getDate());
-        assertEquals(newTime, cut.getTime());
+        assertEquals(newTimestamp, cut.getDateTime());
         assertEquals(newDescription, cut.getDescription());
+        assertEquals(newSocial, cut.getSocial());
     }
 
     public Collection<Mood> getMoods() {

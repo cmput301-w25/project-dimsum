@@ -21,7 +21,10 @@ import androidx.fragment.app.DialogFragment;
 
 import com.example.baobook.model.MoodEvent;
 
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Locale;
 
 public class MoodEventOptionsFragment extends DialogFragment {
@@ -73,14 +76,14 @@ public class MoodEventOptionsFragment extends DialogFragment {
             Button deleteButton = view.findViewById(R.id.button_delete_mood);
 
             moodState.setText(moodEvent.getMood().toString());
-            moodSocial.setText(moodEvent.getSocial());
+            moodSocial.setText(moodEvent.getSocial().toString());
             moodTrigger.setText(moodEvent.getDescription());
 
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+            DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.getDefault());
+            DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
 
-            moodDate.setText(dateFormat.format(moodEvent.getDate()));
-            moodTime.setText(timeFormat.format(moodEvent.getTime()));
+            moodDate.setText(dateFormat.format(moodEvent.getDateTime()));
+            moodTime.setText(timeFormat.format(moodEvent.getDateTime()));
 
             if (moodEvent.getBase64image() != null && !moodEvent.getBase64image().isEmpty()) {
                 moodImage.setImageBitmap(base64ToBitmap(moodEvent.getBase64image()));

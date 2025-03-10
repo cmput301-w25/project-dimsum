@@ -15,6 +15,7 @@ import com.example.baobook.controller.AuthHelper;
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.exception.AuthenticationException;
 import com.example.baobook.exception.UsernameAlreadyExistsException;
+import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.User;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -23,6 +24,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -42,7 +45,7 @@ public class AuthHelperTest {
             // 10.0.2.2 is the special IP address to connect to the 'localhost' of
             // the host computer from an Android emulator.
             db.useEmulator("10.0.2.2", 8080);
-            FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS);
+            FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS).join();
         } catch (IllegalStateException e) {
             // pass
         } catch (Exception e) {
@@ -54,7 +57,7 @@ public class AuthHelperTest {
     public void tearDown() throws RuntimeException, InterruptedException {
         // Clear SharedPreferences.
         sharedPreferences.edit().clear().apply();
-        FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS);
+        FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS).join();
     }
 
     @Test
