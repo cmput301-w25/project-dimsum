@@ -40,7 +40,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
-
+/*this activity adds a mood event with the required parameters and firebase functionality
+ISSUES: still using a default username with IDK, need to grab the unqiue username later on and filter list view using unqiue user.
+ */
 public class AddMoodActivity extends AppCompatActivity {
 
 

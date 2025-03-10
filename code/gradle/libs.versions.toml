@@ -12,6 +12,7 @@ constraintlayout = "2.1.4"
 mockitoCore = "5.10.0"
 junitParams = "1.1.1"
 jacksonDatabind = "2.15.3"
+espressoIntents = "3.6.1"
 
 [libraries]
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
@@ -26,6 +27,7 @@ constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayo
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 junit-params = { module = "pl.pragmatists:JUnitParams", version.ref = "junitParams" }
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jacksonDatabind"}
+espresso-intents = { group = "androidx.test.espresso", name = "espresso-intents", version.ref = "espressoIntents" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

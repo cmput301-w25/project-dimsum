@@ -30,7 +30,13 @@ import static java.util.EnumSet.allOf;
 import static org.hamcrest.CoreMatchers.not;
 
 
+import android.app.Activity;
+import android.app.Instrumentation;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.os.Bundle;
 import android.os.SystemClock;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.DatePicker;
@@ -66,6 +72,14 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
 import java.util.Objects;
+
+import androidx.test.espresso.intent.Intents;
+import androidx.test.espresso.intent.matcher.IntentMatchers;
+import androidx.test.espresso.intent.rule.IntentsTestRule;
+
+import static androidx.test.espresso.intent.Intents.intending;
+import static androidx.test.espresso.intent.matcher.IntentMatchers.hasAction;
+
 //import androidx.test.espresso.contrib.PickerActions;
 
 
@@ -74,13 +88,16 @@ public class MoodHistoryTest {
     @Rule
     public ActivityScenarioRule<MoodHistory> scenario = new ActivityScenarioRule<MoodHistory>(MoodHistory.class);
 
+
     @BeforeClass
     public static void setup() {
         // Specific address for emulated device to access our localHost
+        Intents.init();
         String androidLocalhost = "10.0.2.2";
 
         int portNumber = 8080;
         FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
+
     }
 
     @After
@@ -98,39 +115,54 @@ public class MoodHistoryTest {
                 Log.e("Firestore", "Error fetching documents", task.getException());
             }
         });
-
+        try {
+            Intents.release(); // ✅ Safely release only if initialized
+        } catch (IllegalStateException e) {
+            // ✅ Prevent crash if Intents was never initialized
+            Log.w("EspressoTest", "Intents.release() called without init()");
+        }
         SystemClock.sleep(2000); // Optional: Wait for Firestore operations to complete
     }
 
     @Test
     public void AddMoodEvent() {
-        // Click the add button
+        Intents.init();
+        // Click the add mood button
         onView(withId(R.id.add_button)).perform(click());
         SystemClock.sleep(500);
+
+        // Click the camera button to take a photo
+        TakePhoto();
+        SystemClock.sleep(500);
+
+        // Enter description
         onView(withId(R.id.edit_description)).perform(typeText("test"), pressImeActionButton());
         SystemClock.sleep(500);
-        // Click the spinner to open dropdown
+
+        // Click the mood spinner to open dropdown
         onView(withId(R.id.mood_spinner)).perform(click());
         SystemClock.sleep(500);
 
-        // Select the "Fear" option from the dropdown
+        // Select the "Happiness" mood
         onView(withText("😊 Happiness")).perform(click());
         SystemClock.sleep(500);
 
+        // Click save button
         onView(withId(R.id.save_button)).perform(click());
         SystemClock.sleep(500);
 
-
+        // Verify the mood was added
         onView(withId(R.id.clear_all_button)).perform(click());
         SystemClock.sleep(500);
         onView(withText("😊 Happiness")).perform(click());
         SystemClock.sleep(500);
         onView(withId(R.id.button_edit_mood)).perform(click());
         SystemClock.sleep(500);
+
+        // Check if mood is saved correctly
         onView(withId(R.id.edit_mood_spinner)).check(matches(withSpinnerText(containsString("Happiness"))));
         SystemClock.sleep(500);
         onView(withId(R.id.edit_description)).check(matches(withText("test")));
-
     }
 
     @Before
@@ -140,8 +172,8 @@ public class MoodHistoryTest {
 
         // Seed data with just two moods
         MoodEvent[] moods = {
-                new MoodEvent("idk", "1", Mood.FEAR, new Date(), new Date(), "Bad", "Alone"),
-                new MoodEvent("idk","2", Mood.SADNESS, new Date(), new Date(), "Bad", "Alone")
+                new MoodEvent("idk", "1", Mood.FEAR, new Date(), new Date(), "Bad", "Alone",""),
+                new MoodEvent("idk","2", Mood.SADNESS, new Date(), new Date(), "Bad", "Alone","")
         };
 
         for (MoodEvent mood : moods) {
@@ -211,7 +243,27 @@ public class MoodHistoryTest {
         onView(withText("😨 Fear")).check(doesNotExist());
 
     }
+    // ✅ Add TakePhoto() function here, after deleteMood()
+    private void TakePhoto() {
 
+        // Click the camera button
+        onView(withId(R.id.openCamera)).perform(click());
+        SystemClock.sleep(1000);
+
+        // Mock camera response with a fake image, because espresso can't actually take photos on camera, so it'll jsut replace with black box
+        Intent resultData = new Intent();
+        Bitmap fakeBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
+        Bundle bundle = new Bundle();
+        bundle.putParcelable("data", fakeBitmap);
+        resultData.putExtras(bundle);
+
+        // ✅ Simulate returning an image from the camera
+        intending(hasAction(MediaStore.ACTION_IMAGE_CAPTURE))
+                .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
+
+        // Wait for image to be set in ImageView
+        SystemClock.sleep(1000);
+    }
     @Test
     public void AddError() {
         onView(withId(R.id.add_button)).perform(click());

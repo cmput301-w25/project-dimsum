@@ -60,6 +60,7 @@ public class MoodEventHelperTest {
             new Date("July 20, 2012"),
             Time.valueOf("00:00:00"),
             "",
+            "",
             "");
 
     MoodEvent moodEvent2 = new MoodEvent(
@@ -69,13 +70,16 @@ public class MoodEventHelperTest {
             new Date("August 20, 2012"),
             Time.valueOf("00:00:00"),
             "",
+            "",
             "");
+
     MoodEvent moodEvent3 = new MoodEvent(
             followingUsername2,
             "3",
             Mood.ANGER,
             new Date("September 20, 2012"),
             Time.valueOf("00:00:00"),
+            "",
             "",
             "");
     MoodEvent moodEvent4 = new MoodEvent(
@@ -84,6 +88,7 @@ public class MoodEventHelperTest {
             Mood.ANGER,
             new Date("September 20, 2012"),
             Time.valueOf("00:00:00"),
+            "",
             "",
             "");
 
