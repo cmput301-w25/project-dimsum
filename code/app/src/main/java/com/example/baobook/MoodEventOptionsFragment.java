@@ -1,5 +1,10 @@
 package com.example.baobook;
 
+/*
+This fragment pops up when u tap on a moond and it gives an option whether to delete or edit said mood.
+After User has selected the option it will do the task accordingly (with the help of other classes).
+ */
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
