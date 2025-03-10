@@ -23,9 +23,9 @@ Facebook Clone
 
 ## Setup Instructions
 
-1. [Step 1]
-2. [Step 2]
-3. [Step 3]
+1. [Step 1]: Launch the app, create an account and login.
+2. [Step 2]: Update your mood.
+3. [Step 3]: Click on profile and view full mood history.
 
 ## Documentation
 
