@@ -33,11 +33,9 @@ import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.SocialSetting;
 import com.example.baobook.util.UserSession;
-import com.google.android.material.snackbar.Snackbar;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -227,8 +225,6 @@ public class AddMoodActivity extends AppCompatActivity {
                         return; // Image was too large, don't save it
                     }
                 }
-                OffsetDateTime dt = selectedDateTime.atOffset(ZoneOffset.UTC);
-
                 // If a photo is captured, upload it first
                 // Create the MoodEvent with the generated ID
                 MoodEvent moodEvent = new MoodEvent(username, id, mood, selectedDateTime.atOffset(ZoneOffset.UTC), description, social, base64Image);
