@@ -2,11 +2,12 @@ package com.example.baobook.model;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
-import android.widget.Button;
-import android.widget.ArrayAdapter;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -18,48 +19,114 @@ import com.example.baobook.MoodEventArrayAdapter;
 import com.example.baobook.MoodEventOptionsFragment;
 import com.example.baobook.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
 public class MoodHistory extends AppCompatActivity implements
         MoodEventOptionsFragment.MoodEventOptionsDialogListener,
-        EditFragment.EditMoodEventDialogListener
-{
+        EditFragment.EditMoodEventDialogListener {
 
     private FloatingActionButton addButton;
-
-    // Static list to store moods across activities
-    private static final ArrayList<MoodEvent> dataList = new ArrayList<>();
-    private MoodEventArrayAdapter moodArrayAdapter;
     private ListView moodList;
-    private ArrayList<MoodEvent> filteredList; // To store filtered moods
+    private Spinner moodFilterSpinner;
+    private Button applyFilterButton, clearFilterButton;
+
+    private FirebaseFirestore db;
+    private CollectionReference moodsRef;
+
+    private static ArrayList<MoodEvent> dataList = new ArrayList<>();
+    private ArrayList<MoodEvent> filteredList;
+    private MoodEventArrayAdapter moodArrayAdapter;
 
     @Override
-    public void onEditMoodEvent(MoodEvent mood) {
-        EditFragment fragment = new EditFragment(mood);
-        fragment.show(getSupportFragmentManager(), "Edit Mood");
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_mood_history);
+
+        // Initialize Firestore
+        db = FirebaseFirestore.getInstance();
+        moodsRef = db.collection("moodEvents");
+
+        // Initialize views
+        moodList = findViewById(R.id.mood_history_list);
+        moodFilterSpinner = findViewById(R.id.mood_filter_spinner);
+        applyFilterButton = findViewById(R.id.apply_filter_button);
+        clearFilterButton = findViewById(R.id.clear_filter_button);
+        addButton = findViewById(R.id.add_button);
+
+        // Initialize data lists
+        dataList = new ArrayList<>();
+        filteredList = new ArrayList<>();
+
+        // Initialize adapter
+        moodArrayAdapter = new MoodEventArrayAdapter(this, filteredList);
+        moodList.setAdapter(moodArrayAdapter);
+
+        // Load moods from Firestore
+        loadMoodsFromFirestore();
+
+        // Set up mood filter spinner
+        ArrayAdapter<Mood> spinnerAdapter = new ArrayAdapter<>(this,
+                android.R.layout.simple_spinner_item, Mood.values());
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        moodFilterSpinner.setAdapter(spinnerAdapter);
+
+        // Set up filter button
+        applyFilterButton.setOnClickListener(v -> {
+            Mood selectedMood = (Mood) moodFilterSpinner.getSelectedItem();
+            filteredList = filterByMood(selectedMood);
+            moodArrayAdapter = new MoodEventArrayAdapter(this, filteredList);
+            moodList.setAdapter(moodArrayAdapter);
+            Toast.makeText(this, "Filtered by " + selectedMood.toString(), Toast.LENGTH_SHORT).show();
+        });
+
+        // Set up clear filter button
+        clearFilterButton.setOnClickListener(v -> {
+            filteredList = new ArrayList<>(dataList);
+            moodArrayAdapter = new MoodEventArrayAdapter(this, filteredList);
+            moodList.setAdapter(moodArrayAdapter);
+            moodFilterSpinner.setSelection(0);
+            Toast.makeText(this, "Filter cleared", Toast.LENGTH_SHORT).show();
+        });
+
+        // Floating Action Button to add a new mood
+        addButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MoodHistory.this, AddMoodActivity.class);
+            addMoodLauncher.launch(intent);
+        });
+
+        // Set up item click listener for mood list
+        moodList.setOnItemClickListener((parent, view, position, id) -> {
+            MoodEvent selectedMoodEvent = filteredList.get(position);
+            MoodEventOptionsFragment fragment = new MoodEventOptionsFragment(selectedMoodEvent);
+            fragment.show(getSupportFragmentManager(), "MoodOptionsDialog");
+        });
     }
 
-    @Override
-    public void onMoodEdited(MoodEvent updatedMoodEvent) {
-        for (int i = 0; i < dataList.size(); i++) {
-            MoodEvent mood = dataList.get(i);
-            if (mood.getDate().equals(updatedMoodEvent.getDate()) &&
-                    mood.getTime().equals(updatedMoodEvent.getTime())) {
-                dataList.set(i, updatedMoodEvent);
-                moodArrayAdapter.notifyDataSetChanged();
-                Toast.makeText(this, "Mood Event updated!", Toast.LENGTH_SHORT).show();
+    private void loadMoodsFromFirestore() {
+        moodsRef.addSnapshotListener((value, error) -> {
+            if (error != null) {
+                Log.e("Firestore", "Error loading moods", error);
+                Toast.makeText(this, "Failed to load moods.", Toast.LENGTH_SHORT).show();
                 return;
             }
-        }
-    }
 
-    @Override
-    public void onDeleteMoodEvent(MoodEvent mood) {
-        dataList.remove(mood);
-        moodArrayAdapter.notifyDataSetChanged();
-        Toast.makeText(this, "Mood deleted!", Toast.LENGTH_SHORT).show();
+            if (value != null) {
+                dataList.clear();
+                for (QueryDocumentSnapshot snapshot : value) {
+                    MoodEvent mood = snapshot.toObject(MoodEvent.class);
+                    mood.setId(snapshot.getId()); // Set Firestore document ID
+                    dataList.add(mood);
+                }
+                sortMoodHistoryByDate();
+                filteredList = new ArrayList<>(dataList);
+                moodArrayAdapter.notifyDataSetChanged();
+            }
+        });
     }
 
     private void sortMoodHistoryByDate() {
@@ -77,86 +144,57 @@ public class MoodHistory extends AppCompatActivity implements
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    // Get the new mood event from AddMoodActivity
                     MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("moodEvent");
                     if (mood != null) {
-                        // Add mood to static list
-                        getDataList().add(mood);
-                        // Sort the list in reverse chronological order
-                        sortMoodHistoryByDate();
-                        // Notify adapter to refresh ListView
-                        moodArrayAdapter.notifyDataSetChanged();
-                        Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
+                        addMoodToFirestore(mood);
                     }
                 }
             });
 
+    private void addMoodToFirestore(MoodEvent mood) {
+        moodsRef.add(mood) // Use Firestore's auto-generated ID
+                .addOnSuccessListener(documentReference -> {
+                    mood.setId(documentReference.getId()); // Set the document ID
+                    Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Error adding mood", e);
+                    Toast.makeText(this, "Failed to add mood.", Toast.LENGTH_SHORT).show();
+                });
+    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_mood_history);
-
-        // Initialize ListView and Adapter
-        moodList = findViewById(R.id.mood_history_list);
-        filteredList = new ArrayList<>(dataList); // Initialize with all moods
-        moodArrayAdapter = new MoodEventArrayAdapter(this, filteredList);
-        moodList.setAdapter(moodArrayAdapter);
-
-        // Set up the mood filter spinner
-        Spinner moodFilterSpinner = findViewById(R.id.mood_filter_spinner);
-        ArrayAdapter<Mood> spinnerAdapter = new ArrayAdapter<>(this, 
-            android.R.layout.simple_spinner_item, Mood.values());
-        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        moodFilterSpinner.setAdapter(spinnerAdapter);
-
-        // Set up filter button
-        Button applyFilterButton = findViewById(R.id.apply_filter_button);
-        applyFilterButton.setOnClickListener(v -> {
-            Mood selectedMood = (Mood) moodFilterSpinner.getSelectedItem();
-            filteredList = filterByMood(selectedMood);
-            moodArrayAdapter = new MoodEventArrayAdapter(this, filteredList);
-            moodList.setAdapter(moodArrayAdapter);
-            Toast.makeText(this, "Filtered by " + selectedMood.toString(), Toast.LENGTH_SHORT).show();
-        });
-
-        // Set up clear filter button
-        Button clearFilterButton = findViewById(R.id.clear_filter_button);
-        clearFilterButton.setOnClickListener(v -> {
-            filteredList = new ArrayList<>(dataList);
-            moodArrayAdapter = new MoodEventArrayAdapter(this, filteredList);
-            moodList.setAdapter(moodArrayAdapter);
-            moodFilterSpinner.setSelection(0);
-            Toast.makeText(this, "Filter cleared", Toast.LENGTH_SHORT).show();
-        });
-
-        // Sort the mood history before displaying
-        sortMoodHistoryByDate();
-
-        // Notify adapter of any new moods (useful when returning to this activity)
-        moodArrayAdapter.notifyDataSetChanged();
-
-        // Floating Action Button to add a new mood
-        addButton = findViewById(R.id.add_button);
-        addButton.setOnClickListener(v -> {
-            // Launch AddMoodActivity
-            Intent intent = new Intent(MoodHistory.this, AddMoodActivity.class);
-            addMoodLauncher.launch(intent);
-        });
-
-        moodList.setOnItemClickListener((parent, view, position, id) -> {
-            MoodEvent selectedMoodEvent = dataList.get(position);
-            MoodEventOptionsFragment fragment = new MoodEventOptionsFragment(selectedMoodEvent);
-            fragment.show(getSupportFragmentManager(), "MovieOptionsDialog");
-        });
-
+    public void onEditMoodEvent(MoodEvent mood) {
+        EditFragment fragment = new EditFragment(mood);
+        fragment.show(getSupportFragmentManager(), "Edit Mood");
     }
 
-    // Getter method to access dataList from Home or other activities
-    public static ArrayList<MoodEvent> getDataList() {
-        return dataList;
+    @Override
+    public void onMoodEdited(MoodEvent updatedMoodEvent) {
+        moodsRef.document(updatedMoodEvent.getId()).set(updatedMoodEvent)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Mood updated!", Toast.LENGTH_SHORT).show();
+                    loadMoodsFromFirestore(); // Refresh the list
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Error updating mood", e);
+                    Toast.makeText(this, "Failed to update mood.", Toast.LENGTH_SHORT).show();
+                });
     }
 
-    //Filters the mood list to show only moods of a specific type.
+    @Override
+    public void onDeleteMoodEvent(MoodEvent mood) {
+        moodsRef.document(mood.getId()).delete()
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Mood deleted!", Toast.LENGTH_SHORT).show();
+                    loadMoodsFromFirestore(); // Refresh the list
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Firestore", "Error deleting mood", e);
+                    Toast.makeText(this, "Failed to delete mood.", Toast.LENGTH_SHORT).show();
+                });
+    }
+
     public ArrayList<MoodEvent> filterByMood(Mood moodType) {
         ArrayList<MoodEvent> filteredList = new ArrayList<>();
         for (MoodEvent mood : dataList) {
@@ -166,4 +204,9 @@ public class MoodHistory extends AppCompatActivity implements
         }
         return filteredList;
     }
+
+    public static ArrayList<MoodEvent> getDataList() {
+        return dataList;
+    }
+
 }

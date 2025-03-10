@@ -1,7 +1,5 @@
 package com.example.baobook;
 
-import static com.example.baobook.model.MoodHistory.getDataList;
-import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.MoodEvent;
 
 import android.content.Intent;
@@ -73,7 +71,7 @@ public class UserProfileActivity extends AppCompatActivity implements
                         dataList.add(mood);
                         // Notify adapter to refresh ListView
                         moodArrayAdapter.notifyDataSetChanged();
-//                        FirestoreHelper.firestoreMood(mood, this);
+                        FirestoreHelper.firestoreMood(mood, this);
                     }
                 }
             });

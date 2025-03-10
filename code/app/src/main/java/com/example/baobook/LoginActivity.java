@@ -1,17 +1,13 @@
 package com.example.baobook;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.baobook.MainActivity;
 import com.example.baobook.controller.AuthHelper;
 
 public class LoginActivity extends AppCompatActivity {
@@ -53,12 +49,5 @@ public class LoginActivity extends AppCompatActivity {
             Intent intent = new Intent(LoginActivity.this, SignupActivity.class);
             startActivity(intent);
         });
-    }
-    public void saveLogin(String userId){
-        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putString("username", userId);
-        editor.putBoolean("isLoggedIn", true);
-        editor.apply();
     }
 }

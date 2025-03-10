@@ -3,12 +3,24 @@ package com.example.baobook;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.Manifest;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
@@ -21,16 +33,48 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 public class AddMoodActivity extends AppCompatActivity {
+
+
+    private Calendar selectedDate = Calendar.getInstance();
+    private Calendar selectedTime = Calendar.getInstance();
+    private ImageView capImage;
+    private ImageButton cameraButton;
+    private Bitmap capturedImage;
+
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (!isGranted) {
+                    Toast.makeText(this, "Camera permission is required to use this feature", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    // ActivityResultLauncher for the camera
+    private final ActivityResultLauncher<Intent> cameraLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Bundle extras = result.getData().getExtras();
+                    if (extras != null) {
+                        capturedImage = (Bitmap) extras.get("data"); // Store image
+                        capImage.setImageBitmap(capturedImage);  // Display image
+                    } else {
+                        Toast.makeText(this, "Failed to retrieve image", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(this, "Failed to capture image", Toast.LENGTH_SHORT).show();
+                }
+            });
 
     private final Calendar selectedDateTime = Calendar.getInstance(); // Combines date and time
     private final Calendar currentDateTime = Calendar.getInstance(); // Stores the current time at launch
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.add_mood_event_fragment); // Use the same layout as the fragment
+        setContentView(R.layout.add_mood_event_fragment);
 
         UserSession session = new UserSession(this);
         String username = session.getUsername();
@@ -39,6 +83,38 @@ public class AddMoodActivity extends AppCompatActivity {
         TextView textDate = findViewById(R.id.text_date);
         TextView textTime = findViewById(R.id.text_time);
         TextView editDescription = findViewById(R.id.edit_description);
+
+        capImage = findViewById(R.id.captured_image);
+        cameraButton = findViewById(R.id.openCamera);
+
+        // Request Camera Permission Only If Not Granted
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissionLauncher.launch(Manifest.permission.CAMERA);
+        }
+
+        // Camera Button Click Listener
+        cameraButton.setOnClickListener(v -> {
+            // Check and log camera permission
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.e("CameraDebug", "Camera permission is NOT granted!");
+                Toast.makeText(this, "Please grant camera permission first.", Toast.LENGTH_SHORT).show();
+                requestPermissionLauncher.launch(Manifest.permission.CAMERA);
+                return; // Stop execution if permission isn't granted
+            } else {
+                Log.d("CameraDebug", "Camera permission is granted.");
+            }
+
+            Log.d("CameraDebug", "Launching Camera...");
+            Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+
+            cameraLauncher.launch(cameraIntent);
+
+        });
+
+
         Spinner editSocial = findViewById(R.id.social_situation);
 
         // Pre-fill Date & Time fields
@@ -47,6 +123,7 @@ public class AddMoodActivity extends AppCompatActivity {
 
         textDate.setText(dateFormat.format(selectedDateTime.getTime()));
         textTime.setText(timeFormat.format(selectedDateTime.getTime()));
+
 
         // Date Picker
         textDate.setOnClickListener(v -> {
@@ -82,8 +159,8 @@ public class AddMoodActivity extends AppCompatActivity {
                         }
                         textTime.setText(timeFormat.format(selectedDateTime.getTime()));
                     },
-                    selectedDateTime.get(Calendar.HOUR_OF_DAY),
-                    selectedDateTime.get(Calendar.MINUTE),
+                    selectedTime.get(Calendar.HOUR_OF_DAY),
+                    selectedTime.get(Calendar.MINUTE),
                     true
             );
             timePickerDialog.show();
@@ -104,16 +181,20 @@ public class AddMoodActivity extends AppCompatActivity {
                 }
 
                 Date date = selectedDateTime.getTime();
-                Time time = new Time(selectedDateTime.getTimeInMillis());
+                Date time = selectedDateTime.getTime(); // Use java.util.Date for time
 
                 if (selectedDateTime.after(currentDateTime)) {
                     Toast.makeText(this, "Date and time cannot be in the future", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
-                // Create MoodEvent
-                MoodEvent moodEvent = new MoodEvent(username, mood, date, time, description, social);
+                // Generate a unique ID for the MoodEvent
+                String id = UUID.randomUUID().toString();
 
+                // Create the MoodEvent with the generated ID
+                MoodEvent moodEvent = new MoodEvent(username, id, mood, date, time, description, social);
+
+                // Pass the MoodEvent back to MoodHistory
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra("moodEvent", moodEvent);
                 setResult(RESULT_OK, resultIntent);
@@ -141,9 +222,6 @@ public class AddMoodActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
 
-        // Set default selection
-        if (!moodOptionsList.isEmpty()) {
-            spinner.setSelection(0);
-        }
     }
+
 }
