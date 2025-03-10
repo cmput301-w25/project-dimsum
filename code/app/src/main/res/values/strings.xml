@@ -32,8 +32,10 @@
 
     <string-array name = "social_options">
         <item>Alone</item>
-        <item>Duo</item>
-        <item>Group</item>
+        <item>With one other person</item>
+        <item>With two to several people</item>
+        <item>Crowd</item>
+
     </string-array>
 
 </resources>

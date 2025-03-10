@@ -191,6 +191,11 @@ public class AddMoodActivity extends AppCompatActivity {
                 String description = editDescription.getText().toString().trim();
                 String social = editSocial.getSelectedItem().toString();
 
+                if (!isValidDescription(description)) {
+                    Toast.makeText(this, "Trigger must be at most 20 chars or 3 words", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 if (dateStr.equals("Select Date") || timeStr.equals("Select Time")) {
                     Toast.makeText(this, "Please select date and time", Toast.LENGTH_SHORT).show();
                     return;
@@ -253,6 +258,11 @@ public class AddMoodActivity extends AppCompatActivity {
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Failed to save mood event", Toast.LENGTH_SHORT).show()
                 );
+    }
+
+    private boolean isValidDescription(String desc) {
+        if (desc.isEmpty()) return true;
+        return desc.length() <= 20 && desc.trim().split("\\s+").length <= 3;
     }
     private Bitmap resizeBitmap(Bitmap original, int maxWidth, int maxHeight) {
         int width = original.getWidth();
