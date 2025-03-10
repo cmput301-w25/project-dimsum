@@ -16,6 +16,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withSpinnerText;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.containsString;
+import androidx.test.rule.GrantPermissionRule;
 
 import android.app.Activity;
 import android.app.Instrumentation;
@@ -63,6 +64,10 @@ import static androidx.test.espresso.intent.Intents.intending;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasAction;
 
 public class MoodHistoryTest {
+
+    @Rule
+    public GrantPermissionRule permissionRule = GrantPermissionRule.grant(android.Manifest.permission.CAMERA);
+
     @Rule
     public ActivityScenarioRule<MoodHistory> scenario = new ActivityScenarioRule<MoodHistory>(MoodHistory.class);
 
@@ -263,23 +268,26 @@ public class MoodHistoryTest {
 
     // ✅ Add TakePhoto() function here, after deleteMood()
     private void TakePhoto() {
-        // Mock camera response with a fake image BEFORE clicking the button
+
+        // Click the camera button
+        //onView(withId(R.id.openCamera)).perform(click());
+        //SystemClock.sleep(1000);
+
+        // Mock camera response with a fake image, because espresso can't actually take photos on camera, so it'll jsut replace with black box
         Intent resultData = new Intent();
         Bitmap fakeBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
         Bundle bundle = new Bundle();
         bundle.putParcelable("data", fakeBitmap);
         resultData.putExtras(bundle);
 
-        // Set up an Intent response BEFORE clicking the camera button
+        // ✅ Simulate returning an image from the camera
         intending(hasAction(MediaStore.ACTION_IMAGE_CAPTURE))
                 .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
-
-        // Click the camera button
-        onView(withId(R.id.openCamera)).perform(click());
 
         // Wait for image to be set in ImageView
         SystemClock.sleep(1000);
     }
+
 
 
     @Test
