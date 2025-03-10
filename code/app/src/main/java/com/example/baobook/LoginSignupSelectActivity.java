@@ -12,7 +12,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.firestore.FirebaseFirestore;
-
+/*
+class that allows user to choose between login and signup through buttons and also
+initializes firebase app and firestore database. First screen that user sees
+ */
 public class LoginSignupSelectActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
