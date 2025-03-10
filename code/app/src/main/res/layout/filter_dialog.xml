@@ -7,52 +7,77 @@
     android:orientation="vertical"
     android:padding="16dp">
 
+    <!-- Title -->
+    <TextView
+        android:id="@+id/dialog_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Filter"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- Mood spinner (from strings.xml array) -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Mood:"/>
+    <Spinner
+        android:id="@+id/spinner_mood"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <!-- Time filter (checkbox for “most recent week”) -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Time:"/>
     <CheckBox
         android:id="@+id/check_recent_week"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/filter_label_time"/>
+        android:text="Last 7 Days Only"/>
 
-    <!-- For multiple mood selection, you could use a MultiAutoCompleteTextView,
-         a custom multi-select Spinner, or a list of checkboxes.
-         Here is a simple approach with a Spinner that picks ONE mood at a time,
-         plus a button to add it to a list: -->
-    <Spinner
-        android:id="@+id/spinner_mood"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <Button
-        android:id="@+id/button_add_mood"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="+"/>
-
-    <!-- Single-word filter -->
-    <EditText
-        android:id="@+id/edit_filter_word"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="@string/filter_label_word"/>
-
+    <!-- Single Word filter -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:layout_marginTop="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Word:"
+            android:layout_marginRight="8dp"/>
+
+        <EditText
+            android:id="@+id/edit_filter_word"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Enter 1 word"/>
+    </LinearLayout>
+
+    <!-- Bottom buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:gravity="end"
-        android:paddingTop="8dp">
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp">
 
         <Button
             android:id="@+id/button_cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/filter_cancel" />
+            android:text="Cancel"/>
 
         <Button
             android:id="@+id/button_save"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/filter_save"
-            android:layout_marginStart="16dp"/>
+            android:text="Save"
+            android:layout_marginLeft="16dp"/>
     </LinearLayout>
 </LinearLayout>
