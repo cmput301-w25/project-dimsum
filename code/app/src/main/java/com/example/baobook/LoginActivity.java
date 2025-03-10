@@ -9,7 +9,12 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.baobook.controller.AuthHelper;
+import com.google.android.material.snackbar.Snackbar;
 
+/*
+//Login activity where user can enter their existing credentials and log in
+to their account. Uses the AuthHelper class to authenticate the user
+ */
 public class LoginActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -24,7 +29,7 @@ public class LoginActivity extends AppCompatActivity {
             String usernameText = username.getText().toString();
             String passwordText = password.getText().toString();
             if(usernameText.isEmpty() || passwordText.isEmpty()){
-                Toast.makeText(LoginActivity.this, "Please enter username and password", Toast.LENGTH_SHORT).show();
+                Snackbar.make(v, "Please enter all fields", Snackbar.LENGTH_SHORT).show();
                 return;
             }
             // check if username and password match existing user

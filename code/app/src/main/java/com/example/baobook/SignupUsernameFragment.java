@@ -13,7 +13,9 @@ import android.widget.Toast;
 import androidx.fragment.app.Fragment;
 
 import com.example.baobook.controller.AuthHelper;
-
+import com.google.android.material.snackbar.Snackbar;
+//Fragment for asking for username and password for sign up. Will register user and store their credentials in
+//firebase. Include input validation and uses AuthHelper to register user.
 public class SignupUsernameFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -27,7 +29,7 @@ public class SignupUsernameFragment extends Fragment {
             String password = passwordInput.getText().toString().trim();
 
             if (username.isEmpty() || password.isEmpty()) {
-                Toast.makeText(requireActivity(), "Please enter a valid username and password", Toast.LENGTH_SHORT).show();
+                Snackbar.make(view, "Please enter all fields", Snackbar.LENGTH_SHORT).show();
                 return;  //  Stop execution here if input is empty
             }
 
@@ -35,7 +37,7 @@ public class SignupUsernameFragment extends Fragment {
             AuthHelper authHelper = new AuthHelper(getContext());
             authHelper.userExists(username, exists -> {
                 if (exists) {
-                    Toast.makeText(requireActivity(), "Username already exists", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(view, "Username already exists", Snackbar.LENGTH_SHORT).show();
                     return;  //  Stop execution here if username already exists
                 }
                 authHelper.registerUser(username, password,

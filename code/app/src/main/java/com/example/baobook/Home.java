@@ -21,7 +21,7 @@ import com.example.baobook.model.MoodHistoryManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-
+//home activity where users will be able to see their following mood events and add new ones
 public class Home extends AppCompatActivity {
 
     // Firestore instance and reference

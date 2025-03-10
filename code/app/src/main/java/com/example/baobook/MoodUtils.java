@@ -1,7 +1,7 @@
 package com.example.baobook;
 
 import android.graphics.Color;
-
+//mood utilities and constants that are used in the app.
 public class MoodUtils {
 
     // Define mood options
