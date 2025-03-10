@@ -5,8 +5,10 @@ import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -17,11 +19,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.Manifest;
 
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import java.io.ByteArrayOutputStream;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 import com.google.android.material.snackbar.Snackbar;
@@ -42,6 +49,8 @@ public class AddMoodActivity extends AppCompatActivity {
     private ImageView capImage;
     private ImageButton cameraButton;
     private Bitmap capturedImage;
+    private StorageReference storageRef;
+
 
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -82,13 +91,22 @@ public class AddMoodActivity extends AppCompatActivity {
 
         capImage = findViewById(R.id.captured_image);
         cameraButton = findViewById(R.id.openCamera);
+        storageRef = FirebaseStorage.getInstance().getReference();
 
         // Request Camera Permission Only If Not Granted
         /*if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA);
+
+         
         }*/
 
+        MoodEvent moodEvent = (MoodEvent) getIntent().getSerializableExtra("moodEvent");
+        if (moodEvent != null && moodEvent.getBase64image() != null) {  // Check if moodEvent is not null first
+            capImage.setImageBitmap(base64ToBitmap(moodEvent.getBase64image()));
+        } else {
+            capImage.setImageResource(R.drawable.cat_image);  // Ensure default_image exists
+        }
         // Camera Button Click Listener
         cameraButton.setOnClickListener(v -> {
             // Check and log camera permission
@@ -186,28 +204,91 @@ public class AddMoodActivity extends AppCompatActivity {
                     return;
                 }
 
-                // Generate a unique ID for the MoodEvent
                 String id = UUID.randomUUID().toString();
                 String username = "idk"; //CHANGE LATER
 
-                // Create the MoodEvent with the generated ID
-                MoodEvent moodEvent = new MoodEvent(username, id, mood, date, time, description, social);
-
-                // Pass the MoodEvent back to MoodHistory
-                Intent resultIntent = new Intent();
-                resultIntent.putExtra("moodEvent", moodEvent);
-                setResult(RESULT_OK, resultIntent);
-                finish();
+                String base64Image = null;
+                if (capturedImage != null) {
+                    base64Image = bitmapToBase64(capturedImage);
+                    if (base64Image == null) {
+                        return; // Image was too large, don't save it
+                    }
+                }
+                // If a photo is captured, upload it first
+                saveMoodEvent(username, id, mood, date, time, description, social, base64Image);
             } catch (Exception e) {
                 e.printStackTrace();
-                Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
+
 
         findViewById(R.id.cancel_button).setOnClickListener(v -> finish());
 
         initializeSpinner(editMood);
     }
+    private void saveMoodEvent(String username, String id, Mood mood, Date date, Date time,
+                               String description, String social, String base64Image) {
+        MoodEvent moodEvent = new MoodEvent(username, id, mood, date, time, description, social, base64Image);
+
+        FirebaseFirestore.getInstance()
+                .collection("moodEvents")
+                .document(id)
+                .set(moodEvent)
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(this, "Mood event saved!", Toast.LENGTH_SHORT).show();
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("moodEvent", moodEvent);
+                    setResult(RESULT_OK, resultIntent);
+                    finish();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Failed to save mood event", Toast.LENGTH_SHORT).show()
+                );
+    }
+    private Bitmap resizeBitmap(Bitmap original, int maxWidth, int maxHeight) {
+        int width = original.getWidth();
+        int height = original.getHeight();
+
+        float scale = Math.min((float) maxWidth / width, (float) maxHeight / height);
+
+        int newWidth = Math.round(width * scale);
+        int newHeight = Math.round(height * scale);
+
+        return Bitmap.createScaledBitmap(original, newWidth, newHeight, true);
+    }
+    private String bitmapToBase64(Bitmap bitmap) {
+        int maxSize = 65536; // 64 KB limit
+        int quality = 100; // Start with highest quality
+        Bitmap resizedBitmap = resizeBitmap(bitmap, 512, 512); // Resize to max 512x512
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        resizedBitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+        byte[] byteArray = baos.toByteArray();
+
+        // Reduce quality if image exceeds the 64 KB limit
+        while (byteArray.length > maxSize && quality > 10) {
+            baos.reset();
+            quality -= 10; // Decrease quality by 10%
+            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, quality, baos);
+            byteArray = baos.toByteArray();
+        }
+
+        // If still too large, notify the user
+        if (byteArray.length > maxSize) {
+            Toast.makeText(this, "Image is too large! Try capturing a smaller one.", Toast.LENGTH_SHORT).show();
+            return null; // Return null so we don't save it
+        }
+
+        return Base64.encodeToString(byteArray, Base64.DEFAULT);
+    }
+
+    private Bitmap base64ToBitmap(String base64Image) {
+        if (base64Image == null || base64Image.isEmpty()) return null;
+        byte[] decodedBytes = Base64.decode(base64Image, Base64.DEFAULT);
+        return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+    }
+
 
     private void initializeSpinner(Spinner spinner) {
         List<String> moodOptionsList = Arrays.asList(MoodUtils.MOOD_OPTIONS);

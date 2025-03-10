@@ -17,11 +17,12 @@ public class MoodEvent implements Serializable {
     private Date time; // Use java.util.Date for time
     private String description;
     private String social;
+    private String base64image;
 
     // No-argument constructor required for Firestore
     public MoodEvent() {}
 
-    public MoodEvent(String username, String id, Mood mood, Date date, Date time, String description, String social) {
+    public MoodEvent(String username, String id, Mood mood, Date date, Date time, String description, String social, String base64image) {
         this.username = username;
         this.id = id;
         this.mood = mood;
@@ -29,6 +30,7 @@ public class MoodEvent implements Serializable {
         this.time = time;
         this.description = description;
         this.social = social;
+        this.base64image = base64image;
     }
 
     // Constructor for testing - converts java.sql.Time to java.util.Date
@@ -94,6 +96,10 @@ public class MoodEvent implements Serializable {
         this.social = social;
     }
 
+    public String getBase64image() {return base64image;}
+
+    public void setBase64image(String base64image) {this.base64image = base64image;}
+
     /**
      * Edits the current mood event with new details.
      *
@@ -134,4 +140,6 @@ public class MoodEvent implements Serializable {
             throw new RuntimeException("Failed to map MoodEvent to string.");
         }
     }
+
+
 }
