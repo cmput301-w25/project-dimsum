@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * helps get mood events
+ * Handles getting Users' own MoodEvents as well as following MoodEvents.
  */
 public class MoodEventHelper {
     private final FirebaseFirestore db;
@@ -21,6 +21,13 @@ public class MoodEventHelper {
         this.db = FirebaseFirestore.getInstance();
     }
 
+    /**
+     * Gets all MoodEvents authored by a given user.
+     * MoodEvents are returned in chronological order, newest first.
+     * @param username  The username of the user to MoodEvents from.
+     * @param onSuccess  Callback triggered upon successful retrieval.
+     * @param onFailure  Callback triggered on failure.
+     */
     public void getMoodEventsByUser(String username, OnSuccessListener<List<MoodEvent>> onSuccess, OnFailureListener onFailure) {
         db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
                 .whereEqualTo(FirestoreConstants.FIELD_USERNAME, username)
@@ -39,8 +46,15 @@ public class MoodEventHelper {
                 .addOnFailureListener(onFailure);
     }
 
+    /**
+     * Gets all MoodEvents from a given user's following list.
+     * MoodEvents are returned in chronological order, newest first.
+     * @param username  The username of the user to get following MoodEvents from.
+     * @param onSuccess  Callback triggered upon successful retrieval.
+     * @param onFailure  Callback triggered on failure.
+     */
     public void getMoodEventsByFollowing(String username, OnSuccessListener<List<MoodEvent>> onSuccess, OnFailureListener onFailure) {
-        db.collection(FirestoreConstants.COLLECTION_USERS)
+        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
                 .document(username)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
@@ -56,7 +70,7 @@ public class MoodEventHelper {
                         // Get mood events from all followed users.
                         db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
                                 .whereIn(FirestoreConstants.FIELD_USERNAME, followingList)
-                                // .orderBy("date", Query.Direction.DESCENDING) // Order by newest date first.
+                                 .orderBy("date", Query.Direction.DESCENDING) // Order by newest date first.
                                 .get()
                                 .addOnSuccessListener(querySnapshot -> {
                                     List<MoodEvent> moodEvents = new ArrayList<>();
@@ -73,68 +87,4 @@ public class MoodEventHelper {
                 })
                 .addOnFailureListener(onFailure);
     }
-
-
-////
-////    public void getFromUsersFollowing(String username, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
-////        DocumentReference currentUserRef = db.collection(FirestoreConstants.COLLECTION_USERS).document(currentUser);
-////        DocumentReference targetUserRef = db.collection(FirestoreConstants.COLLECTION_USERS).document(targetUser);
-////
-////        db.runTransaction(transaction -> {
-////            DocumentSnapshot currentUserDoc = transaction.get(currentUserRef);
-////            DocumentSnapshot targetUserDoc = transaction.get(targetUserRef);
-//
-//            if (!currentUserDoc.exists() || !targetUserDoc.exists()) {
-//                throw new RuntimeException("One or both users do not exist.");
-//            }
-//
-//            List<String> following = (List<String>) currentUserDoc.get("followings");
-//            List<String> followers = (List<String>) targetUserDoc.get("followers");
-//
-//            if (following != null && !following.contains(targetUser)) {
-//                following.add(targetUser);
-//            }
-//            if (followers != null && !followers.contains(currentUser)) {
-//                followers.add(currentUser);
-//            }
-//
-//            transaction.update(currentUserRef, "followings", following);
-//            transaction.update(targetUserRef, "followers", followers);
-//
-//            return null;
-//        }).addOnSuccessListener(aVoid -> {
-//            onSuccess.onSuccess(null);
-//        }).addOnFailureListener(onFailure);
-//    }
-//
-//    public void unfollowUser(String currentUser, String targetUser, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
-//        DocumentReference currentUserRef = db.collection(FirestoreConstants.COLLECTION_USERS).document(currentUser);
-//        DocumentReference targetUserRef = db.collection(FirestoreConstants.COLLECTION_USERS).document(targetUser);
-//
-//        db.runTransaction(transaction -> {
-//            DocumentSnapshot currentUserDoc = transaction.get(currentUserRef);
-//            DocumentSnapshot targetUserDoc = transaction.get(targetUserRef);
-//
-//            if (!currentUserDoc.exists() || !targetUserDoc.exists()) {
-//                throw new RuntimeException("One or both users do not exist.");
-//            }
-//
-//            List<String> following = (List<String>) currentUserDoc.get("followings");
-//            List<String> followers = (List<String>) targetUserDoc.get("followers");
-//
-//            if (following != null) {
-//                following.remove(targetUser);
-//            }
-//            if (followers != null) {
-//                followers.remove(currentUser);
-//            }
-//
-//            transaction.update(currentUserRef, "followings", following);
-//            transaction.update(targetUserRef, "followers", followers);
-//
-//            return null;
-//        }).addOnSuccessListener(aVoid -> {
-//            onSuccess.onSuccess(null);
-//        }).addOnFailureListener(onFailure);
-//    }
 }

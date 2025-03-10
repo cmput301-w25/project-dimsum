@@ -19,6 +19,7 @@ import com.example.baobook.model.User;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.json.JSONStringer;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -28,8 +29,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @RunWith(AndroidJUnit4.class)
 public class MoodEventHelperTest {
@@ -44,12 +47,15 @@ public class MoodEventHelperTest {
     private static final String followingUsername1 = "following1";
     private static final String followingUsername2 = "following2";
 
-    private static final User user1 = new User(username1, "pw");
-    private static final User following1 = new User(followingUsername1, "pw");
-    private static final User following2 = new User(followingUsername2, "pw");
+    private static final User following1 = new User(followingUsername1, "");
+    private static final User following2 = new User(followingUsername2, "");
+    private static final User user1 = new User(username1, "");
+
+    private static final UserHelper userHelper = new UserHelper();
 
     MoodEvent moodEvent1 = new MoodEvent(
             username1,
+            "1",
             Mood.HAPPINESS,
             new Date("July 20, 2012"),
             Time.valueOf("00:00:00"),
@@ -58,6 +64,7 @@ public class MoodEventHelperTest {
 
     MoodEvent moodEvent2 = new MoodEvent(
             followingUsername1,
+            "2",
             Mood.ANGER,
             new Date("August 20, 2012"),
             Time.valueOf("00:00:00"),
@@ -65,6 +72,7 @@ public class MoodEventHelperTest {
             "");
     MoodEvent moodEvent3 = new MoodEvent(
             followingUsername2,
+            "3",
             Mood.ANGER,
             new Date("September 20, 2012"),
             Time.valueOf("00:00:00"),
@@ -72,6 +80,7 @@ public class MoodEventHelperTest {
             "");
     MoodEvent moodEvent4 = new MoodEvent(
             username1,
+            "4",
             Mood.ANGER,
             new Date("September 20, 2012"),
             Time.valueOf("00:00:00"),
@@ -101,20 +110,23 @@ public class MoodEventHelperTest {
                     moodEvent4
             ));
 
+            // Set up following relationships
+            user1.followUser(following1);
+            user1.followUser(following2);
+
+            // Initialize Firestore
             for (User u : testUsers) {
-                addDocumentToCollection(
-                        u,
-                        FirestoreConstants.COLLECTION_USERS,
-                        e -> {
-                            throw new RuntimeException("Failed to instantiate test users.");
+                addDocumentToCollection(u, FirestoreConstants.COLLECTION_USERS)
+                        .exceptionally(ex -> {
+                            System.err.println("Error initializing test environment: " + ex.getMessage());
+                            return null;
                         });
             }
             for (MoodEvent m : testMoodEvents) {
-                addDocumentToCollection(
-                        m,
-                        FirestoreConstants.COLLECTION_MOOD_EVENTS,
-                        e -> {
-                            throw new RuntimeException("Failed to instantiate test moods.");
+                addDocumentToCollection(m, FirestoreConstants.COLLECTION_MOOD_EVENTS)
+                        .exceptionally(ex -> {
+                            System.err.println("Error initializing test environment: " + ex.getMessage());
+                            return null;
                         });
             }
         } catch (IllegalStateException e) {
@@ -125,32 +137,51 @@ public class MoodEventHelperTest {
     }
 
     @Test
-    public void getMoodEventsByUser_shouldReturnUsersMoodEvents() throws InterruptedException {
-        CountDownLatch latch = new CountDownLatch(1);
+    public void getMoodEventsByUser_shouldReturnUsersMoodEvents() throws ExecutionException, InterruptedException, TimeoutException {
+        CompletableFuture<List<MoodEvent>> future = new CompletableFuture<>();
 
         List<MoodEvent> expected = new ArrayList<>(Arrays.asList(
-                moodEvent1,
-                moodEvent4
+                moodEvent4,  // Newest first
+                moodEvent1
         ));
 
         moodEventHelper.getMoodEventsByUser(username1,
-                moodEvents -> {
-                    assertEquals(expected, moodEvents);
-                    latch.countDown();
-                },
-                e -> {
-                    fail(e.getMessage());
-                    latch.countDown();
-        });
+                future::complete,
+                future::completeExceptionally
+        );
 
-        assertTrue("Test timed out", latch.await(5, TimeUnit.SECONDS));
+        // Waits for the result and asserts
+        List<MoodEvent> moodEvents = future.get(5, TimeUnit.SECONDS);
+        assertEquals(expected, moodEvents);
     }
 
+    @Test
+    public void getMoodEventsByFollowing_shouldReturnFollowingMoodEvents() throws ExecutionException, InterruptedException, TimeoutException {
+        CompletableFuture<List<MoodEvent>> future = new CompletableFuture<>();
 
+        List<MoodEvent> expected = new ArrayList<>(Arrays.asList(
+                moodEvent3,  // Newest first
+                moodEvent2
+        ));
 
-    private void addDocumentToCollection(Object document, String collectionName, OnFailureListener onFailure) {
+        moodEventHelper.getMoodEventsByFollowing(username1,
+                future::complete,
+                future::completeExceptionally
+        );
+
+        // Waits for the result and asserts
+        List<MoodEvent> moodEvents = future.get(5, TimeUnit.SECONDS);
+        assertEquals(expected, moodEvents);
+    }
+
+    private CompletableFuture<Void> addDocumentToCollection(Object document, String collectionName) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
         db.collection(collectionName)
                 .add(document)
-                .addOnFailureListener(onFailure);
+                .addOnSuccessListener(aVoid -> future.complete(null)) // Complete successfully
+                .addOnFailureListener(future::completeExceptionally); // Complete with an exception
+
+        return future;
     }
 }
