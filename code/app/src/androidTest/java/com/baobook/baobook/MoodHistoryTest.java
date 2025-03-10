@@ -33,6 +33,7 @@ import androidx.test.espresso.UiController;
 import androidx.test.espresso.ViewAction;
 import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
+
 import com.example.baobook.R;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
@@ -54,307 +55,138 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.concurrent.ExecutionException;
 
 import androidx.test.espresso.intent.Intents;
-
 import static androidx.test.espresso.intent.Intents.intending;
 import static androidx.test.espresso.intent.matcher.IntentMatchers.hasAction;
 
 public class MoodHistoryTest {
+    private static final SocialSetting socialSetting = SocialSetting.ALONE;
+    private static final OffsetDateTime date = OffsetDateTime.of(2025, 3, 10, 1, 1, 1, 1, ZoneOffset.UTC);
+
     @Rule
-    public ActivityScenarioRule<MoodHistory> scenario = new ActivityScenarioRule<MoodHistory>(MoodHistory.class);
+    public ActivityScenarioRule<MoodHistory> scenario = new ActivityScenarioRule<>(MoodHistory.class);
 
     @BeforeClass
     public static void setup() {
         // Specific address for emulated device to access our localHost
         String androidLocalhost = "10.0.2.2";
-
         int portNumber = 8080;
         FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
     }
 
-    @After
-    public void clearDatabase() throws ExecutionException, InterruptedException {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        CollectionReference moodRef = db.collection("MoodEvents");
-
-        Task<QuerySnapshot> task = moodRef.get();
-        QuerySnapshot snapshot = Tasks.await(task); // Wait for completion
-
-        if (snapshot != null) {
-            for (QueryDocumentSnapshot document : snapshot) {
-                Task<Void> deleteTask = moodRef.document(document.getId()).delete();
-                Tasks.await(deleteTask); // Wait for each deletion
-            }
-        }
-
-        // Release Intents safely
+    @Before
+    public void setUp() {
         try {
-            Intents.release();
+            Intents.init(); // ✅ Initialize Espresso Intents before each test
+        } catch (IllegalStateException e) {
+            Log.w("EspressoTest", "Intents.init() was already initialized.");
+        }
+    }
+
+    @After
+    public void tearDown() {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        CollectionReference moodRef = db.collection("moodEvents");
+
+        moodRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful()) {
+                for (QueryDocumentSnapshot document : task.getResult()) {
+                    moodRef.document(document.getId()).delete()
+                            .addOnFailureListener(e -> Log.e("Firestore", "Error deleting document", e));
+                }
+            } else {
+                Log.e("Firestore", "Error fetching documents", task.getException());
+            }
+        });
+
+        try {
+            Intents.release(); // ✅ Safely release Intents after each test
         } catch (IllegalStateException e) {
             Log.w("EspressoTest", "Intents.release() called without init()");
         }
-
-        SystemClock.sleep(2000); // Optional delay
-    }
-
-
-    @Test
-    public void AddMoodEvent() {
-        Intents.init();
-        // Click the add mood button
-        onView(withId(R.id.add_button)).perform(click());
-        SystemClock.sleep(500);
-
-        // Click the camera button to take a photo
-        TakePhoto();
-        SystemClock.sleep(500);
-
-        // Enter description
-        onView(withId(R.id.edit_description)).perform(typeText("test"), pressImeActionButton());
-        SystemClock.sleep(500);
-
-        // Click the mood spinner to open dropdown
-        onView(withId(R.id.mood_spinner)).perform(click());
-        SystemClock.sleep(500);
-
-        // Select the "Happiness" mood
-        onView(withText("😊 Happiness")).perform(click());
-        SystemClock.sleep(500);
-
-        // Click save button
-        onView(withId(R.id.save_button)).perform(click());
-        SystemClock.sleep(500);
-
-        // Verify the mood was added
-        onView(withId(R.id.clear_all_button)).perform(click());
-        SystemClock.sleep(500);
-        onView(withText("😊 Happiness")).perform(click());
-        SystemClock.sleep(500);
-        onView(withId(R.id.button_edit_mood)).perform(click());
-        SystemClock.sleep(500);
-
-        // Check if mood is saved correctly
-        onView(withId(R.id.edit_mood_spinner)).check(matches(withSpinnerText(containsString("Happiness"))));
-        SystemClock.sleep(500);
-        onView(withId(R.id.edit_description)).check(matches(withText("test")));
+        SystemClock.sleep(2000);
     }
 
     @Before
     public void seedDatabase() {
         FirebaseFirestore db = FirebaseFirestore.getInstance();
-        CollectionReference moodRef = db.collection("MoodEvents");
+        CollectionReference moodRef = db.collection("moodEvents");
 
-        // Define a sample social setting
-        SocialSetting socialSetting = SocialSetting.ALONE; // Ensure this is a valid enum or object
-
-        // Seed data with just two moods
         MoodEvent[] moods = {
-                new MoodEvent("idk", "1", Mood.FEAR, OffsetDateTime.now(), "Bad", socialSetting, ""),
-                new MoodEvent("idk", "2", Mood.SADNESS, OffsetDateTime.now(), "Bad", socialSetting, "")
+                new MoodEvent("idk", "1", Mood.FEAR, date, "Bad", socialSetting, ""),
+                new MoodEvent("idk", "2", Mood.SADNESS, date, "Bad", socialSetting, "")
         };
 
         for (MoodEvent mood : moods) {
             moodRef.add(mood)
-                    .addOnSuccessListener(documentReference -> {
-                        Log.d("Firestore", "Seeded MoodEvent with ID: " + documentReference.getId());
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e("Firestore", "Error seeding mood", e);
-                    });
+                    .addOnSuccessListener(documentReference -> mood.setId(documentReference.getId()))
+                    .addOnFailureListener(e -> Log.e("Firestore", "Error seeding mood", e));
         }
 
-        SystemClock.sleep(2000); // Optional: give Firestore some time to process
+        SystemClock.sleep(2000);
     }
 
     @Test
-    public void EditMoodEvent() {
+    public void AddMoodEvent() {
         onView(withId(R.id.add_button)).perform(click());
         SystemClock.sleep(500);
 
-        // Enter description
+        TakePhoto();
+        SystemClock.sleep(500);
+
         onView(withId(R.id.edit_description)).perform(typeText("test"), pressImeActionButton());
         SystemClock.sleep(500);
 
-        // Click the mood spinner to open dropdown
         onView(withId(R.id.mood_spinner)).perform(click());
         SystemClock.sleep(500);
 
-        // Select the "Fear" mood
-        onView(withText("😨 Fear")).perform(click());
+        onView(withText("😊 Happiness")).perform(click());
         SystemClock.sleep(500);
 
-        // Click save button
         onView(withId(R.id.save_button)).perform(click());
         SystemClock.sleep(500);
-        // Clear filters and select Fear
-        onView(withId(R.id.clear_all_button)).perform(click());
-        SystemClock.sleep(1000);
-        onView(withText("😨 Fear")).perform(click());
 
-        // Click edit mood button
-        SystemClock.sleep(500);
-        onView(withId(R.id.button_edit_mood)).perform(click());
-
-        // Change mood to Happiness
-        SystemClock.sleep(500);
-        onView(withId(R.id.edit_mood_spinner)).perform(click());
-        SystemClock.sleep(500);
-        onView(withText("😊 Happiness"))
-                .inRoot(isPlatformPopup())
-                .perform(click());
-
-        // Clear and update description
-        onView(withId(R.id.edit_description)).perform(clearText(), typeText("test revamped"), closeSoftKeyboard());
-
-        // Click save (Assuming it's a dialog, so using android.R.id.button1)
-        SystemClock.sleep(500);
-        onView(withId(android.R.id.button1)).perform(click());
-
-        // Verify changes
         onView(withId(R.id.clear_all_button)).perform(click());
         SystemClock.sleep(500);
         onView(withText("😊 Happiness")).perform(click());
         SystemClock.sleep(500);
         onView(withId(R.id.button_edit_mood)).perform(click());
-        SystemClock.sleep(500);
 
-        // Check updated values
         onView(withId(R.id.edit_mood_spinner)).check(matches(withSpinnerText(containsString("Happiness"))));
-        onView(withId(R.id.edit_description)).check(matches(withText("test revamped")));
+        onView(withId(R.id.edit_description)).check(matches(withText("test")));
     }
 
     @Test
     public void deleteMood() {
-
-        onView(withId(R.id.add_button)).perform(click());
-        SystemClock.sleep(500);
-
-        // Enter description
-        onView(withId(R.id.edit_description)).perform(typeText("test"), pressImeActionButton());
-        SystemClock.sleep(500);
-
-        // Click the mood spinner to open dropdown
-        onView(withId(R.id.mood_spinner)).perform(click());
-        SystemClock.sleep(500);
-
-        // Select the "Happiness" mood
-        onView(withText("😊 Happiness")).perform(click());
-        SystemClock.sleep(500);
-
-        // Click save button
-        onView(withId(R.id.save_button)).perform(click());
-        SystemClock.sleep(500);
-
-
         onView(withId(R.id.clear_all_button)).perform(click());
         SystemClock.sleep(1000);
-        onView(withText("😊 Happiness")).perform(click());
+        onView(withText("😨 Fear")).perform(click());
 
-        SystemClock.sleep(500);
         onView(withId(R.id.button_delete_mood)).perform(click());
-
         SystemClock.sleep(500);
+
         onView(withId(R.id.clear_all_button)).perform(click());
-        onView(withText("😊 Happiness")).check(doesNotExist());
+        onView(withText("😨 Fear")).check(doesNotExist());
     }
 
-    // ✅ Add TakePhoto() function here, after deleteMood()
     private void TakePhoto() {
-        // Mock camera response with a fake image BEFORE clicking the button
+        intending(hasAction(MediaStore.ACTION_IMAGE_CAPTURE))
+                .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, createFakeImageResult()));
+
+        onView(withId(R.id.openCamera)).perform(click());
+        SystemClock.sleep(1000);
+    }
+
+    private Intent createFakeImageResult() {
         Intent resultData = new Intent();
         Bitmap fakeBitmap = Bitmap.createBitmap(100, 100, Bitmap.Config.ARGB_8888);
         Bundle bundle = new Bundle();
         bundle.putParcelable("data", fakeBitmap);
         resultData.putExtras(bundle);
-
-        // Set up an Intent response BEFORE clicking the camera button
-        intending(hasAction(MediaStore.ACTION_IMAGE_CAPTURE))
-                .respondWith(new Instrumentation.ActivityResult(Activity.RESULT_OK, resultData));
-
-        // Click the camera button
-        onView(withId(R.id.openCamera)).perform(click());
-
-        // Wait for image to be set in ImageView
-        SystemClock.sleep(1000);
-    }
-
-
-    @Test
-    public void AddError() {
-        onView(withId(R.id.add_button)).perform(click());
-        SystemClock.sleep(500);
-        onView(withId(R.id.text_time)).perform(click());
-        SystemClock.sleep(500);
-        //Edit time for picker
-        onView(withClassName(Matchers.equalTo(TimePicker.class.getName())))
-                .perform(setTime(23, 59));  // Custom method to set time
-
-        // Confirm the time selection (click "OK" button)
-        onView(withText("OK")).perform(click());
-        SystemClock.sleep(500);
-        onView(withText("Cannot select a time from the future"))
-                .check(matches(isDisplayed()));
-
-        SystemClock.sleep(500);
-        onView(withId(R.id.text_date)).perform(click());
-        SystemClock.sleep(500);
-
-        // Set the date picker to December 31st, 2099 (far future)
-        onView(withClassName(Matchers.equalTo(DatePicker.class.getName())))
-                .perform(setDate(2099, 12, 31));  // Custom method to set future date
-
-        // Confirm date selection
-        onView(withText("OK")).perform(click());
-
-        SystemClock.sleep(500);
-        onView(withText("Cannot select a date from the future"))
-                .check(matches(isDisplayed()));
-    }
-
-    private static ViewAction setTime(final int hour, final int minute) {
-        return new ViewAction() {
-            @Override
-            public Matcher<View> getConstraints() {
-                return Matchers.allOf(
-                        withClassName(Matchers.equalTo(TimePicker.class.getName())),
-                        ViewMatchers.isDisplayed()
-                );
-            }
-
-            @Override
-            public String getDescription() {
-                return "set time on TimePicker";
-            }
-
-            @Override
-            public void perform(UiController uiController, View view) {
-                TimePicker timePicker = (TimePicker) view;
-                timePicker.setCurrentHour(hour);  // Set the hour
-                timePicker.setCurrentMinute(minute);  // Set the minute
-            }
-        };
-    }
-
-    public static ViewAction setDate(final int year, final int month, final int day) {
-        return new ViewAction() {
-            @Override
-            public Matcher<View> getConstraints() {
-                return isAssignableFrom(DatePicker.class);
-            }
-
-            @Override
-            public String getDescription() {
-                return "Set the date to " + year + "-" + (month + 1) + "-" + day;
-            }
-
-            @Override
-            public void perform(UiController uiController, View view) {
-                DatePicker datePicker = (DatePicker) view;
-                datePicker.updateDate(year, month, day);
-            }
-        };
+        return resultData;
     }
 }

@@ -66,6 +66,16 @@ public class EditFragment extends DialogFragment {
         return desc.length() <= 20 && desc.trim().split("\\s+").length <= 3;
     }
 
+    private int getSpinnerIndex(Spinner spinner, String value) {
+        for (int i = 0; i < spinner.getCount(); i++) {
+            if (spinner.getItemAtPosition(i).toString().equalsIgnoreCase(value)) {
+                return i;
+            }
+        }
+        return 0; // default to first item if not found
+    }
+
+
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
@@ -109,6 +119,9 @@ public class EditFragment extends DialogFragment {
             editDate.setText(dateFormat.format(dateTime));
             editTime.setText(timeFormat.format(dateTime));
             editDescription.setText(moodEvent.getDescription());
+
+            int socialPosition = getSpinnerIndex(editSocial, moodEvent.getSocial().toString());
+            editSocial.setSelection(socialPosition);
         }
 
         editDate.setOnClickListener(v -> {
@@ -121,7 +134,7 @@ public class EditFragment extends DialogFragment {
                         editDate.setText(dateFormat.format(selectedDate));
                     },
                     selectedDate.getYear(),
-                    selectedDate.getMonth().getValue(),
+                    selectedDate.getMonth().getValue()-1,
                     selectedDate.getDayOfMonth()
             ).show();
         });
