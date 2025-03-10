@@ -64,7 +64,7 @@ public class EditFragment extends DialogFragment {
         }
 
         View view = LayoutInflater.from(context).inflate(R.layout.edit_fragment, null);
-        Spinner editMood = view.findViewById(R.id.mood_spinner);
+        Spinner editMood = view.findViewById(R.id.edit_mood_spinner);
         TextView editDate = view.findViewById(R.id.text_date);
         TextView editTime = view.findViewById(R.id.text_time);
         EditText editDescription = view.findViewById(R.id.edit_description);

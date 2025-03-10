@@ -54,13 +54,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text_date" />
 
-        android:textColor="@android:color/black" />
 
     <Spinner
         android:id="@+id/social_situation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:entries="@array/social_options"/>
+        android:entries="@array/social_options"
+        app:layout_constraintBottom_toTopOf="@+id/edit_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 
     <EditText
@@ -70,15 +72,13 @@
 
         android:layout_alignParentBottom="true"
         android:layout_marginTop="36dp"
-        android:hint="Enter Description"
+        android:hint="Enter Trigger"
         android:inputType="text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text_time" />
 
-        android:hint="Enter Trigger (Optional)"
-        android:inputType="text" />
 
     <!--<CheckBox
         android:id="@+id/add_to_watchlist"

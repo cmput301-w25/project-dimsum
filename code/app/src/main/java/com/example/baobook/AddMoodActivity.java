@@ -83,10 +83,10 @@ public class AddMoodActivity extends AppCompatActivity {
         cameraButton = findViewById(R.id.openCamera);
 
         // Request Camera Permission Only If Not Granted
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        /*if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA);
-        }
+        }*/
 
         // Camera Button Click Listener
         cameraButton.setOnClickListener(v -> {
@@ -220,9 +220,3 @@ public class AddMoodActivity extends AppCompatActivity {
     }
 }
 
-        // Set default selection
-        if (!moodOptionsList.isEmpty()) {
-            spinner.setSelection(0);
-        }
-    }
-}
