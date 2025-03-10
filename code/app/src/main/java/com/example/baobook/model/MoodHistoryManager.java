@@ -3,11 +3,8 @@ package com.example.baobook.model;
 import java.util.ArrayList;
 import java.util.Collections;
 
-/**
- * Manager class for handling mood history business logic
- * Separates data manipulation from UI concerns
- * Implemented as a singleton to share data across activities
- */
+//Manager class for handling mood history
+
 public class MoodHistoryManager {
     private static MoodHistoryManager instance;
     private ArrayList<MoodEvent> moodList;
@@ -35,9 +32,7 @@ public class MoodHistoryManager {
         moodList.clear();
     }
 
-    /**
-     * Sorts the mood list in reverse chronological order
-     */
+    //Sorts the mood list in reverse chronological order
     public void sortByDate() {
         Collections.sort(moodList, (mood1, mood2) -> {
             int dateComparison = mood2.getDate().compareTo(mood1.getDate());
@@ -49,11 +44,7 @@ public class MoodHistoryManager {
         });
     }
 
-    /**
-     * Filters the mood list to show only moods of a specific type
-     * @param moodType The type of mood to filter by
-     * @return ArrayList of MoodEvents containing only the specified mood type
-     */
+    // Filters the mood list to show only moods of a specific type
     public ArrayList<MoodEvent> filterByMood(Mood moodType) {
         ArrayList<MoodEvent> filteredList = new ArrayList<>();
         for (MoodEvent mood : moodList) {
