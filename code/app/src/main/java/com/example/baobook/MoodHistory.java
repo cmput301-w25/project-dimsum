@@ -42,6 +42,7 @@ import java.util.Date;
  * Activity that displays the mood history list.
  * Loads from Firestore, adds each MoodEvent to MoodHistoryManager,
  * then uses manager.getFilteredList(...) to apply filters for display.
+ * Also has the functions for delete and edit
  */
 public class MoodHistory extends AppCompatActivity
         implements MoodEventOptionsFragment.MoodEventOptionsDialogListener,

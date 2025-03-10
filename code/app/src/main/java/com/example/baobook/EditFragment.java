@@ -31,6 +31,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Locale;
 
+/*
+Edits current mood activity. Changes can be applied to trigger, mood, time, date and social status.
+*/
+
+
 public class EditFragment extends DialogFragment {
 
     private LocalDate selectedDate;

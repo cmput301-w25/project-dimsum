@@ -25,7 +25,7 @@ public class MoodEvent implements Serializable {
     @Exclude
     @JsonIgnore
     private OffsetDateTime dateTime;
-    private String description;
+    private String description; // trigger description
     private String base64image;
     private SocialSetting social;
 
