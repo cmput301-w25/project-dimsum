@@ -229,6 +229,14 @@ public class AddMoodActivity extends AppCompatActivity {
     }
     private void saveMoodEvent(String username, String id, Mood mood, Date date, Date time,
                                String description, String social, String base64Image) {
+        if (date == null || time == null) {
+            Toast.makeText(this, "Error: Mood event must have a valid date and time.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        //where you use default image and no photo taken
+        if (base64Image == null) {
+            base64Image = "";
+        }
         MoodEvent moodEvent = new MoodEvent(username, id, mood, date, time, description, social, base64Image);
 
         FirebaseFirestore.getInstance()

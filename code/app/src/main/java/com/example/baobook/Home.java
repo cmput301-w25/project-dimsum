@@ -35,7 +35,7 @@ public class Home extends AppCompatActivity {
                     MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("moodEvent");
                     if (mood != null) {
                         // Add the mood to Firestore
-                        addMoodToFirestore(mood);
+                        Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
