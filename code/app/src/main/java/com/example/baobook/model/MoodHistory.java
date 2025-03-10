@@ -33,6 +33,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 
+/**
+ * Activity that displays the mood history list.
+ * Loads from Firestore, adds each MoodEvent to MoodHistoryManager,
+ * then uses manager.getFilteredList(...) to apply filters for display.
+ */
 public class MoodHistory extends AppCompatActivity
         implements MoodEventOptionsFragment.MoodEventOptionsDialogListener,
         EditFragment.EditMoodEventDialogListener,
@@ -47,15 +52,17 @@ public class MoodHistory extends AppCompatActivity
     private FirebaseFirestore db;
     private CollectionReference moodsRef;
 
-    private static ArrayList<MoodEvent> dataList = new ArrayList<>();
-    private ArrayList<MoodEvent> filteredList;
     private MoodEventArrayAdapter moodArrayAdapter;
     private Button homeButton, mapButton, profileButton;
 
-    // Fields to store the user’s chosen filters
-    private Mood filterMood = null;          // which mood?
-    private boolean filterRecentWeek = false; // last 7 days?
-    private String filterWord = null;         // single word in description?
+    // Filter states
+    private Mood filterMood = null;
+    private boolean filterRecentWeek = false;
+    private String filterWord = null;
+
+    // We'll display the "filtered" results in memory, for the ListView
+    // So we keep a local list for quick adaptation to the UI
+    private ArrayList<MoodEvent> filteredList = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,52 +75,41 @@ public class MoodHistory extends AppCompatActivity
         // Initialize views
         moodList = findViewById(R.id.mood_history_list);
         addButton = findViewById(R.id.add_button);
-
-        // BOTTOM NAV BUTTONS
         homeButton = findViewById(R.id.home_button);
         mapButton = findViewById(R.id.map_button);
         profileButton = findViewById(R.id.profile_button);
-
-        // 2) The new filter UI elements
         openFilterButton = findViewById(R.id.open_filter_button);
         clearAllButton = findViewById(R.id.clear_all_button);
         activeFiltersContainer = findViewById(R.id.active_filters_container);
 
-        // Prepare data
-        dataList = new ArrayList<>();
-        filteredList = new ArrayList<>();
-
-        // Set up the ListView adapter
+        // Setup the list adapter
         moodArrayAdapter = new MoodEventArrayAdapter(this, filteredList);
         moodList.setAdapter(moodArrayAdapter);
 
-        // Load data from Firestore
+        // Load data from Firestore -> push into manager
         loadMoodsFromFirestore();
 
-        // FAB to add new mood
+        // Add new mood
         addButton.setOnClickListener(v -> {
             Intent intent = new Intent(MoodHistory.this, AddMoodActivity.class);
             addMoodLauncher.launch(intent);
         });
 
-        // If user clicks an item -> show edit/delete options
+        // If user clicks an item -> edit/delete
         moodList.setOnItemClickListener((parent, view, position, id) -> {
             MoodEvent selectedMoodEvent = filteredList.get(position);
             MoodEventOptionsFragment fragment = new MoodEventOptionsFragment(selectedMoodEvent);
             fragment.show(getSupportFragmentManager(), "MoodOptionsDialog");
         });
 
-        // 3) “Filter” button: open the FilterDialogFragment
+        // Filter button -> open dialog
         openFilterButton.setOnClickListener(v -> {
             FilterDialogFragment dialog = new FilterDialogFragment(this);
-
-            // Optionally pass current filters so user sees them in the dialog:
             dialog.setExistingFilters(filterMood, filterRecentWeek, filterWord);
-
             dialog.show(getSupportFragmentManager(), "FilterDialog");
         });
 
-        // 4) “Clear All” button: reset everything
+        // Clear All -> remove filters
         clearAllButton.setOnClickListener(v -> {
             filterMood = null;
             filterRecentWeek = false;
@@ -122,84 +118,37 @@ public class MoodHistory extends AppCompatActivity
             Toast.makeText(this, "All filters cleared", Toast.LENGTH_SHORT).show();
         });
 
-        // HOME button -> open HomeActivity
+        // Bottom nav
         homeButton.setOnClickListener(v -> {
             Intent intent = new Intent(MoodHistory.this, Home.class);
             startActivity(intent);
         });
-
-        // MAP button -> open MapActivity
-        // In part4
-
-        // PROFILE button -> open ProfileActivity
+        mapButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MoodHistory.this, Map.class);
+            startActivity(intent);
+        });
         profileButton.setOnClickListener(v -> {
             Intent intent = new Intent(MoodHistory.this, UserProfileActivity.class);
             startActivity(intent);
         });
     }
 
-    // Called by FilterDialogFragment after user taps “Save”
     @Override
     public void onFilterSave(Mood mood, boolean lastWeek, String word) {
-        // Store the chosen filters
-        this.filterMood = mood;          // e.g. Mood.ANGER
-        this.filterRecentWeek = lastWeek; // true/false
-        this.filterWord = word;          // single word from user
-
-        // Then apply them
+        this.filterMood = mood;
+        this.filterRecentWeek = lastWeek;
+        this.filterWord = word;
         applyFilters();
     }
 
-    // The actual filtering logic
+    /**
+     * Calls the manager to get a filtered list, updates the UI with results,
+     * and rebuilds the filter “chips”.
+     */
     private void applyFilters() {
-        // Start from entire data set
-        ArrayList<MoodEvent> temp = new ArrayList<>(dataList);
+        MoodHistoryManager manager = MoodHistoryManager.getInstance();
+        ArrayList<MoodEvent> temp = manager.getFilteredList(filterMood, filterRecentWeek, filterWord);
 
-        // 1) If user picked a mood, remove all events that aren’t that mood
-        if (filterMood != null) {
-            ArrayList<MoodEvent> toRemove = new ArrayList<>();
-            for (MoodEvent me : temp) {
-                if (me.getMood() != filterMood) {
-                    toRemove.add(me);
-                }
-            }
-            temp.removeAll(toRemove);
-        }
-
-        // 2) If user wants last 7 days only
-        if (filterRecentWeek) {
-            long oneWeekAgo = System.currentTimeMillis() - (7L * 24 * 60 * 60 * 1000);
-            ArrayList<MoodEvent> toRemove = new ArrayList<>();
-            for (MoodEvent me : temp) {
-                Date dateTime = combineDateAndTime(me.getDate(), me.getTime());
-                if (dateTime.getTime() < oneWeekAgo) {
-                    toRemove.add(me);
-                }
-            }
-            temp.removeAll(toRemove);
-        }
-
-        // 3) If user provided a single word
-        if (filterWord != null && !filterWord.isEmpty()) {
-            String lower = filterWord.toLowerCase();
-            ArrayList<MoodEvent> toRemove = new ArrayList<>();
-            for (MoodEvent me : temp) {
-                String desc = (me.getDescription() == null) ? "" : me.getDescription().toLowerCase();
-                if (!desc.contains(lower)) {
-                    toRemove.add(me);
-                }
-            }
-            temp.removeAll(toRemove);
-        }
-
-        // Sort them descending by date/time
-        Collections.sort(temp, (m1, m2) -> {
-            int dateComparison = m2.getDate().compareTo(m1.getDate());
-            if (dateComparison != 0) return dateComparison;
-            return m2.getTime().compareTo(m1.getTime());
-        });
-
-        // Replace filteredList contents
         filteredList.clear();
         filteredList.addAll(temp);
         moodArrayAdapter.notifyDataSetChanged();
@@ -207,16 +156,10 @@ public class MoodHistory extends AppCompatActivity
         rebuildActiveFiltersChips();
     }
 
-    // Combine date + time
-    private Date combineDateAndTime(Date date, Date time) {
-        return date;
-    }
-
-    // Build small “chips” for each active filter, each with an “X” to remove it
+    // Show “chips” for each active filter
     private void rebuildActiveFiltersChips() {
         activeFiltersContainer.removeAllViews();
 
-        // Mood chip
         if (filterMood != null) {
             activeFiltersContainer.addView(
                     createChip(filterMood.toString(), v -> {
@@ -226,7 +169,6 @@ public class MoodHistory extends AppCompatActivity
             );
         }
 
-        // “Last 7 days” chip
         if (filterRecentWeek) {
             activeFiltersContainer.addView(
                     createChip("Last 7 days", v -> {
@@ -236,7 +178,6 @@ public class MoodHistory extends AppCompatActivity
             );
         }
 
-        // Word chip
         if (filterWord != null && !filterWord.isEmpty()) {
             activeFiltersContainer.addView(
                     createChip("Word: " + filterWord, v -> {
@@ -265,6 +206,10 @@ public class MoodHistory extends AppCompatActivity
         return layout;
     }
 
+    /**
+     * Load from Firestore, clear the manager’s list, add each mood,
+     * then show them in the UI with no filters initially.
+     */
     private void loadMoodsFromFirestore() {
         moodsRef.addSnapshotListener((value, error) -> {
             if (error != null) {
@@ -274,29 +219,25 @@ public class MoodHistory extends AppCompatActivity
             }
 
             if (value != null) {
-                dataList.clear();
+                // Clear manager first
+                MoodHistoryManager manager = MoodHistoryManager.getInstance();
+                manager.clearMoods();
+
+                // Add each doc
                 for (QueryDocumentSnapshot snapshot : value) {
                     MoodEvent mood = snapshot.toObject(MoodEvent.class);
                     mood.setId(snapshot.getId());
-                    dataList.add(mood);
+                    manager.addMood(mood);
                 }
-                sortMoodHistoryByDate();
 
-                // By default, filtered = entire data
+                // Sort manager’s list by date
+                manager.sortByDate();
+
+                // By default, no filters => show entire list
                 filteredList.clear();
-                filteredList.addAll(dataList);
+                filteredList.addAll(manager.getMoodList());
                 moodArrayAdapter.notifyDataSetChanged();
             }
-        });
-    }
-
-    private void sortMoodHistoryByDate() {
-        Collections.sort(dataList, (m1, m2) -> {
-            int dateComparison = m2.getDate().compareTo(m1.getDate());
-            if (dateComparison != 0) {
-                return dateComparison;
-            }
-            return m2.getTime().compareTo(m1.getTime());
         });
     }
 
@@ -309,7 +250,8 @@ public class MoodHistory extends AppCompatActivity
                                 addMoodToFirestore(mood);
                             }
                         }
-                    });
+                    }
+            );
 
     private void addMoodToFirestore(MoodEvent mood) {
         moodsRef.add(mood)
@@ -353,9 +295,5 @@ public class MoodHistory extends AppCompatActivity
                     Log.e("Firestore", "Error deleting mood", e);
                     Toast.makeText(this, "Failed to delete mood.", Toast.LENGTH_SHORT).show();
                 });
-    }
-
-    public static ArrayList<MoodEvent> getDataList() {
-        return dataList;
     }
 }
