@@ -4,7 +4,8 @@ import androidx.annotation.NonNull;
 
 public enum SocialSetting {
     ALONE("Alone"),
-    DUO("Duo"),  // 2 to several people
+    PAIR("Pair"),
+    SMALL_GROUP("Small group"),
     CROWD("Crowd");
 
     private final String prettyName;

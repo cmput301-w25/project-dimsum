@@ -85,7 +85,7 @@ public class MoodEventTest {
         Mood newMood = Mood.ANGER;
         OffsetDateTime newTimestamp = OffsetDateTime.parse("2025-03-04T14:30:00Z");
         String newDescription = "i'm hungry";
-        SocialSetting newSocial = SocialSetting.DUO;
+        SocialSetting newSocial = SocialSetting.PAIR;
 
         cut.editMoodEvent(newMood, newTimestamp, newDescription, newSocial);
         assertEquals(newMood, cut.getMood());
