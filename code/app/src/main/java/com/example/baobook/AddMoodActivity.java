@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat;
 
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
+import com.google.android.material.snackbar.Snackbar;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -127,7 +128,7 @@ public class AddMoodActivity extends AppCompatActivity {
                     (view, year, month, dayOfMonth) -> {
                         selectedDateTime.set(year, month, dayOfMonth);
                         if (selectedDateTime.after(currentDateTime)) {
-                            Toast.makeText(this, "Cannot select a future date", Toast.LENGTH_SHORT).show();
+                            Snackbar.make(textTime, "Cannot select a future date", Snackbar.LENGTH_LONG).show();
                             selectedDateTime.setTime(currentDateTime.getTime());
                         }
                         textDate.setText(dateFormat.format(selectedDateTime.getTime()));
@@ -149,7 +150,8 @@ public class AddMoodActivity extends AppCompatActivity {
                         selectedDateTime.set(Calendar.MINUTE, minute);
 
                         if (selectedDateTime.after(currentDateTime)) {
-                            Toast.makeText(this, "Cannot select a future time", Toast.LENGTH_SHORT).show();
+                            Snackbar.make(textTime, "Cannot select a future time", Snackbar.LENGTH_LONG).show();
+
                             selectedDateTime.setTime(currentDateTime.getTime());
                         }
                         textTime.setText(timeFormat.format(selectedDateTime.getTime()));
@@ -203,6 +205,21 @@ public class AddMoodActivity extends AppCompatActivity {
         findViewById(R.id.cancel_button).setOnClickListener(v -> finish());
 
         initializeSpinner(editMood);
+
+        Button profile = findViewById(R.id.profile_button);
+        profile.setOnClickListener(v -> {
+            // Handle profile button click
+            Intent intent = new Intent(AddMoodActivity.this, UserProfileActivity.class);
+            startActivity(intent);
+        });
+
+        Button home = findViewById(R.id.home_button);
+        home.setOnClickListener(v -> {
+            // Handle profile button click
+            Intent intent = new Intent(AddMoodActivity.this, Home.class);
+            startActivity(intent);
+        });
+
     }
 
     private void initializeSpinner(Spinner spinner) {
@@ -218,5 +235,8 @@ public class AddMoodActivity extends AppCompatActivity {
         spinner.setAdapter(adapter);
 
     }
+
+
+
 }
 

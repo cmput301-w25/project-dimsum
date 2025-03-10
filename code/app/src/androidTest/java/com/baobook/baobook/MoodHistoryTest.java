@@ -7,25 +7,39 @@ import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
 import static androidx.test.espresso.action.ViewActions.longClick;
 import static androidx.test.espresso.action.ViewActions.pressImeActionButton;
+import static androidx.test.espresso.action.ViewActions.replaceText;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
 import static androidx.test.espresso.assertion.ViewAssertions.matches;
+
 import static androidx.test.espresso.matcher.RootMatchers.isPlatformPopup;
+import static androidx.test.espresso.matcher.RootMatchers.withDecorView;
 import static androidx.test.espresso.matcher.ViewMatchers.hasErrorText;
+import static androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom;
 import static androidx.test.espresso.matcher.ViewMatchers.isDisplayed;
+import static androidx.test.espresso.matcher.ViewMatchers.withClassName;
 import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withSpinnerText;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static java.util.EnumSet.allOf;
+import static org.hamcrest.CoreMatchers.not;
+
 
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.View;
+import android.widget.DatePicker;
+import android.widget.TimePicker;
 
+import androidx.test.espresso.UiController;
+import androidx.test.espresso.ViewAction;
 import androidx.test.espresso.action.ViewActions;
+import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.LargeTest;
@@ -37,6 +51,8 @@ import com.example.baobook.model.MoodHistory;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import org.hamcrest.Matcher;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -50,13 +66,16 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
 import java.util.Objects;
+//import androidx.test.espresso.contrib.PickerActions;
+
+
 
 public class MoodHistoryTest {
     @Rule
     public ActivityScenarioRule<MoodHistory> scenario = new ActivityScenarioRule<MoodHistory>(MoodHistory.class);
 
     @BeforeClass
-    public static void setup(){
+    public static void setup() {
         // Specific address for emulated device to access our localHost
         String androidLocalhost = "10.0.2.2";
 
@@ -195,7 +214,82 @@ public class MoodHistoryTest {
 
     @Test
     public void AddError() {
+        onView(withId(R.id.add_button)).perform(click());
+        SystemClock.sleep(500);
+        onView(withId(R.id.text_time)).perform(click());
+        SystemClock.sleep(500);
+        //Edit time for picker
+        onView(withClassName(Matchers.equalTo(TimePicker.class.getName())))
+                .perform(setTime(23, 59));  // Custom method to set time
 
+        // Confirm the time selection (click "OK" button)
+        onView(withText("OK")).perform(click());
+        SystemClock.sleep(500);
+        onView(withText("Cannot select a future time"))
+                .check(matches(isDisplayed()));
+
+        SystemClock.sleep(500);
+        onView(withId(R.id.text_date)).perform(click());
+        SystemClock.sleep(500);
+
+        // Set the date picker to December 31st, 2099 (far future)
+        onView(withClassName(Matchers.equalTo(DatePicker.class.getName())))
+                .perform(setDate(2099, 12, 31));  // Custom method to set future date
+
+        // Confirm date selection
+        onView(withText("OK")).perform(click());
+
+        SystemClock.sleep(500);
+        onView(withText("Cannot select a future date"))
+                .check(matches(isDisplayed()));
+
+
+
+
+
+    }
+    private static ViewAction setTime(final int hour, final int minute) {
+        return new ViewAction() {
+            @Override
+            public Matcher<View> getConstraints() {
+                return Matchers.allOf(
+                        withClassName(Matchers.equalTo(TimePicker.class.getName())),
+                        ViewMatchers.isDisplayed()
+                );
+            }
+
+            @Override
+            public String getDescription() {
+                return "set time on TimePicker";
+            }
+
+            @Override
+            public void perform(UiController uiController, View view) {
+                TimePicker timePicker = (TimePicker) view;
+                timePicker.setCurrentHour(hour);  // Set the hour
+                timePicker.setCurrentMinute(minute);  // Set the minute
+            }
+        };
+    }
+
+    public static ViewAction setDate(final int year, final int month, final int day) {
+        return new ViewAction() {
+            @Override
+            public Matcher<View> getConstraints() {
+                return isAssignableFrom(DatePicker.class);
+            }
+
+            @Override
+            public String getDescription() {
+                return "Set the date to " + year + "-" + (month + 1) + "-" + day;
+            }
+
+            @Override
+            public void perform(UiController uiController, View view) {
+                DatePicker datePicker = (DatePicker) view;
+                datePicker.updateDate(year, month, day);
+            }
+        };
     }
 
 
