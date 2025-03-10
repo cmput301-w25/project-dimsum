@@ -1,4 +1,7 @@
 package com.example.baobook;
+/*
+Created parallel lists to get the color and emoji for a certain mood
+ */
 
 import android.graphics.Color;
 
