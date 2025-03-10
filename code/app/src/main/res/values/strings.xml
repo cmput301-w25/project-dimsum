@@ -15,6 +15,9 @@
     <string name="no">No</string>
     <string name="yes">Yes</string>
     <string name="choose_your_unique_username_and_password">Choose your unique username and password</string>
+    <string name="select_date">Select Date</string>
+    <string name="select_time">Select Time</string>
+    <string name="select_mood">Select Mood</string>
 
     <string-array name="mood_options">
         <item>Anger</item>
