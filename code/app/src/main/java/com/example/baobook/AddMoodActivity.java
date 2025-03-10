@@ -24,7 +24,9 @@ import androidx.core.content.ContextCompat;
 
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.util.UserSession;
 
+import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -73,6 +75,9 @@ public class AddMoodActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_mood_event_fragment);
+
+        UserSession session = new UserSession(this);
+        String username = session.getUsername();
 
         Spinner editMood = findViewById(R.id.mood_spinner);
         TextView textDate = findViewById(R.id.text_date);
@@ -154,8 +159,8 @@ public class AddMoodActivity extends AppCompatActivity {
                         }
                         textTime.setText(timeFormat.format(selectedDateTime.getTime()));
                     },
-                    selectedDateTime.get(Calendar.HOUR_OF_DAY),
-                    selectedDateTime.get(Calendar.MINUTE),
+                    selectedTime.get(Calendar.HOUR_OF_DAY),
+                    selectedTime.get(Calendar.MINUTE),
                     true
             );
             timePickerDialog.show();
@@ -187,7 +192,7 @@ public class AddMoodActivity extends AppCompatActivity {
                 String id = UUID.randomUUID().toString();
 
                 // Create the MoodEvent with the generated ID
-                MoodEvent moodEvent = new MoodEvent(id, mood, date, time, description, social);
+                MoodEvent moodEvent = new MoodEvent(username, id, mood, date, time, description, social);
 
                 // Pass the MoodEvent back to MoodHistory
                 Intent resultIntent = new Intent();

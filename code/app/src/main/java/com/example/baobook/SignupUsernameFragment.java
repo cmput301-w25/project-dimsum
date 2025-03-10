@@ -1,9 +1,7 @@
 package com.example.baobook;
 
-import static android.content.Context.MODE_PRIVATE;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,9 +12,7 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
-import com.example.baobook.FirestoreHelper;
-import com.example.baobook.Home;
-import com.example.baobook.model.User;
+import com.example.baobook.controller.AuthHelper;
 
 public class SignupUsernameFragment extends Fragment {
     @Override
@@ -36,38 +32,23 @@ public class SignupUsernameFragment extends Fragment {
             }
 
             // Check if username exists
-            FirestoreHelper.checkIfUsernameExists(username, new FirestoreHelper.UsernameExistsCallback() {
-                @Override
-                public void onResult(boolean exists) {
-                    if (exists) {
-                        Toast.makeText(requireActivity(), "Username already exists", Toast.LENGTH_SHORT).show();
-                        return;  //  Stop execution here if username exists
-                    }
-
-                    // If username is unique, create the user
-                    User user = new User(username, password);
-
-                    // Save username in SharedPreferences
-                    SharedPreferences prefs = requireActivity().getSharedPreferences("UserPrefs", MODE_PRIVATE);
-                    SharedPreferences.Editor editor = prefs.edit();
-                    editor.putString("Username", username);
-                    editor.apply();
-
-                    // Add user to Firestore
-                    FirestoreHelper.addUser(user, new FirestoreHelper.UserCallback() {
-                        @Override
-                        public void onResult(boolean success) {
-                            if (success) {
-                                Toast.makeText(getActivity(), "Signup Successful", Toast.LENGTH_LONG).show();
-                                Intent intent = new Intent(getActivity(), Home.class);
-                                startActivity(intent);
-                                requireActivity().finish();
-                            } else {
-                                Toast.makeText(getActivity(), "Signup Failed. Try Again.", Toast.LENGTH_LONG).show();
-                            }
-                        }
-                    });
+            AuthHelper authHelper = new AuthHelper(getContext());
+            authHelper.userExists(username, exists -> {
+                if (exists) {
+                    Toast.makeText(requireActivity(), "Username already exists", Toast.LENGTH_SHORT).show();
+                    return;  //  Stop execution here if username already exists
                 }
+                authHelper.registerUser(username, password,
+                        aVoid -> {
+                            Toast.makeText(getActivity(), "Signup Successful", Toast.LENGTH_LONG).show();
+                            Intent intent = new Intent(getActivity(), Home.class);
+                            startActivity(intent);
+                            requireActivity().finish();
+                        }, e -> {
+                            Toast.makeText(getActivity(), "Signup Failed. Try Again.", Toast.LENGTH_LONG).show();
+                        });
+                }, e -> {
+                    Toast.makeText(getActivity(), "Something went wrong. Please try again later", Toast.LENGTH_LONG).show();
             });
         });
 

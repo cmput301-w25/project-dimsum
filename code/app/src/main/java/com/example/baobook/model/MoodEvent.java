@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Date;
 
 public class MoodEvent implements Serializable {
+    private String username;
     private String id; // Unique ID for Firestore
     private Mood mood;
     private Date date; // Use java.util.Date for date
@@ -14,7 +15,8 @@ public class MoodEvent implements Serializable {
     // No-argument constructor required for Firestore
     public MoodEvent() {}
 
-    public MoodEvent(String id, Mood mood, Date date, Date time, String description, String social) {
+    public MoodEvent(String username, String id, Mood mood, Date date, Date time, String description, String social) {
+        this.username = username;
         this.id = id;
         this.mood = mood;
         this.date = date;
@@ -23,13 +25,16 @@ public class MoodEvent implements Serializable {
         this.social = social;
     }
 
-    // Getters and setters
     public String getId() {
         return id;
     }
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public Mood getMood() {
