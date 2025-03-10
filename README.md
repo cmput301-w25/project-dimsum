@@ -13,13 +13,13 @@
 
 ## Project Description
 
-Facebook Clone?
+Facebook Clone
 
 ## Key Features
 
-- [Feature 1]: Brief description
-- [Feature 2]: Brief description
-- [Feature 3]: Brief description
+- [Feature 1]: Update your friends about your mood along with pictures, who you're with, etc.
+- [Feature 2]: A wide range of filters to organize your mood updates!
+- [Feature 3]: Your personalized mood profile!
 
 ## Setup Instructions
 
