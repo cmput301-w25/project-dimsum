@@ -292,10 +292,20 @@ public class MoodHistory extends AppCompatActivity
 
     private void sortMoodHistoryByDate() {
         Collections.sort(dataList, (m1, m2) -> {
+            // Ensure we never attempt to compare null dates
+            if (m1.getDate() == null && m2.getDate() == null) return 0; // Both null -> Keep order
+            if (m1.getDate() == null) return 1; // Push null dates to the bottom
+            if (m2.getDate() == null) return -1; // Push null dates to the bottom
+
+            // Compare dates
             int dateComparison = m2.getDate().compareTo(m1.getDate());
-            if (dateComparison != 0) {
-                return dateComparison;
-            }
+            if (dateComparison != 0) return dateComparison;
+
+            // Ensure we never attempt to compare null times
+            if (m1.getTime() == null && m2.getTime() == null) return 0;
+            if (m1.getTime() == null) return 1;
+            if (m2.getTime() == null) return -1;
+
             return m2.getTime().compareTo(m1.getTime());
         });
     }
@@ -306,7 +316,7 @@ public class MoodHistory extends AppCompatActivity
                         if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                             MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("moodEvent");
                             if (mood != null) {
-                                addMoodToFirestore(mood);
+                                Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
                             }
                         }
                     });
