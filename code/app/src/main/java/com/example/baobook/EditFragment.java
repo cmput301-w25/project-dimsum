@@ -20,23 +20,32 @@ import androidx.fragment.app.DialogFragment;
 
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.SocialSetting;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Locale;
 
 public class EditFragment extends DialogFragment {
 
-    private Calendar selectedDate = Calendar.getInstance();
-    private Calendar selectedTime = Calendar.getInstance();
+    private LocalDate selectedDate;
+    private LocalTime selectedTime;
     private EditMoodEventDialogListener listener;
     private MoodEvent moodEvent;
 
+    private static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.getDefault());
+    private static final DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
+
     public EditFragment(MoodEvent clickedMood) {
         this.moodEvent = clickedMood;
-        selectedDate.setTime(clickedMood.getDate());
-        selectedTime.setTime(clickedMood.getTime());
+        OffsetDateTime dateTime = clickedMood.getDateTime();
+        this.selectedDate = dateTime.toLocalDate();
+        this.selectedTime = dateTime.toLocalTime();
     }
 
     public EditFragment() {
@@ -47,7 +56,7 @@ public class EditFragment extends DialogFragment {
         void onMoodEdited(MoodEvent updatedMoodEvent);
     }
 
-    private boolean isValidDescription(String desc) {
+    public static boolean isValidDescription(String desc) {
         if (desc.isEmpty()) return true;
         return desc.length() <= 20 && desc.trim().split("\\s+").length <= 3;
     }
@@ -91,34 +100,37 @@ public class EditFragment extends DialogFragment {
         if (moodEvent != null) {
             int position = adapter.getPosition(moodEvent.getMood().toString());
             editMood.setSelection(position);
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-            editDate.setText(dateFormat.format(moodEvent.getDate()));
-            editTime.setText(timeFormat.format(moodEvent.getTime()));
+            OffsetDateTime dateTime = moodEvent.getDateTime();
+            editDate.setText(dateFormat.format(dateTime));
+            editTime.setText(timeFormat.format(dateTime));
             editDescription.setText(moodEvent.getDescription());
         }
 
         editDate.setOnClickListener(v -> {
             new DatePickerDialog(context,
                     (view1, year, month, dayOfMonth) -> {
-                        selectedDate.set(year, month, dayOfMonth);
-                        editDate.setText(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(selectedDate.getTime()));
+                        selectedDate = selectedDate
+                                .withYear(year)
+                                .withMonth(month)
+                                .withDayOfMonth(dayOfMonth);
+                        editDate.setText(dateFormat.format(selectedDate));
                     },
-                    selectedDate.get(Calendar.YEAR),
-                    selectedDate.get(Calendar.MONTH),
-                    selectedDate.get(Calendar.DAY_OF_MONTH)
+                    selectedDate.getYear(),
+                    selectedDate.getMonth().getValue(),
+                    selectedDate.getDayOfMonth()
             ).show();
         });
 
         editTime.setOnClickListener(v -> {
             new TimePickerDialog(context,
                     (view12, hourOfDay, minute) -> {
-                        selectedTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                        selectedTime.set(Calendar.MINUTE, minute);
-                        editTime.setText(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(selectedTime.getTime()));
+                        selectedTime.withHour(hourOfDay);
+                        selectedTime.withMinute(minute);
+
+                        editTime.setText(timeFormat.format(selectedTime));
                     },
-                    selectedTime.get(Calendar.HOUR_OF_DAY),
-                    selectedTime.get(Calendar.MINUTE),
+                    selectedTime.getHour() % 12,
+                    selectedTime.getMinute(),
                     true
             ).show();
         });
@@ -135,14 +147,15 @@ public class EditFragment extends DialogFragment {
             positiveButton.setOnClickListener(v -> {
                 Mood newMood = Mood.fromString(editMood.getSelectedItem().toString());
                 String newDescription = editDescription.getText().toString().trim();
-                String newSocial = editSocial.getSelectedItem().toString();
+                SocialSetting newSocial = SocialSetting.fromString(editSocial.getSelectedItem().toString());
+                OffsetDateTime dateTime = OffsetDateTime.of(selectedDate, selectedTime, ZoneOffset.UTC);
 
                 if (!isValidDescription(newDescription)) {
                     Toast.makeText(getContext(), "Trigger must be at most 20 chars or 3 words", Toast.LENGTH_SHORT).show();
                     return; // Prevent dialog from closing
                 }
 
-                moodEvent.editMoodEvent(newMood, selectedDate.getTime(), selectedTime.getTime(), newDescription, newSocial);
+                moodEvent.editMoodEvent(newMood, dateTime, newDescription, newSocial);
                 listener.onMoodEdited(moodEvent);
                 dialog.dismiss(); // Dismiss only when validation passes
             });

@@ -35,16 +35,7 @@ public class UserHelperTest {
         db = FirebaseFirestore.getInstance();
         try {
             db.useEmulator("10.0.2.2", 8080);
-
-            FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS);
-            List<User> testUsers = Arrays.asList(
-                    new User(username1, "password"),
-                    new User(username2, "password")
-            );
-
-            for (User user : testUsers) {
-                setUserInUsersCollection(user).join();
-            }
+            resetDatabase();
         } catch (IllegalStateException e) {
             // pass
         } catch (Exception e) {
@@ -54,7 +45,7 @@ public class UserHelperTest {
 
     @After
     public void tearDown() {
-        FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS);
+        resetDatabase();
     }
 
     @Test
@@ -182,4 +173,16 @@ public class UserHelperTest {
 
         return future;
     }
+
+    private void resetDatabase() {
+        FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS).join();
+        List<User> testUsers = Arrays.asList(
+                new User(username1, "password"),
+                new User(username2, "password")
+        );
+        for (User user : testUsers) {
+            setUserInUsersCollection(user).join();
+        }
+    }
+
 }

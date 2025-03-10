@@ -1,5 +1,7 @@
 package com.example.baobook;
 
+import static com.example.baobook.EditFragment.isValidDescription;
+
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
@@ -10,8 +12,6 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
@@ -19,10 +19,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.Manifest;
 
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.example.baobook.controller.MoodEventHelper;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import java.io.ByteArrayOutputStream;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -31,12 +31,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.SocialSetting;
+import com.example.baobook.util.UserSession;
 import com.google.android.material.snackbar.Snackbar;
 
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
@@ -44,15 +48,13 @@ import java.util.UUID;
 ISSUES: still using a default username with IDK, need to grab the unqiue username later on and filter list view using unqiue user.
  */
 public class AddMoodActivity extends AppCompatActivity {
-
-
-    private Calendar selectedDate = Calendar.getInstance();
-    private Calendar selectedTime = Calendar.getInstance();
     private ImageView capImage;
     private ImageButton cameraButton;
     private Bitmap capturedImage;
     private StorageReference storageRef;
-
+    private MoodEventHelper moodEventHelper = new MoodEventHelper();
+    private LocalDateTime selectedDateTime = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()); // Combines date and time
+    private LocalDateTime currentDateTime = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()); // Combines date and time
 
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
@@ -77,14 +79,13 @@ public class AddMoodActivity extends AppCompatActivity {
                 }
             });
 
-    private final Calendar selectedDateTime = Calendar.getInstance(); // Combines date and time
-    private final Calendar currentDateTime = Calendar.getInstance(); // Stores the current time at launch
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_mood_event_fragment);
+
+        UserSession session = new UserSession(this);
+        String username = session.getUsername();
 
         Spinner editMood = findViewById(R.id.mood_spinner);
         TextView textDate = findViewById(R.id.text_date);
@@ -100,12 +101,12 @@ public class AddMoodActivity extends AppCompatActivity {
                 != PackageManager.PERMISSION_GRANTED) {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA);
 
-         
+
         }*/
 
-        MoodEvent moodEvent = (MoodEvent) getIntent().getSerializableExtra("moodEvent");
-        if (moodEvent != null && moodEvent.getBase64image() != null) {  // Check if moodEvent is not null first
-            capImage.setImageBitmap(base64ToBitmap(moodEvent.getBase64image()));
+        MoodEvent currentEvent = (MoodEvent) getIntent().getSerializableExtra("moodEvent");
+        if (currentEvent != null && currentEvent.getBase64image() != null) {  // Check if current moodEvent is not null first
+            capImage.setImageBitmap(base64ToBitmap(currentEvent.getBase64image()));
         } else {
             capImage.setImageResource(R.drawable.cat_image);  // Ensure default_image exists
         }
@@ -134,11 +135,11 @@ public class AddMoodActivity extends AppCompatActivity {
         Spinner editSocial = findViewById(R.id.social_situation);
 
         // Pre-fill Date & Time fields
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.getDefault());
+        DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
 
-        textDate.setText(dateFormat.format(selectedDateTime.getTime()));
-        textTime.setText(timeFormat.format(selectedDateTime.getTime()));
+        textDate.setText(dateFormat.format(selectedDateTime));
+        textTime.setText(timeFormat.format(selectedDateTime));
 
 
         // Date Picker
@@ -146,19 +147,29 @@ public class AddMoodActivity extends AppCompatActivity {
             DatePickerDialog datePickerDialog = new DatePickerDialog(
                     this,
                     (view, year, month, dayOfMonth) -> {
-                        selectedDateTime.set(year, month, dayOfMonth);
-                        if (selectedDateTime.after(currentDateTime)) {
-                            Snackbar.make(textDate, "Cannot select a future date", Snackbar.LENGTH_LONG).show();
+                        selectedDateTime = selectedDateTime
+                                .withYear(year)
+                                .withMonth(month + 1)  // DatePickerDialog is 0-11 based, but LocalDateTime is 1-12 based.
+                                .withDayOfMonth(dayOfMonth);
 
-                            selectedDateTime.setTime(currentDateTime.getTime());
+                        if (selectedDateTime.isAfter(LocalDateTime.now())) {
+                            Snackbar.make(textDate, "Cannot select a date from the future", Snackbar.LENGTH_LONG).show();
+                            selectedDateTime = LocalDateTime.now();
                         }
-                        textDate.setText(dateFormat.format(selectedDateTime.getTime()));
+                        textDate.setText(dateFormat.format(selectedDateTime));
                     },
-                    selectedDateTime.get(Calendar.YEAR),
-                    selectedDateTime.get(Calendar.MONTH),
-                    selectedDateTime.get(Calendar.DAY_OF_MONTH)
+                    selectedDateTime.getYear(),
+                    selectedDateTime.getMonth().getValue(),
+                    selectedDateTime.getDayOfMonth()
             );
-            datePickerDialog.getDatePicker().setMaxDate(currentDateTime.getTimeInMillis());
+            datePickerDialog.getDatePicker().setMaxDate(
+                    LocalDateTime
+                            .now()
+                            .toLocalDate()
+                            .atStartOfDay(ZoneId.systemDefault())
+                            .toInstant()
+                            .toEpochMilli()
+            );
             datePickerDialog.show();
         });
 
@@ -167,19 +178,17 @@ public class AddMoodActivity extends AppCompatActivity {
             TimePickerDialog timePickerDialog = new TimePickerDialog(
                     this,
                     (view, hourOfDay, minute) -> {
-                        selectedDateTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
-                        selectedDateTime.set(Calendar.MINUTE, minute);
+                        selectedDateTime = selectedDateTime.withHour(hourOfDay).withMinute(minute);
 
-                        if (selectedDateTime.after(currentDateTime)) {
-                            Snackbar.make(textDate, "Cannot select a future time", Snackbar.LENGTH_LONG).show();
-
-                            selectedDateTime.setTime(currentDateTime.getTime());
+                        if (selectedDateTime.isAfter(LocalDateTime.now())) {
+                            Snackbar.make(textDate, "Cannot select a time from the future", Snackbar.LENGTH_LONG).show();
+                            selectedDateTime = LocalDateTime.now();
                         }
-                        textTime.setText(timeFormat.format(selectedDateTime.getTime()));
+                        textTime.setText(timeFormat.format(selectedDateTime));
                     },
-                    selectedDateTime.get(Calendar.HOUR_OF_DAY),
-                    selectedDateTime.get(Calendar.MINUTE),
-                    true
+                    selectedDateTime.getHour(),
+                    selectedDateTime.getMinute(),
+                    false
             );
             timePickerDialog.show();
         });
@@ -191,7 +200,7 @@ public class AddMoodActivity extends AppCompatActivity {
                 String dateStr = textDate.getText().toString().trim();
                 String timeStr = textTime.getText().toString().trim();
                 String description = editDescription.getText().toString().trim();
-                String social = editSocial.getSelectedItem().toString();
+                SocialSetting social = SocialSetting.fromString(editSocial.getSelectedItem().toString()) ;
 
                 if (!isValidDescription(description)) {
                     Toast.makeText(this, "Trigger must be at most 20 chars or 3 words", Toast.LENGTH_SHORT).show();
@@ -203,16 +212,12 @@ public class AddMoodActivity extends AppCompatActivity {
                     return;
                 }
 
-                Date date = selectedDateTime.getTime();
-                Date time = selectedDateTime.getTime(); // Use java.util.Date for time
-
-                if (selectedDateTime.after(currentDateTime)) {
+                if (selectedDateTime.isAfter(currentDateTime)) {
                     Toast.makeText(this, "Date and time cannot be in the future", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
                 String id = UUID.randomUUID().toString();
-                String username = "idk"; //CHANGE LATER
 
                 String base64Image = null;
                 if (capturedImage != null) {
@@ -222,7 +227,20 @@ public class AddMoodActivity extends AppCompatActivity {
                     }
                 }
                 // If a photo is captured, upload it first
-                saveMoodEvent(username, id, mood, date, time, description, social, base64Image);
+                // Create the MoodEvent with the generated ID
+                MoodEvent moodEvent = new MoodEvent(username, id, mood, selectedDateTime.atOffset(ZoneOffset.UTC), description, social, base64Image);
+                moodEventHelper.publishMood(moodEvent,
+                        aVoid -> {
+                            Toast.makeText(this, "Mood event saved!", Toast.LENGTH_SHORT).show();
+                            Intent resultIntent = new Intent();
+                            resultIntent.putExtra("moodEvent", moodEvent);
+                            setResult(RESULT_OK, resultIntent);
+                            finish();
+                        },
+                        e -> Toast.makeText(this, "Failed to save mood event", Toast.LENGTH_SHORT).show()
+                );
+
+
             } catch (Exception e) {
                 e.printStackTrace();
                 Toast.makeText(this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -233,38 +251,6 @@ public class AddMoodActivity extends AppCompatActivity {
         findViewById(R.id.cancel_button).setOnClickListener(v -> finish());
 
         initializeSpinner(editMood);
-    }
-    private void saveMoodEvent(String username, String id, Mood mood, Date date, Date time,
-                               String description, String social, String base64Image) {
-        if (date == null || time == null) {
-            Toast.makeText(this, "Error: Mood event must have a valid date and time.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        //where you use default image and no photo taken
-        if (base64Image == null) {
-            base64Image = "";
-        }
-        MoodEvent moodEvent = new MoodEvent(username, id, mood, date, time, description, social, base64Image);
-
-        FirebaseFirestore.getInstance()
-                .collection("moodEvents")
-                .document(id)
-                .set(moodEvent)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Mood event saved!", Toast.LENGTH_SHORT).show();
-                    Intent resultIntent = new Intent();
-                    resultIntent.putExtra("moodEvent", moodEvent);
-                    setResult(RESULT_OK, resultIntent);
-                    finish();
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Failed to save mood event", Toast.LENGTH_SHORT).show()
-                );
-    }
-
-    private boolean isValidDescription(String desc) {
-        if (desc.isEmpty()) return true;
-        return desc.length() <= 20 && desc.trim().split("\\s+").length <= 3;
     }
     private Bitmap resizeBitmap(Bitmap original, int maxWidth, int maxHeight) {
         int width = original.getWidth();

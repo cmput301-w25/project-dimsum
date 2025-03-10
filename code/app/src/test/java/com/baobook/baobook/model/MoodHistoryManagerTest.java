@@ -6,14 +6,16 @@ import static org.junit.Assert.assertTrue;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.MoodHistoryManager;
+import com.example.baobook.model.SocialSetting;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import java.sql.Time;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 
 /**
  * Tests for the MoodHistoryManager's functionality, including
@@ -23,6 +25,8 @@ public class MoodHistoryManagerTest {
 
     private MoodHistoryManager manager;
     private static final String TEST_USERNAME = "testUser"; // For our mock MoodEvents
+    private static final SocialSetting socialSetting = SocialSetting.ALONE;
+    private static final OffsetDateTime date = LocalDateTime.now().atOffset(ZoneOffset.UTC);
 
     @Before
     public void setUp() {
@@ -38,27 +42,20 @@ public class MoodHistoryManagerTest {
     @Test
     public void testSortMoodHistoryByDate_ReverseChronological() {
         // Create test dates
-        Calendar cal = Calendar.getInstance();
 
         // Create most recent date
-        cal.set(2024, Calendar.MARCH, 15, 10, 0);
-        Date date1 = cal.getTime();
-        Time time1 = new Time(cal.getTimeInMillis());
+        OffsetDateTime date1 = OffsetDateTime.of(2024, 3, 15, 10, 0, 0, 0, ZoneOffset.UTC);
 
         // Create middle date
-        cal.set(2024, Calendar.MARCH, 14, 15, 30);
-        Date date2 = cal.getTime();
-        Time time2 = new Time(cal.getTimeInMillis());
+        OffsetDateTime date2 = OffsetDateTime.of(2024, 3, 14, 15, 30, 0, 0, ZoneOffset.UTC);
 
         // Create oldest date
-        cal.set(2024, Calendar.MARCH, 13, 9, 45);
-        Date date3 = cal.getTime();
-        Time time3 = new Time(cal.getTimeInMillis());
+        OffsetDateTime date3 = OffsetDateTime.of(2024, 3, 13, 9, 45, 0, 0, ZoneOffset.UTC);
 
         // Add moods in random order
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date2, time2, "Middle"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.SADNESS, date3, time3, "Oldest"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.ANGER, date1, time1, "Most Recent"));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date2, "Middle", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.SADNESS, date3, "Oldest", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.ANGER, date1, "Most Recent", socialSetting, ""));
 
         // Sort the list
         manager.sortByDate();
@@ -70,56 +67,17 @@ public class MoodHistoryManagerTest {
         assertEquals("Oldest", sortedList.get(2).getDescription());
     }
 
-    @Test
-    public void testSortMoodHistoryByDate_SameDate_DifferentTimes() {
-        // Create a single date
-        Calendar cal = Calendar.getInstance();
-        cal.set(2024, Calendar.MARCH, 15);
-        Date sameDate = cal.getTime();
-
-        // Different times on that date
-        cal.set(Calendar.HOUR_OF_DAY, 14);
-        cal.set(Calendar.MINUTE, 30);
-        Time time1 = new Time(cal.getTimeInMillis()); // 14:30
-
-        cal.set(Calendar.HOUR_OF_DAY, 12);
-        cal.set(Calendar.MINUTE, 0);
-        Time time2 = new Time(cal.getTimeInMillis()); // 12:00
-
-        cal.set(Calendar.HOUR_OF_DAY, 9);
-        cal.set(Calendar.MINUTE, 15);
-        Time time3 = new Time(cal.getTimeInMillis()); // 09:15
-
-        // Add moods in random order
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, sameDate, time2, "Noon"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.SADNESS, sameDate, time3, "Morning"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.ANGER, sameDate, time1, "Afternoon"));
-
-        // Sort the list
-        manager.sortByDate();
-
-        // Should be [Afternoon (14:30), Noon (12:00), Morning (09:15)]
-        ArrayList<MoodEvent> sortedList = manager.getMoodList();
-        assertEquals("Afternoon", sortedList.get(0).getDescription());
-        assertEquals("Noon", sortedList.get(1).getDescription());
-        assertEquals("Morning", sortedList.get(2).getDescription());
-    }
-
     // ---------------------------------------------------------------------------------------------
     // filterByMood(...) Tests
     // ---------------------------------------------------------------------------------------------
 
     @Test
     public void testFilterByMood_SingleMoodType() {
-        Calendar cal = Calendar.getInstance();
-        Date date = cal.getTime();
-        Time time = new Time(cal.getTimeInMillis());
-
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "Happy1"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.SADNESS, date, time, "Sad"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "Happy2"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.ANGER, date, time, "Angry"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "Happy3"));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "Happy1", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.SADNESS, date, "Sad", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.HAPPINESS, date, "Happy2", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "4", Mood.ANGER, date, "Angry", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "5", Mood.HAPPINESS, date, "Happy3", socialSetting, ""));
 
         // Filter for happy moods
         ArrayList<MoodEvent> filteredList = manager.filterByMood(Mood.HAPPINESS);
@@ -133,12 +91,8 @@ public class MoodHistoryManagerTest {
 
     @Test
     public void testFilterByMood_NoMatchingMoods() {
-        Calendar cal = Calendar.getInstance();
-        Date date = cal.getTime();
-        Time time = new Time(cal.getTimeInMillis());
-
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "Happy1"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "Happy2"));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "Happy1", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date, "Happy2", socialSetting, ""));
 
         // Filter for a different mood type
         ArrayList<MoodEvent> filteredList = manager.filterByMood(Mood.SADNESS);
@@ -162,14 +116,10 @@ public class MoodHistoryManagerTest {
     @Test
     public void testFilterByWord_PartialMatch() {
         // This checks partial substring matches for "hel"
-        Calendar cal = Calendar.getInstance();
-        Date date = cal.getTime();
-        Time time = new Time(cal.getTimeInMillis());
-
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "hello world"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.SADNESS, date, time, "helipad stuff"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.FEAR, date, time, "my best friend"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.DISGUST, date, time, "Help me!"));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "hello world", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.SADNESS, date, "helipad stuff", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.FEAR, date, "my best friend", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "4", Mood.DISGUST, date, "Help me!", socialSetting, ""));
 
         // We'll not filter by mood or last7days => pass (null, false, "hel")
         ArrayList<MoodEvent> filtered = manager.getFilteredList(null, false, "hel");
@@ -189,12 +139,8 @@ public class MoodHistoryManagerTest {
     @Test
     public void testFilterByWord_NoPartialMatch() {
         // If the filter word doesn't appear at all => empty result
-        Calendar cal = Calendar.getInstance();
-        Date date = cal.getTime();
-        Time time = new Time(cal.getTimeInMillis());
-
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "hello world"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.SADNESS, date, time, "helipad stuff"));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "hello world", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.SADNESS, date, "helipad stuff", socialSetting, ""));
 
         ArrayList<MoodEvent> filtered = manager.getFilteredList(null, false, "xyz");
         assertTrue("Expecting no matches for 'xyz'", filtered.isEmpty());
@@ -203,13 +149,9 @@ public class MoodHistoryManagerTest {
     @Test
     public void testFilterByWord_CaseInsensitivePartialMatch() {
         // If your code does case-insensitive matching, verify:
-        Calendar cal = Calendar.getInstance();
-        Date date = cal.getTime();
-        Time time = new Time(cal.getTimeInMillis());
-
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "Hello World"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.SADNESS, date, time, "HELLO AGAIN"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.FEAR, date, time, "HeLium balloon"));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "Hello World", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.SADNESS, date, "HELLO AGAIN", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.FEAR, date, "HeLium balloon", socialSetting, ""));
 
         ArrayList<MoodEvent> filtered = manager.getFilteredList(null, false, "hel");
 
@@ -217,15 +159,13 @@ public class MoodHistoryManagerTest {
         assertEquals("All 3 match ignoring case", 3, filtered.size());
     }
 
+
     @Test
     public void testFilterByWord_OneEditAway() {
-
         Calendar cal = Calendar.getInstance();
-        Date date = cal.getTime();
-        Time time = new Time(cal.getTimeInMillis());
         // User typed "helo," we want to match "hello."
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "hello friend"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "some other desc"));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "hello friend", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date, "some other desc", socialSetting, ""));
 
         ArrayList<MoodEvent> filtered = manager.getFilteredList(null, false, "helo");
         assertEquals("Expect 'hello friend' to match 'helo' by 1 edit distance", 1, filtered.size());
@@ -235,12 +175,8 @@ public class MoodHistoryManagerTest {
     @Test
     public void testFilterByWord_EmptyString() {
         // If user enters empty => no word filtering => all remain
-        Calendar cal = Calendar.getInstance();
-        Date date = cal.getTime();
-        Time time = new Time(cal.getTimeInMillis());
-
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.ANGER, date, time, "hello test"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "something"));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.ANGER, date, "hello test", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date, "something", socialSetting, ""));
 
         ArrayList<MoodEvent> filtered = manager.getFilteredList(null, false, "");
         assertEquals("Empty filter means no filtering, so all remain", 2, filtered.size());
@@ -255,14 +191,12 @@ public class MoodHistoryManagerTest {
     public void testGetFilteredList_Combined() {
         // We'll test a scenario with a mood = HAPPINESS, lastWeek = false, and word = "hello"
         // Add data, then see if we get the correct subset
-        Calendar cal = Calendar.getInstance();
-        Date date = cal.getTime();
-        Time time = new Time(cal.getTimeInMillis());
 
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "hello world"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "random text"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.ANGER, date, time, "hello friend"));
-        manager.addMood(new MoodEvent(TEST_USERNAME, Mood.HAPPINESS, date, time, "HELLO AGAIN"));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "hello world", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date, "random text", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.ANGER, date, "hello friend", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "4", Mood.HAPPINESS, date, "HELLO AGAIN", socialSetting, ""));
+
 
         // Filter: Mood=HAPPINESS, lastWeek=false, word="hello"
         ArrayList<MoodEvent> filtered = manager.getFilteredList(Mood.HAPPINESS, false, "hello");

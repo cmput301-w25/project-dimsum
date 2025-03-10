@@ -1,4 +1,4 @@
-package com.example.baobook;
+package com.example.baobook.controller;
 
 import static android.content.Context.MODE_PRIVATE;
 
@@ -8,11 +8,10 @@ import android.util.Log;
 import android.widget.Toast;
 
 
+import com.example.baobook.MoodEventArrayAdapter;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.User;
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.Source;
 
 import java.util.ArrayList;
 import java.util.List;

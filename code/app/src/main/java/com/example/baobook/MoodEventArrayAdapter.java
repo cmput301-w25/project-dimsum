@@ -17,7 +17,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.baobook.model.MoodEvent;
-import java.text.SimpleDateFormat;
+
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Locale;
 
@@ -54,8 +55,8 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
 
         if (moodEvent != null) {
             // Format date and time
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+            DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.getDefault());
+            DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
 
             // Set mood state with emoji and color using MoodUtils
             String moodString = moodEvent.getMood().toString();
@@ -63,8 +64,9 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
             moodText.setTextColor(MoodUtils.getMoodColor(moodString)); // Set color
 
             // Set date, time, and description
-            dateText.setText("Date: " + dateFormat.format(moodEvent.getDate()));
-            timeText.setText("Time: " + timeFormat.format(moodEvent.getTime()));
+            dateText.setText("Date: " + dateFormat.format(moodEvent.getDateTime().toLocalDate()));
+            timeText.setText("Time: " + timeFormat.format(moodEvent.getDateTime().toLocalTime()));
+            descriptionText.setText("Trigger: " + moodEvent.getDescription());
 
             String description = moodEvent.getDescription();
             if (description == null || description.trim().isEmpty()) {
@@ -75,8 +77,6 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
             }
 
             social.setText("Social: " + moodEvent.getSocial());
-
-
 
             if (moodEvent.getBase64image() != null && !moodEvent.getBase64image().isEmpty()) {
                 Log.d("MoodEventArrayAdapter", "Base64 Image Found: " + moodEvent.getBase64image().substring(0, 30)); // Show only first 30 chars
@@ -89,10 +89,7 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
 
             GradientDrawable drawable = (GradientDrawable) rootLayout.getBackground();
             if (drawable != null) {
-
                 drawable.setStroke(5, MoodUtils.getMoodColor(moodString)); // Set border color
-                //drawable.setStroke(2, MoodUtils.getMoodColor(moodString)); // Set border color
-
             }
         }
 

@@ -59,7 +59,7 @@ public class User {
         }
 
         if (!followers.contains(follower)) {
-            followers.add(username);
+            followers.add(follower);
         }
     }
 
@@ -73,7 +73,7 @@ public class User {
         }
 
         if (!followings.contains(following)) {
-            followings.add(username);
+            followings.add(following);
         }
     }
 
@@ -81,9 +81,9 @@ public class User {
         followings.remove(following);
     }
 
-    public void followUser(User user) {
-        user.addFollower(username);
-        addFollowing(user.getUsername());
+    public void followUser(User otherUser) {
+        otherUser.addFollower(username);
+        addFollowing(otherUser.getUsername());
     }
 
     public void unfollowUser(User user) {

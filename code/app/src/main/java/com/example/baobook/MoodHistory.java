@@ -1,4 +1,4 @@
-package com.example.baobook.model;
+package com.example.baobook;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -24,6 +24,11 @@ import com.example.baobook.MoodEventArrayAdapter;
 import com.example.baobook.MoodEventOptionsFragment;
 import com.example.baobook.R;
 import com.example.baobook.UserProfileActivity;
+import com.example.baobook.controller.MoodEventHelper;
+import com.example.baobook.model.Mood;
+import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.MoodHistoryManager;
+import com.example.baobook.util.UserSession;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -49,8 +54,9 @@ public class MoodHistory extends AppCompatActivity
     private Button openFilterButton, clearAllButton;
     private LinearLayout activeFiltersContainer;
 
-    private FirebaseFirestore db;
-    private CollectionReference moodsRef;
+    private MoodEventHelper moodEventHelper = new MoodEventHelper();
+    private UserSession userSession;
+
 
     private MoodEventArrayAdapter moodArrayAdapter;
     private Button homeButton, mapButton, profileButton;
@@ -69,8 +75,7 @@ public class MoodHistory extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mood_history);
 
-        db = FirebaseFirestore.getInstance();
-        moodsRef = db.collection("moodEvents");
+        userSession = new UserSession(this);
 
         // Initialize views
         moodList = findViewById(R.id.mood_history_list);
@@ -211,39 +216,19 @@ public class MoodHistory extends AppCompatActivity
      * then show them in the UI with no filters initially.
      */
     private void loadMoodsFromFirestore() {
-        moodsRef.addSnapshotListener((value, error) -> {
-            if (error != null) {
-                Log.e("Firestore", "Error loading moods", error);
-                Toast.makeText(this, "Failed to load moods.", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        moodEventHelper.getMoodEventsByUser(userSession.getUsername(), moodEvents -> {
+            MoodHistoryManager manager = MoodHistoryManager.getInstance();
+            manager.clearMoods();
+            manager.addAllMoods(moodEvents);
 
-            if (value != null) {
-                // Clear manager first
-                MoodHistoryManager manager = MoodHistoryManager.getInstance();
-                manager.clearMoods();
-
-                // Add each doc
-                for (QueryDocumentSnapshot snapshot : value) {
-                    MoodEvent mood = snapshot.toObject(MoodEvent.class);
-                    mood.setId(snapshot.getId());
-                    manager.addMood(mood);
-                }
-
-                // Sort manager’s list by date
-                manager.sortByDate();
-
-                // By default, no filters => show entire list
-                filteredList.clear();
-                filteredList.addAll(manager.getMoodList());
-                moodArrayAdapter.notifyDataSetChanged();
-            }
+            filteredList.clear();
+            filteredList.addAll(manager.getMoodList());
+            moodArrayAdapter.notifyDataSetChanged();
+        }, e -> {
+            Log.e("Firestore", "Error loading moods", e);
+            Toast.makeText(this, "Failed to load moods.", Toast.LENGTH_SHORT).show();
         });
     }
-
-
-
-
 
     private final ActivityResultLauncher<Intent> addMoodLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
@@ -256,19 +241,6 @@ public class MoodHistory extends AppCompatActivity
                         }
                     }
             );
-
-    private void addMoodToFirestore(MoodEvent mood) {
-        moodsRef.add(mood)
-                .addOnSuccessListener(docRef -> {
-                    mood.setId(docRef.getId());
-                    Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("Firestore", "Error adding mood", e);
-                    Toast.makeText(this, "Failed to add mood.", Toast.LENGTH_SHORT).show();
-                });
-    }
-
     @Override
     public void onEditMoodEvent(MoodEvent mood) {
         EditFragment fragment = new EditFragment(mood);
@@ -277,27 +249,23 @@ public class MoodHistory extends AppCompatActivity
 
     @Override
     public void onMoodEdited(MoodEvent updatedMoodEvent) {
-        moodsRef.document(updatedMoodEvent.getId()).set(updatedMoodEvent)
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Mood updated!", Toast.LENGTH_SHORT).show();
-                    loadMoodsFromFirestore();
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("Firestore", "Error updating mood", e);
-                    Toast.makeText(this, "Failed to update mood.", Toast.LENGTH_SHORT).show();
-                });
+        moodEventHelper.updateMood(updatedMoodEvent, aVoid -> {
+            Toast.makeText(this, "Mood updated!", Toast.LENGTH_SHORT).show();
+            loadMoodsFromFirestore();
+        }, e -> {
+            Log.e("Firestore", "Error updating mood", e);
+            Toast.makeText(this, "Failed to update mood.", Toast.LENGTH_SHORT).show();
+        });
     }
 
     @Override
     public void onDeleteMoodEvent(MoodEvent mood) {
-        moodsRef.document(mood.getId()).delete()
-                .addOnSuccessListener(aVoid -> {
-                    Toast.makeText(this, "Mood deleted!", Toast.LENGTH_SHORT).show();
-                    loadMoodsFromFirestore();
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("Firestore", "Error deleting mood", e);
-                    Toast.makeText(this, "Failed to delete mood.", Toast.LENGTH_SHORT).show();
-                });
+        moodEventHelper.deleteMood(mood, aVoid -> {
+            Toast.makeText(this, "Mood deleted!", Toast.LENGTH_SHORT).show();
+            loadMoodsFromFirestore();
+        }, e -> {
+            Log.e("Firestore", "Error deleting mood", e);
+            Toast.makeText(this, "Failed to delete mood.", Toast.LENGTH_SHORT).show();
+        });
     }
 }
