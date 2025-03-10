@@ -31,9 +31,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
-import com.example.baobook.util.UserSession;
+import com.google.android.material.snackbar.Snackbar;
 
-import java.sql.Time;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -85,9 +84,6 @@ public class AddMoodActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_mood_event_fragment);
 
-        UserSession session = new UserSession(this);
-        String username = session.getUsername();
-
         Spinner editMood = findViewById(R.id.mood_spinner);
         TextView textDate = findViewById(R.id.text_date);
         TextView textTime = findViewById(R.id.text_time);
@@ -98,12 +94,14 @@ public class AddMoodActivity extends AppCompatActivity {
         storageRef = FirebaseStorage.getInstance().getReference();
 
         // Request Camera Permission Only If Not Granted
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+        /*if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA);
-        }
-        MoodEvent moodEvent = (MoodEvent) getIntent().getSerializableExtra("moodEvent");
 
+         
+        }*/
+
+        MoodEvent moodEvent = (MoodEvent) getIntent().getSerializableExtra("moodEvent");
         if (moodEvent != null && moodEvent.getBase64image() != null) {  // Check if moodEvent is not null first
             capImage.setImageBitmap(base64ToBitmap(moodEvent.getBase64image()));
         } else {
@@ -148,7 +146,8 @@ public class AddMoodActivity extends AppCompatActivity {
                     (view, year, month, dayOfMonth) -> {
                         selectedDateTime.set(year, month, dayOfMonth);
                         if (selectedDateTime.after(currentDateTime)) {
-                            Toast.makeText(this, "Cannot select a future date", Toast.LENGTH_SHORT).show();
+                            Snackbar.make(textDate, "Cannot select a future date", Snackbar.LENGTH_LONG).show();
+
                             selectedDateTime.setTime(currentDateTime.getTime());
                         }
                         textDate.setText(dateFormat.format(selectedDateTime.getTime()));
@@ -170,13 +169,14 @@ public class AddMoodActivity extends AppCompatActivity {
                         selectedDateTime.set(Calendar.MINUTE, minute);
 
                         if (selectedDateTime.after(currentDateTime)) {
-                            Toast.makeText(this, "Cannot select a future time", Toast.LENGTH_SHORT).show();
+                            Snackbar.make(textDate, "Cannot select a future time", Snackbar.LENGTH_LONG).show();
+
                             selectedDateTime.setTime(currentDateTime.getTime());
                         }
                         textTime.setText(timeFormat.format(selectedDateTime.getTime()));
                     },
-                    selectedTime.get(Calendar.HOUR_OF_DAY),
-                    selectedTime.get(Calendar.MINUTE),
+                    selectedDateTime.get(Calendar.HOUR_OF_DAY),
+                    selectedDateTime.get(Calendar.MINUTE),
                     true
             );
             timePickerDialog.show();
@@ -205,6 +205,7 @@ public class AddMoodActivity extends AppCompatActivity {
                 }
 
                 String id = UUID.randomUUID().toString();
+                String username = "idk"; //CHANGE LATER
 
                 String base64Image = null;
                 if (capturedImage != null) {
@@ -302,5 +303,5 @@ public class AddMoodActivity extends AppCompatActivity {
         spinner.setAdapter(adapter);
 
     }
-
 }
+
