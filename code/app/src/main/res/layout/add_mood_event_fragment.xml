@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <TextView
+
         android:id="@+id/mood_spinner_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -16,6 +16,7 @@
         android:gravity="center"
         android:textColor="@android:color/black" />
 
+
     <Spinner
         android:id="@+id/mood_spinner"
         android:layout_width="match_parent"
@@ -23,22 +24,16 @@
         android:entries="@array/mood_options"
         app:layout_constraintBottom_toTopOf="@+id/text_date"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-
-    <!--<CheckBox
-        android:id="@+id/add_to_watchlist"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Add?"
-        />-->
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.785" />
 
     <TextView
         android:id="@+id/text_date"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="56dp"
+        android:layout_marginTop="68dp"
         android:background="?android:attr/selectableItemBackground"
         android:gravity="center"
         android:padding="12dp"
@@ -59,6 +54,7 @@
         android:gravity="center"
         android:textColor="@android:color/black"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text_date" />
 
@@ -66,20 +62,34 @@
         android:id="@+id/social_situation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:entries="@array/social_options"/>
+        android:entries="@array/social_options"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:layout_editor_absoluteX="16dp" /><![CDATA[
+
+
+    android:hint="Enter Trigger (Optional)"
+        android:inputType="text" />
+
+    ]]><!--<CheckBox
+        android:id="@+id/add_to_watchlist"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Add?"
+        />-->
 
     <EditText
         android:id="@+id/edit_description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginTop="36dp"
+        android:layout_marginTop="28dp"
         android:hint="Enter Description"
         android:inputType="text"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/text_time" />
+
 
     <!--<CheckBox
         android:id="@+id/add_to_watchlist"
@@ -114,10 +124,10 @@
         android:background="?attr/selectableItemBackground"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.786"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.418"
+        app:layout_constraintVertical_bias="0.402"
         app:srcCompat="@mipmap/red_camera" />
 
     <ImageView
@@ -139,8 +149,9 @@
         android:text="Show how you're feeling?"
         app:layout_constraintBottom_toTopOf="@+id/captured_image"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.13"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.802" />
+        app:layout_constraintVertical_bias="0.88" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
