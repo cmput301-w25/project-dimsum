@@ -33,6 +33,7 @@ android {
 }
 
 dependencies {
+    androidTestImplementation("androidx.test.uiautomator:uiautomator:2.2.0")
     implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
     implementation("com.google.firebase:firebase-storage:20.3.0")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
