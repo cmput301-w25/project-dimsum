@@ -7,9 +7,11 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -45,6 +47,11 @@ public class EditFragment extends DialogFragment {
         void onMoodEdited(MoodEvent updatedMoodEvent);
     }
 
+    private boolean isValidDescription(String desc) {
+        if (desc.isEmpty()) return true;
+        return desc.length() <= 20 && desc.trim().split("\\s+").length <= 3;
+    }
+
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
@@ -74,14 +81,13 @@ public class EditFragment extends DialogFragment {
         MoodSpinnerAdapter adapter = new MoodSpinnerAdapter(
                 context,
                 android.R.layout.simple_spinner_item,
-                Arrays.asList(MoodUtils.MOOD_OPTIONS), // Convert String[] to List<String>
+                Arrays.asList(MoodUtils.MOOD_OPTIONS),
                 MoodUtils.MOOD_COLORS,
                 MoodUtils.MOOD_EMOJIS
         );
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         editMood.setAdapter(adapter);
 
-        // Set initial values if editing an existing MoodEvent
         if (moodEvent != null) {
             int position = adapter.getPosition(moodEvent.getMood().toString());
             editMood.setSelection(position);
@@ -92,55 +98,56 @@ public class EditFragment extends DialogFragment {
             editDescription.setText(moodEvent.getDescription());
         }
 
-        // Date Picker
         editDate.setOnClickListener(v -> {
-            DatePickerDialog datePickerDialog = new DatePickerDialog(
-                    context,
+            new DatePickerDialog(context,
                     (view1, year, month, dayOfMonth) -> {
                         selectedDate.set(year, month, dayOfMonth);
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                        editDate.setText(dateFormat.format(selectedDate.getTime()));
+                        editDate.setText(new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(selectedDate.getTime()));
                     },
                     selectedDate.get(Calendar.YEAR),
                     selectedDate.get(Calendar.MONTH),
                     selectedDate.get(Calendar.DAY_OF_MONTH)
-            );
-            datePickerDialog.show();
+            ).show();
         });
 
-        // Time Picker
         editTime.setOnClickListener(v -> {
-            TimePickerDialog timePickerDialog = new TimePickerDialog(
-                    context,
+            new TimePickerDialog(context,
                     (view12, hourOfDay, minute) -> {
                         selectedTime.set(Calendar.HOUR_OF_DAY, hourOfDay);
                         selectedTime.set(Calendar.MINUTE, minute);
-                        SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
-                        editTime.setText(timeFormat.format(selectedTime.getTime()));
+                        editTime.setText(new SimpleDateFormat("HH:mm", Locale.getDefault()).format(selectedTime.getTime()));
                     },
                     selectedTime.get(Calendar.HOUR_OF_DAY),
                     selectedTime.get(Calendar.MINUTE),
                     true
-            );
-            timePickerDialog.show();
+            ).show();
         });
 
-        // Build and return the dialog
-        return new AlertDialog.Builder(context)
+        AlertDialog dialog = new AlertDialog.Builder(context)
                 .setView(view)
                 .setTitle("Edit Mood Event")
-                .setPositiveButton("Save", (dialog, which) -> {
-                    Mood newMood = Mood.fromString(editMood.getSelectedItem().toString());
-                    String newDescription = editDescription.getText().toString();
-                    String newSocial = editSocial.getSelectedItem().toString();
-
-                    // Update the MoodEvent
-                    moodEvent.editMoodEvent(newMood, selectedDate.getTime(), selectedTime.getTime(), newDescription, newSocial);
-
-                    // Notify the listener
-                    listener.onMoodEdited(moodEvent);
-                })
-                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                .setPositiveButton("Save", null) // Set to null for overriding later
+                .setNegativeButton("Cancel", (dialog1, which) -> dialog1.dismiss())
                 .create();
+
+        dialog.setOnShowListener(dialogInterface -> {
+            Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+            positiveButton.setOnClickListener(v -> {
+                Mood newMood = Mood.fromString(editMood.getSelectedItem().toString());
+                String newDescription = editDescription.getText().toString().trim();
+                String newSocial = editSocial.getSelectedItem().toString();
+
+                if (!isValidDescription(newDescription)) {
+                    Toast.makeText(getContext(), "Trigger must be at most 20 chars or 3 words", Toast.LENGTH_SHORT).show();
+                    return; // Prevent dialog from closing
+                }
+
+                moodEvent.editMoodEvent(newMood, selectedDate.getTime(), selectedTime.getTime(), newDescription, newSocial);
+                listener.onMoodEdited(moodEvent);
+                dialog.dismiss(); // Dismiss only when validation passes
+            });
+        });
+
+        return dialog;
     }
-}
+    }
