@@ -16,6 +16,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.MoodHistory;
+import com.example.baobook.model.MoodHistoryManager;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -84,7 +85,7 @@ public class Home extends AppCompatActivity {
                     // Set the Firestore document ID in the MoodEvent
                     mood.setId(documentReference.getId());
                     // Add the mood to the local list in MoodHistory
-                    MoodHistory.getDataList().add(mood);
+                    MoodHistoryManager.getInstance().addMood(mood);
                     Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
                 })
                 .addOnFailureListener(e -> {
