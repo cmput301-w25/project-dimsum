@@ -121,7 +121,7 @@ public class MoodHistoryTest {
         SystemClock.sleep(500);
 
 
-        onView(withId(R.id.clear_filter_button)).perform(click());
+        onView(withId(R.id.clear_all_button)).perform(click());
         SystemClock.sleep(500);
         onView(withText("😊 Happiness")).perform(click());
         SystemClock.sleep(500);
@@ -140,8 +140,8 @@ public class MoodHistoryTest {
 
         // Seed data with just two moods
         MoodEvent[] moods = {
-                new MoodEvent("1", Mood.FEAR, new Date(), new Date(), "Bad", "Alone"),
-                new MoodEvent("2", Mood.SADNESS, new Date(), new Date(), "Bad", "Alone")
+                new MoodEvent("idk", "1", Mood.FEAR, new Date(), new Date(), "Bad", "Alone"),
+                new MoodEvent("idk","2", Mood.SADNESS, new Date(), new Date(), "Bad", "Alone")
         };
 
         for (MoodEvent mood : moods) {
@@ -160,7 +160,7 @@ public class MoodHistoryTest {
     @Test
     public void EditMoodEvent() {
         // Clear filters and select Fear
-        onView(withId(R.id.clear_filter_button)).perform(click());
+        onView(withId(R.id.clear_all_button)).perform(click());
         SystemClock.sleep(1000);
         onView(withText("😨 Fear")).perform(click());
 
@@ -184,7 +184,7 @@ public class MoodHistoryTest {
         onView(withId(android.R.id.button1)).perform(click());
 
         // Verify changes
-        onView(withId(R.id.clear_filter_button)).perform(click());
+        onView(withId(R.id.clear_all_button)).perform(click());
         SystemClock.sleep(500);
         onView(withText("😊 Happiness")).perform(click());
         SystemClock.sleep(500);
@@ -198,7 +198,7 @@ public class MoodHistoryTest {
 
     @Test
     public void deleteMood() {
-        onView(withId(R.id.clear_filter_button)).perform(click());
+        onView(withId(R.id.clear_all_button)).perform(click());
         SystemClock.sleep(1000);
         onView(withText("😨 Fear")).perform(click());
 
@@ -207,7 +207,7 @@ public class MoodHistoryTest {
         onView(withId(R.id.button_delete_mood)).perform(click());
 
         SystemClock.sleep(500);
-        onView(withId(R.id.clear_filter_button)).perform(click());
+        onView(withId(R.id.clear_all_button)).perform(click());
         onView(withText("😨 Fear")).check(doesNotExist());
 
     }

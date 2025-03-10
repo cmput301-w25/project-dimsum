@@ -1,9 +1,16 @@
 package com.example.baobook.model;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.Serializable;
 import java.util.Date;
+import java.sql.Time;
+import java.util.UUID;
 
 public class MoodEvent implements Serializable {
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private String username;
     private String id; // Unique ID for Firestore
     private Mood mood;
     private Date date; // Use java.util.Date for date
@@ -14,7 +21,8 @@ public class MoodEvent implements Serializable {
     // No-argument constructor required for Firestore
     public MoodEvent() {}
 
-    public MoodEvent(String id, Mood mood, Date date, Date time, String description, String social) {
+    public MoodEvent(String username, String id, Mood mood, Date date, Date time, String description, String social) {
+        this.username = username;
         this.id = id;
         this.mood = mood;
         this.date = date;
@@ -23,13 +31,27 @@ public class MoodEvent implements Serializable {
         this.social = social;
     }
 
-    // Getters and setters
+    // Constructor for testing - converts java.sql.Time to java.util.Date
+    public MoodEvent(String username, Mood mood, Date date, Time time, String description) {
+        this.username = username;
+        this.id = UUID.randomUUID().toString();
+        this.mood = mood;
+        this.date = date;
+        this.time = new Date(time.getTime()); // Convert sql.Time to util.Date
+        this.description = description;
+        this.social = "ALONE";
+    }
+
     public String getId() {
         return id;
     }
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public Mood getMood() {
@@ -80,11 +102,36 @@ public class MoodEvent implements Serializable {
      * @param newTime       The new time for the event.
      * @param newDescription The new description for the event.
      */
+    public void editMoodEvent(Mood newMood, Date newDate, Time newTime, String newDescription) {
+        setMood(newMood);
+        setDate(newDate);
+        setTime(new Date(newTime.getTime()));
+        setDescription(newDescription);
+    }
+
     public void editMoodEvent(Mood newMood, Date newDate, Date newTime, String newDescription, String newSocial) {
         setMood(newMood);
         setDate(newDate);
-        setTime(newTime);
+        setTime(new Date(newTime.getTime()));
         setDescription(newDescription);
         setSocial(newSocial);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj.getClass() == MoodEvent.class) {
+            MoodEvent moodEvent = (MoodEvent) obj;
+            return this.getId().equals(moodEvent.getId());  // same MoodEvent id
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        try {
+            return objectMapper.writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to map MoodEvent to string.");
+        }
     }
 }
