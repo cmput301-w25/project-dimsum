@@ -1,3 +1,7 @@
+/**
+ * Represents a mood event with associated metadata, such as mood type, date, description, and social setting.
+ */
+
 package com.example.baobook.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -9,6 +13,9 @@ import com.google.firebase.firestore.PropertyName;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 
+/**
+ * Serializable class representing a user's mood event, designed for Firestore integration.
+ */
 public class MoodEvent implements Serializable {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -27,6 +34,17 @@ public class MoodEvent implements Serializable {
     // No-argument constructor required for Firestore
     public MoodEvent() {}
 
+    /**
+     * Constructs a MoodEvent with provided details.
+     *
+     * @param username    username associated with the event
+     * @param id          unique identifier for the event
+     * @param mood        mood type
+     * @param dateTime    date and time of the mood event
+     * @param description description or trigger
+     * @param social      social setting of the mood event
+     * @param base64image base64 encoded image string
+     */
     public MoodEvent(String username, String id, Mood mood, OffsetDateTime dateTime, String description, SocialSetting social, String base64image) {
         this.username = username;
         this.id = id;

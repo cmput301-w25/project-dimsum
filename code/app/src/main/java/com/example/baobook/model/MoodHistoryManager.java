@@ -1,3 +1,7 @@
+/**
+ * Manages mood history by storing, sorting, and filtering a list of MoodEvent objects.
+ */
+
 package com.example.baobook.model;
 
 import java.time.OffsetDateTime;
@@ -20,6 +24,11 @@ public class MoodHistoryManager {
         this.moodList = new ArrayList<>();
     }
 
+    /**
+     * Retrieves the singleton instance of MoodHistoryManager.
+     *
+     * @return the single instance of MoodHistoryManager
+     */
     public static MoodHistoryManager getInstance() {
         if (instance == null) {
             instance = new MoodHistoryManager();
@@ -27,17 +36,33 @@ public class MoodHistoryManager {
         return instance;
     }
 
-    // Add a single mood to the manager's list
+    /**
+     * Adds a single MoodEvent to the mood list.
+     *
+     * @param mood the MoodEvent to add
+     */
+
     public void addMood(MoodEvent mood) {
         moodList.add(mood);
     }
 
-    // Add a single mood to the manager's list
+
+
+
+    /**
+     * Adds multiple MoodEvents to the mood list.
+     *
+     * @param moods a list of MoodEvents to add
+     */
     public void addAllMoods(List<MoodEvent> moods) {
         moodList.addAll(moods);
     }
 
-    // Return the raw list (unfiltered)
+    /**
+     * Retrieves the raw (unfiltered) mood list.
+     *
+     * @return the list of all MoodEvents
+     */
     public ArrayList<MoodEvent> getMoodList() {
         return moodList;
     }
@@ -52,7 +77,12 @@ public class MoodHistoryManager {
         moodList.sort(Comparator.comparing(MoodEvent::getDateTime).reversed());
     }
 
-    // Existing single-mood filter (optional)
+    /**
+     * Filters MoodEvents by a specific Mood.
+     *
+     * @param moodType the mood to filter by
+     * @return a filtered list of MoodEvents matching the moodType
+     */
     public ArrayList<MoodEvent> filterByMood(Mood moodType) {
         ArrayList<MoodEvent> filteredList = new ArrayList<>();
         for (MoodEvent mood : moodList) {
@@ -64,12 +94,12 @@ public class MoodHistoryManager {
     }
 
     /**
-     * Returns a filtered list of MoodEvent based on:
-     * 1) Mood (if not null)
-     * 2) Last 7 days (if true)
-     * 3) Single-word partial match in description.
-     * The word filter checks each token in the description.
-     * Then sorts the result in descending date/time.
+     * Filters the mood list based on mood type, recent week, and keyword in description.
+     *
+     * @param filterMood       the Mood to filter by (null to skip this filter)
+     * @param filterRecentWeek true to filter only events from the last 7 days
+     * @param filterWord       keyword for partial matching in descriptions (null or empty to skip)
+     * @return a filtered and sorted list of MoodEvents
      */
     public ArrayList<MoodEvent> getFilteredList(Mood filterMood,
                                                 boolean filterRecentWeek,
@@ -122,10 +152,11 @@ public class MoodHistoryManager {
     }
 
     /**
-     * Checks if the description contains the word.
-     * It splits the description into tokens (words) and checks if any token:
-     *  - Contains the filter word as a substring, OR
-     *  - Has a Levenshtein distance <= 1 from the filter word.
+     * Checks if a description contains the specified word using substring or Levenshtein distance.
+     *
+     * @param description the mood event description
+     * @param word        the keyword to search for
+     * @return true if the description matches criteria
      */
     private boolean descriptionContainsWord(String description, String word) {
         String[] tokens = description.split("\\s+");
@@ -138,7 +169,11 @@ public class MoodHistoryManager {
     }
 
     /**
-     * Standard dynamic programming approach to compute Levenshtein distance.
+     * Calculates the Levenshtein distance between two strings.
+     *
+     * @param s1 first string
+     * @param s2 second string
+     * @return the Levenshtein distance
      */
     private int levenshteinDistance(String s1, String s2) {
         int len1 = s1.length();
