@@ -3,16 +3,11 @@ package com.example.baobook.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.Exclude;
 import com.google.firebase.firestore.PropertyName;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
-import java.util.Objects;
-import java.util.Date;
-import java.sql.Time;
-import java.util.UUID;
 
 public class MoodEvent implements Serializable {
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -36,7 +31,7 @@ public class MoodEvent implements Serializable {
         this.username = username;
         this.id = id;
         this.mood = mood;
-        this.timestamp = dateTime.getNano();
+        this.timestamp = dateTime.toInstant().toEpochMilli();
         this.dateTime = dateTime;
         this.description = description;
         this.social = social;
@@ -57,15 +52,15 @@ public class MoodEvent implements Serializable {
     @Exclude
     public void setDateTime(OffsetDateTime dateTime) {
         this.dateTime = dateTime;
-        this.timestamp = dateTime.getNano();
+        this.timestamp = dateTime.toInstant().toEpochMilli();
     }
 
     @PropertyName("timestamp")
-    public long getDateTimeInNano() {
+    public long getDateTimeInMilli() {
         return timestamp;
     }
     @PropertyName("timestamp")
-    public void setDateTimeInNano(long timestamp) {
+    public void setDateTimeInMilli(long timestamp) {
         this.timestamp = timestamp;
         this.dateTime = OffsetDateTime.ofInstant(java.time.Instant.ofEpochMilli(timestamp), java.time.ZoneOffset.UTC);
     }
@@ -102,7 +97,7 @@ public class MoodEvent implements Serializable {
         MoodEvent other = (MoodEvent) obj;
         return id.equals(other.getId())
                 && mood == other.getMood()
-                && timestamp == other.getDateTimeInNano()
+                && timestamp == other.getDateTimeInMilli()
                 && description.equals(other.getDescription())
                 && social == other.getSocial();
     }
