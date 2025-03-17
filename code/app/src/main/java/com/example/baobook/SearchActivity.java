@@ -1,4 +1,4 @@
 package com.example.baobook;
 
-public class Follower {
+public class SearchActivity {
 }
