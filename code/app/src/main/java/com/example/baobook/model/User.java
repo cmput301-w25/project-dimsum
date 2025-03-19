@@ -33,6 +33,9 @@ public class User {
         this.followers = new ArrayList<>();
         this.followings = new ArrayList<>();
     }
+    public User(String username) {
+        this.username = username;
+    }
 
     /**
      * Creates a user with username, password, and predefined lists of followers and followings.

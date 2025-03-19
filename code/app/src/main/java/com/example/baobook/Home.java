@@ -3,7 +3,10 @@ package com.example.baobook;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.SearchView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -15,12 +18,17 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.baobook.constant.FirestoreConstants;
+import com.example.baobook.controller.FirestoreHelper;
 import com.example.baobook.controller.MoodEventHelper;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.MoodHistoryManager;
+import com.example.baobook.model.User;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.List;
+
 //home activity where users will be able to see their following mood events and add new ones
 public class Home extends AppCompatActivity {
 
@@ -28,6 +36,7 @@ public class Home extends AppCompatActivity {
     private FirebaseFirestore db;
     private CollectionReference moodsRef;
     private MoodEventHelper moodEventHelper = new MoodEventHelper();
+    private FirestoreHelper firestoreHelper = new FirestoreHelper();
 
     // ActivityResultLauncher to handle the result from AddMoodActivity
     private final ActivityResultLauncher<Intent> addMoodLauncher =
@@ -78,21 +87,28 @@ public class Home extends AppCompatActivity {
             Intent intent = new Intent(Home.this, UserProfileActivity.class);
             startActivity(intent);
         });
+        Button search = findViewById(R.id.btn_search);
+        search.setOnClickListener(v -> {
+            // Handle search button click
+            Intent intent = new Intent(Home.this, SearchActivity.class);
+            startActivity(intent);
+        });
     }
 
-    private void addMoodToFirestore(MoodEvent mood) {
-        moodsRef.add(mood) // Use Firestore's auto-generated ID
-                .addOnSuccessListener(documentReference -> {
-                    // Set the Firestore document ID in the MoodEvent
-                    mood.setId(documentReference.getId());
-                    // Add the mood to the local list in MoodHistory
-                    MoodHistoryManager.getInstance().addMood(mood);
-                    Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e -> {
-                    // Handle failure
-                    Toast.makeText(this, "Failed to add mood.", Toast.LENGTH_SHORT).show();
-                    Log.e("Firestore", "Error adding mood", e);
-                });
-    }
+
+//    private void addMoodToFirestore(MoodEvent mood) {
+//        moodsRef.add(mood) // Use Firestore's auto-generated ID
+//                .addOnSuccessListener(documentReference -> {
+//                    // Set the Firestore document ID in the MoodEvent
+//                    mood.setId(documentReference.getId());
+//                    // Add the mood to the local list in MoodHistory
+//                    MoodHistoryManager.getInstance().addMood(mood);
+//                    Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
+//                })
+//                .addOnFailureListener(e -> {
+//                    // Handle failure
+//                    Toast.makeText(this, "Failed to add mood.", Toast.LENGTH_SHORT).show();
+//                    Log.e("Firestore", "Error adding mood", e);
+//                });
+//    }
 }

@@ -45,10 +45,6 @@ public class MoodHistoryManager {
     public void addMood(MoodEvent mood) {
         moodList.add(mood);
     }
-
-
-
-
     /**
      * Adds multiple MoodEvents to the mood list.
      *
