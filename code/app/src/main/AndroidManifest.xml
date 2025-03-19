@@ -42,6 +42,14 @@
             android:exported="true" />
         <activity android:name=".LogoutActivity"
             android:exported="true" />
+        <activity android:name=".SearchActivity"
+            android:exported="true" />
+        <activity android:name=".FollowingActivity"
+            android:exported="true" />
+        <activity android:name=".FollowersActivity"
+            android:exported="true" />
+        <activity android:name=".FollowRequestsActivity"
+            android:exported="true" />
 
     </application>
 

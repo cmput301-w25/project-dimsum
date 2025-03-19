@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import com.example.baobook.constant.SharedPreferencesConstants;
+import com.example.baobook.model.User;
 
 public class UserSession {
     private final SharedPreferences sharedPreferences;
@@ -17,7 +18,9 @@ public class UserSession {
                 .putString(SharedPreferencesConstants.USERNAME, username)
                 .apply();
     }
-
+    public User getUser(){
+        return new User(this.getUsername(), null);
+    }
     public String getUsername() {
         return sharedPreferences.getString(SharedPreferencesConstants.USERNAME, "null");
     }
