@@ -9,7 +9,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.firestore.Exclude;
 import com.google.firebase.firestore.PropertyName;
-import com.google.firebase.firestore.GeoPoint;
 
 import java.io.Serializable;
 import java.time.OffsetDateTime;
@@ -31,8 +30,6 @@ public class MoodEvent implements Serializable {
     private String description; // trigger description
     private String base64image;
     private SocialSetting social;
-
-    private GeoPoint location;
 
     // No-argument constructor required for Firestore
     public MoodEvent() {}
