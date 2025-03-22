@@ -15,28 +15,14 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import com.example.baobook.AddMoodActivity;
-import com.example.baobook.EditFragment;
-import com.example.baobook.FilterDialogFragment;
-import com.example.baobook.Home;
-import com.example.baobook.Map;
-import com.example.baobook.MoodEventArrayAdapter;
-import com.example.baobook.MoodEventOptionsFragment;
-import com.example.baobook.R;
-import com.example.baobook.UserProfileActivity;
 import com.example.baobook.controller.MoodEventHelper;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.MoodHistoryManager;
 import com.example.baobook.util.UserSession;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
 
 /**
  * Activity that displays the mood history list.
@@ -130,7 +116,7 @@ public class MoodHistory extends AppCompatActivity
             startActivity(intent);
         });
         mapButton.setOnClickListener(v -> {
-            Intent intent = new Intent(MoodHistory.this, Map.class);
+            Intent intent = new Intent(MoodHistory.this, MapsActivity.class);
             startActivity(intent);
         });
         profileButton.setOnClickListener(v -> {
