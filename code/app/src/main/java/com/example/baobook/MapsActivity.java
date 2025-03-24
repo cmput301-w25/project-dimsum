@@ -46,7 +46,10 @@ import com.google.firebase.firestore.GeoPoint;
 
 import java.util.ArrayList;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, FilterDialogFragment.OnFilterSaveListener {
+public class MapsActivity extends FragmentActivity
+        implements OnMapReadyCallback, FilterDialogFragment.OnFilterSaveListener,
+        MoodEventOptionsFragment.MoodEventOptionsDialogListener,
+        EditFragment.EditMoodEventDialogListener {
 
     private final MoodEventHelper moodEventHelper = new MoodEventHelper();
     private UserSession userSession;
@@ -138,6 +141,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
+    @Override
+    public void onEditMoodEvent(MoodEvent mood) {
+        EditFragment fragment = new EditFragment(mood);
+        fragment.show(getSupportFragmentManager(), "Edit Mood");
+    }
+
+    @Override
+    public void onDeleteMoodEvent(MoodEvent mood) {
+        moodEventHelper.deleteMood(mood, aVoid -> {
+            loadMoodsFromFirestore();
+            Toast.makeText(this, "Mood deleted!", Toast.LENGTH_SHORT).show();
+        }, e -> {
+            Log.e("Firestore", "Error deleting mood", e);
+            Toast.makeText(this, "Failed to delete mood.", Toast.LENGTH_SHORT).show();
+        });
+    }
     private void centerMapOnUserLocation() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -195,11 +214,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if (marker != null) {
                         marker.setTag(event);  // Associate the marker with the MoodEvent.
                     }
+                    moodMarkers.add(marker);
                 }
             }
         }
     }
-
 
     // Show “chips” for each active filter
     private void rebuildActiveFiltersChips() {
@@ -329,5 +348,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         drawable.setBounds(0, 0, width, height);
         drawable.draw(canvas);
         return bitmap;
+    }
+
+    @Override
+    public void onMoodEdited(MoodEvent updatedMoodEvent) {
+        moodEventHelper.updateMood(updatedMoodEvent, aVoid -> {
+            Toast.makeText(this, "Mood updated!", Toast.LENGTH_SHORT).show();
+            loadMoodsFromFirestore();
+        }, e -> {
+            Log.e("Firestore", "Error updating mood", e);
+            Toast.makeText(this, "Failed to update mood.", Toast.LENGTH_SHORT).show();
+        });
     }
 }
