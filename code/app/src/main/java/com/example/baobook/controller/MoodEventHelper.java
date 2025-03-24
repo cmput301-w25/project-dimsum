@@ -1,9 +1,16 @@
 package com.example.baobook.controller;
 
+
+import android.util.Log;
+
+
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.Comment;
+import com.example.baobook.model.Privacy;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -51,42 +58,45 @@ public class MoodEventHelper {
      * @param onSuccess  Callback triggered upon successful retrieval.
      * @param onFailure  Callback triggered on failure.
      */
-//    public void getMoodEventsByFollowing(String username, OnSuccessListener<List<MoodEvent>> onSuccess, OnFailureListener onFailure) {
-//        db.collection(FirestoreConstants.COLLECTION_USERS)
-//                .document(username)
-//                .get()
-//                .addOnSuccessListener(documentSnapshot -> {
-//                    if (documentSnapshot.exists()) {
-//                        List<String> followingList = (List<String>) documentSnapshot.get(FirestoreConstants.FIELD_FOLLOWINGS);
-//
-//                        // If the following list is empty, return an empty list.
-//                        if (followingList == null || followingList.isEmpty()) {
-//                            onSuccess.onSuccess(new ArrayList<>());
-//                            return;
-//                        }
-//
-//                        // Get mood events from all followed users.
-//                        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
-//                                .whereIn(FirestoreConstants.FIELD_USERNAME, followingList)
-//                                 .orderBy("timestamp", Query.Direction.DESCENDING) // Order by newest date first.
-//                                .get()
-//                                .addOnSuccessListener(querySnapshot -> {
-//                                    List<MoodEvent> moodEvents = new ArrayList<>();
-//                                    for (QueryDocumentSnapshot doc : querySnapshot) {
-//                                        MoodEvent moodEvent = doc.toObject(MoodEvent.class);
-//                                        moodEvents.add(moodEvent);
-//                                    }
-//                                    onSuccess.onSuccess(moodEvents);
-//                                })
-//                                .addOnFailureListener(onFailure);
-//                    } else {
-//                        onFailure.onFailure(new RuntimeException("User not found: " + username));
-//                    }
-//                })
-//                .addOnFailureListener(onFailure);
-//    }
+    public void getMoodEventsByFollowing(String username, OnSuccessListener<List<MoodEvent>> onSuccess, OnFailureListener onFailure) {
+        db.collection(FirestoreConstants.COLLECTION_USERS)
+                .document(username)
+                .collection(FirestoreConstants.COLLECTION_FOLLOWINGS) // Access the subcollection
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<String> followingList = new ArrayList<>();
 
+                    for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
+                        String followedUser = doc.getId(); // Assuming the document ID is the username of the followed user
+                        Log.d("MoodEventHelper", "Found followed user: " + followedUser);
+                        followingList.add(followedUser);
+                    }
 
+                    if (followingList.isEmpty()) {
+                        onSuccess.onSuccess(new ArrayList<>());
+                        return;
+                    }
+
+                    // Query mood events using whereIn for the followed users
+                    db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
+                            .whereIn(FirestoreConstants.FIELD_USERNAME, followingList)
+                            .orderBy("timestamp", Query.Direction.DESCENDING)
+                            .get()
+                            .addOnSuccessListener(eventsSnapshot -> {
+                                List<MoodEvent> moodEvents = new ArrayList<>();
+                                for (QueryDocumentSnapshot doc : eventsSnapshot) {
+                                    MoodEvent moodEvent = doc.toObject(MoodEvent.class);
+                                    if(moodEvent.getPrivacy() == Privacy.PUBLIC){ //only add PUBLIC mood events
+                                        Log.d("MoodEventHelper", "Found mood event: " + moodEvent);
+                                        moodEvents.add(moodEvent);
+                                    }
+                                }
+                                onSuccess.onSuccess(moodEvents);
+                            })
+                            .addOnFailureListener(onFailure);
+                })
+                .addOnFailureListener(onFailure);
+    }
     /**
      * Publishes a new MoodEvent to Firestore.
      * Checks if the MoodEvent with the given ID already exists.
@@ -152,6 +162,46 @@ public class MoodEventHelper {
         String id = moodEvent.getId();
         db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS).document(id).delete()
                 .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    /**
+     * Adds a comment to a mood event. Comments are stored as a subcollection for each moodEvent
+     * @param moodEventId The ID of the mood event to add the comment to.
+     * @param comment The comment object to add.
+     * @param onSuccess Callback triggered upon successful addition.
+     * @param onFailure Callback triggered on failure.
+     */
+    public void addComment(String moodEventId, Comment comment, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
+        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
+                .document(moodEventId)
+                .collection(FirestoreConstants.COLLECTION_COMMENTS)
+                .add(comment)
+                .addOnSuccessListener(aVoid-> {
+                    onSuccess.onSuccess(null); // Correct call
+                    Log.d("MoodEventHelper", "Comment added successfully");
+                })
+                .addOnFailureListener(onFailure);
+    }
+    /**
+     * Loads comments for a given mood event.
+     * @param moodEventId The ID of the mood event to load comments for.
+     * @param onSuccess Callback triggered upon successful retrieval.
+     * @param onFailure Callback triggered on failure.
+     */
+    public void loadComments(String moodEventId, OnSuccessListener<List<Comment>> onSuccess, OnFailureListener onFailure) {
+        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
+                .document(moodEventId)
+                .collection(FirestoreConstants.COLLECTION_COMMENTS)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<Comment> comments = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        Comment comment = doc.toObject(Comment.class);
+                        comments.add(comment);
+                    }
+                    onSuccess.onSuccess(comments);
+                })
                 .addOnFailureListener(onFailure);
     }
 }

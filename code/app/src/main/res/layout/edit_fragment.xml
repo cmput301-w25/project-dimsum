@@ -42,7 +42,15 @@
         android:id="@+id/edit_description"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Enter Trigger"
+        android:hint="Enter Reason"
         android:inputType="text" />
+
+    <RadioButton
+        android:id="@+id/privateRadioButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Make post private?"
+        android:checked="true"/>
+
 
 </LinearLayout>

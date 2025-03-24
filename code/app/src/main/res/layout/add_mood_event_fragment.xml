@@ -56,12 +56,19 @@
         android:id="@+id/edit_description"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Enter Trigger"
+        android:hint="Enter Reason"
         android:padding="12dp"
         android:layout_marginTop="12dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/text_time" />
+
+    <RadioButton
+        android:id="@+id/privacyRadioButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Make post private? "
+        app:layout_constraintTop_toBottomOf="@+id/edit_description"/>
 
     <TextView
         android:id="@+id/textView2"
@@ -70,7 +77,7 @@
         android:text="Show how you're feeling?"
         android:layout_marginTop="24dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/edit_description" />
+        app:layout_constraintTop_toBottomOf="@id/privacyRadioButton" />
 
     <ImageButton
         android:id="@+id/openCamera"

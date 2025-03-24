@@ -11,4 +11,5 @@ public class FirestoreConstants {
     public static final String COLLECTION_FOLLOWERS = "followers";
     public static final String COLLECTION_FOLLOWINGS = "followings";
     public static final String COLLECTION_REQUESTS = "requests";
+    public static final String COLLECTION_COMMENTS = "comments";
 }

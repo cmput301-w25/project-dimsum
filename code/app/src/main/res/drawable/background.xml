@@ -1,4 +1,23 @@
-<?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-  
+
+<!-- Soft Radial Glow -->
+<item>
+    <shape android:shape="rectangle">
+        <gradient
+            android:type="radial"
+            android:centerX="50%"
+            android:centerY="50%"
+            android:gradientRadius="400dp"
+            android:startColor="#06AED5"
+            android:centerColor="@color/beige"
+            android:endColor="@color/red"
+            android:useLevel="false"/>
+    </shape>
+</item>
+
 </layer-list>
+
+
+
+
+

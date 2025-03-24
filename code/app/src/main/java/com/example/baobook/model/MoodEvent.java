@@ -23,6 +23,7 @@ public class MoodEvent implements Serializable {
     private String id; // Unique ID for Firestore
     private Mood mood;
     private long timestamp; // For deserializing from Firestore
+    private Privacy privacy;
 
     @Exclude
     @JsonIgnore
@@ -44,8 +45,9 @@ public class MoodEvent implements Serializable {
      * @param description description or trigger
      * @param social      social setting of the mood event
      * @param base64image base64 encoded image string
+     * @param privacy     privacy setting of the mood event
      */
-    public MoodEvent(String username, String id, Mood mood, OffsetDateTime dateTime, String description, SocialSetting social, String base64image) {
+    public MoodEvent(String username, String id, Mood mood, OffsetDateTime dateTime, String description, SocialSetting social, String base64image, Privacy privacy) {
         this.username = username;
         this.id = id;
         this.mood = mood;
@@ -54,6 +56,7 @@ public class MoodEvent implements Serializable {
         this.description = description;
         this.social = social;
         this.base64image = base64image;
+        this.privacy = privacy;
     }
 
     public String getId() { return id; }
@@ -92,7 +95,8 @@ public class MoodEvent implements Serializable {
     public String getBase64image() {return base64image;}
 
     public void setBase64image(String base64image) {this.base64image = base64image;}
-
+    public Privacy getPrivacy() {return privacy;}
+    public void setPrivacy(Privacy privacy) {this.privacy = privacy;}
     /**
      * Edits the current mood event with new details.
      *
@@ -100,12 +104,14 @@ public class MoodEvent implements Serializable {
      * @param newDateTime  The new date and time for the event.
      * @param newDescription The new description for the event.
      * @param newSocial     The new social setting for the event.
+     * @param newPrivacy    The new privacy setting for the event.
      */
-    public void editMoodEvent(Mood newMood, OffsetDateTime newDateTime, String newDescription, SocialSetting newSocial) {
+    public void editMoodEvent(Mood newMood, OffsetDateTime newDateTime, String newDescription, SocialSetting newSocial, Privacy newPrivacy) {
         setMood(newMood);
         setDateTime(newDateTime);
         setDescription(newDescription);
         setSocial(newSocial);
+        setPrivacy(privacy);
     }
 
     @Override
@@ -117,7 +123,8 @@ public class MoodEvent implements Serializable {
                 && mood == other.getMood()
                 && timestamp == other.getDateTimeInMilli()
                 && description.equals(other.getDescription())
-                && social == other.getSocial();
+                && social == other.getSocial()
+                && privacy == other.getPrivacy();
     }
 
     @Override

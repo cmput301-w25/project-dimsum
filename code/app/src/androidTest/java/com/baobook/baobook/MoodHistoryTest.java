@@ -38,6 +38,7 @@ import com.example.baobook.R;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.MoodHistory;
+import com.example.baobook.model.Privacy;
 import com.example.baobook.model.SocialSetting;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
@@ -157,8 +158,8 @@ public class MoodHistoryTest {
 
         // Seed data with just two moods
         MoodEvent[] moods = {
-                new MoodEvent("idk", "1", Mood.FEAR, OffsetDateTime.now(), "Bad", socialSetting, ""),
-                new MoodEvent("idk", "2", Mood.SADNESS, OffsetDateTime.now(), "Bad", socialSetting, "")
+                new MoodEvent("idk", "1", Mood.FEAR, OffsetDateTime.now(), "Bad", socialSetting, "", Privacy.PUBLIC),
+                new MoodEvent("idk", "2", Mood.SADNESS, OffsetDateTime.now(), "Bad", socialSetting, "", Privacy.PUBLIC)
         };
 
         for (MoodEvent mood : moods) {

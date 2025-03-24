@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -20,9 +21,10 @@ import androidx.fragment.app.DialogFragment;
 
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.Privacy;
 import com.example.baobook.model.SocialSetting;
+import com.example.baobook.util.MoodUtils;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
@@ -32,17 +34,14 @@ import java.util.Arrays;
 import java.util.Locale;
 
 /*
-Edits current mood activity. Changes can be applied to trigger, mood, time, date and social status.
+Edits current mood activity. Changes can be applied to trigger, mood, time, date, social status, and privacy.
 */
 
-
 public class EditFragment extends DialogFragment {
-
     private LocalDate selectedDate;
     private LocalTime selectedTime;
     private EditMoodEventDialogListener listener;
     private MoodEvent moodEvent;
-
     private static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.getDefault());
     private static final DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
 
@@ -63,7 +62,8 @@ public class EditFragment extends DialogFragment {
 
     public static boolean isValidDescription(String desc) {
         if (desc.isEmpty()) return true;
-        return desc.length() <= 20 && desc.trim().split("\\s+").length <= 3;
+        return desc.length() <= 200;
+        //return desc.length() <= 20 && desc.trim().split("\\s+").length <= 3;
     }
 
     private int getSpinnerIndex(Spinner spinner, String value) {
@@ -100,6 +100,7 @@ public class EditFragment extends DialogFragment {
         TextView editTime = view.findViewById(R.id.text_time);
         EditText editDescription = view.findViewById(R.id.edit_description);
         Spinner editSocial = view.findViewById(R.id.social_spinner);
+        RadioButton privateRadioButton = view.findViewById(R.id.privateRadioButton);
 
         // Initialize the Spinner with MoodUtils
         MoodSpinnerAdapter adapter = new MoodSpinnerAdapter(
@@ -119,7 +120,7 @@ public class EditFragment extends DialogFragment {
             editDate.setText(dateFormat.format(dateTime));
             editTime.setText(timeFormat.format(dateTime));
             editDescription.setText(moodEvent.getDescription());
-
+            privateRadioButton.setChecked(moodEvent.getPrivacy() == Privacy.PRIVATE);
             int socialPosition = getSpinnerIndex(editSocial, moodEvent.getSocial().toString());
             editSocial.setSelection(socialPosition);
         }
@@ -167,13 +168,14 @@ public class EditFragment extends DialogFragment {
                 String newDescription = editDescription.getText().toString().trim();
                 SocialSetting newSocial = SocialSetting.fromString(editSocial.getSelectedItem().toString());
                 OffsetDateTime dateTime = OffsetDateTime.of(selectedDate, selectedTime, ZoneOffset.UTC);
+                Privacy newPrivacy = privateRadioButton.isChecked() ? Privacy.PRIVATE : Privacy.PUBLIC;
 
                 if (!isValidDescription(newDescription)) {
                     Toast.makeText(getContext(), "Trigger must be at most 20 chars or 3 words", Toast.LENGTH_SHORT).show();
                     return; // Prevent dialog from closing
                 }
 
-                moodEvent.editMoodEvent(newMood, dateTime, newDescription, newSocial);
+                moodEvent.editMoodEvent(newMood, dateTime, newDescription, newSocial, newPrivacy);
                 listener.onMoodEdited(moodEvent);
                 dialog.dismiss(); // Dismiss only when validation passes
             });

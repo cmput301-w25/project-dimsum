@@ -83,8 +83,8 @@ public class UserHelperTest {
 
         userHelper.followUser(username1, username2,
                 aVoid -> {
-                    CompletableFuture<Void> verify = verifyUserInList(username2, username1, FirestoreConstants.FIELD_FOLLOWINGS)
-                            .thenCombine(verifyUserInList(username1, username2, FirestoreConstants.FIELD_FOLLOWERS), (a, b) -> null);
+                    CompletableFuture<Void> verify = verifyUserInSubcollection(username1, username2, FirestoreConstants.COLLECTION_FOLLOWINGS)
+                            .thenCombine(verifyUserInSubcollection(username2, username1, FirestoreConstants.COLLECTION_FOLLOWERS), (a, b) -> null);
 
                     verify.whenComplete((result, ex) -> {
                         if (ex != null) future.completeExceptionally(ex);
@@ -103,14 +103,14 @@ public class UserHelperTest {
 
         userHelper.followUser(username1, username2,
                 aVoid -> {
-                    CompletableFuture<Void> verifyBeforeUnfollow = verifyUserInList(username1, username2, FirestoreConstants.FIELD_FOLLOWERS)
-                            .thenCombine(verifyUserInList(username2, username1, FirestoreConstants.FIELD_FOLLOWINGS), (a, b) -> null);
+                    CompletableFuture<Void> verifyBeforeUnfollow = verifyUserInSubcollection(username1, username2, FirestoreConstants.COLLECTION_FOLLOWINGS)
+                            .thenCombine(verifyUserInSubcollection(username2, username1, FirestoreConstants.COLLECTION_FOLLOWERS), (a, b) -> null);
 
                     verifyBeforeUnfollow.thenRun(() -> {
                         userHelper.unfollowUser(username1, username2,
                                 aVoid2 -> {
-                                    CompletableFuture<Void> verifyAfterUnfollow = verifyUserNotInList(username2, username1, FirestoreConstants.FIELD_FOLLOWINGS)
-                                            .thenCombine(verifyUserNotInList(username1, username2, FirestoreConstants.FIELD_FOLLOWERS), (a, b) -> null);
+                                    CompletableFuture<Void> verifyAfterUnfollow = verifyUserNotInSubcollection(username1, username2, FirestoreConstants.COLLECTION_FOLLOWINGS)
+                                            .thenCombine(verifyUserNotInSubcollection(username2, username1, FirestoreConstants.COLLECTION_FOLLOWERS), (a, b) -> null);
 
                                     verifyAfterUnfollow.whenComplete((result, ex) -> {
                                         if (ex != null) future.completeExceptionally(ex);
@@ -184,5 +184,47 @@ public class UserHelperTest {
             setUserInUsersCollection(user).join();
         }
     }
+    private CompletableFuture<Void> verifyUserInSubcollection(String ownerUsername, String targetUsername, String subcollection) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users")
+                .document(ownerUsername)
+                .collection(subcollection)
+                .document(targetUsername)
+                .get()
+                .addOnSuccessListener(document -> {
+                    if (document.exists()) {
+                        future.complete(null);
+                    } else {
+                        future.completeExceptionally(new AssertionError("User not found in subcollection: " + subcollection));
+                    }
+                })
+                .addOnFailureListener(future::completeExceptionally);
+
+        return future;
+    }
+
+    private CompletableFuture<Void> verifyUserNotInSubcollection(String ownerUsername, String targetUsername, String subcollection) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("users")
+                .document(ownerUsername)
+                .collection(subcollection)
+                .document(targetUsername)
+                .get()
+                .addOnSuccessListener(document -> {
+                    if (!document.exists()) {
+                        future.complete(null);
+                    } else {
+                        future.completeExceptionally(new AssertionError("User still found in subcollection: " + subcollection));
+                    }
+                })
+                .addOnFailureListener(future::completeExceptionally);
+
+        return future;
+    }
+
 
 }

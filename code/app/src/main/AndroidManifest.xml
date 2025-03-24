@@ -50,6 +50,9 @@
             android:exported="true" />
         <activity android:name=".FollowRequestsActivity"
             android:exported="true" />
+        <activity android:name=".CommentActivity"
+            android:exported="true" />
+
 
     </application>
 

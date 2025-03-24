@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.MoodHistoryManager;
+import com.example.baobook.model.Privacy;
 import com.example.baobook.model.SocialSetting;
 
 import org.junit.Before;
@@ -53,9 +54,9 @@ public class MoodHistoryManagerTest {
         OffsetDateTime date3 = OffsetDateTime.of(2024, 3, 13, 9, 45, 0, 0, ZoneOffset.UTC);
 
         // Add moods in random order
-        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date2, "Middle", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.SADNESS, date3, "Oldest", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.ANGER, date1, "Most Recent", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date2, "Middle", socialSetting, "", Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.SADNESS, date3, "Oldest", socialSetting, "", Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.ANGER, date1, "Most Recent", socialSetting, "", Privacy.PUBLIC));
 
         // Sort the list
         manager.sortByDate();
@@ -73,11 +74,11 @@ public class MoodHistoryManagerTest {
 
     @Test
     public void testFilterByMood_SingleMoodType() {
-        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "Happy1", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.SADNESS, date, "Sad", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.HAPPINESS, date, "Happy2", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "4", Mood.ANGER, date, "Angry", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "5", Mood.HAPPINESS, date, "Happy3", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "Happy1", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.SADNESS, date, "Sad", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.HAPPINESS, date, "Happy2", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "4", Mood.ANGER, date, "Angry", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "5", Mood.HAPPINESS, date, "Happy3", socialSetting, "",Privacy.PUBLIC));
 
         // Filter for happy moods
         ArrayList<MoodEvent> filteredList = manager.filterByMood(Mood.HAPPINESS);
@@ -91,8 +92,8 @@ public class MoodHistoryManagerTest {
 
     @Test
     public void testFilterByMood_NoMatchingMoods() {
-        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "Happy1", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date, "Happy2", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "Happy1", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date, "Happy2", socialSetting, "",Privacy.PUBLIC));
 
         // Filter for a different mood type
         ArrayList<MoodEvent> filteredList = manager.filterByMood(Mood.SADNESS);
@@ -116,10 +117,10 @@ public class MoodHistoryManagerTest {
     @Test
     public void testFilterByWord_PartialMatch() {
         // This checks partial substring matches for "hel"
-        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "hello world", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.SADNESS, date, "helipad stuff", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.FEAR, date, "my best friend", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "4", Mood.DISGUST, date, "Help me!", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "hello world", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.SADNESS, date, "helipad stuff", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.FEAR, date, "my best friend", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "4", Mood.DISGUST, date, "Help me!", socialSetting, "",Privacy.PUBLIC));
 
         // We'll not filter by mood or last7days => pass (null, false, "hel")
         ArrayList<MoodEvent> filtered = manager.getFilteredList(null, false, "hel");
@@ -139,8 +140,8 @@ public class MoodHistoryManagerTest {
     @Test
     public void testFilterByWord_NoPartialMatch() {
         // If the filter word doesn't appear at all => empty result
-        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "hello world", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.SADNESS, date, "helipad stuff", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "hello world", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.SADNESS, date, "helipad stuff", socialSetting, "",Privacy.PUBLIC));
 
         ArrayList<MoodEvent> filtered = manager.getFilteredList(null, false, "xyz");
         assertTrue("Expecting no matches for 'xyz'", filtered.isEmpty());
@@ -149,9 +150,9 @@ public class MoodHistoryManagerTest {
     @Test
     public void testFilterByWord_CaseInsensitivePartialMatch() {
         // If your code does case-insensitive matching, verify:
-        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "Hello World", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.SADNESS, date, "HELLO AGAIN", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.FEAR, date, "HeLium balloon", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "Hello World", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.SADNESS, date, "HELLO AGAIN", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.FEAR, date, "HeLium balloon", socialSetting, "",Privacy.PUBLIC));
 
         ArrayList<MoodEvent> filtered = manager.getFilteredList(null, false, "hel");
 
@@ -164,8 +165,8 @@ public class MoodHistoryManagerTest {
     public void testFilterByWord_OneEditAway() {
         Calendar cal = Calendar.getInstance();
         // User typed "helo," we want to match "hello."
-        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "hello friend", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date, "some other desc", socialSetting, ""));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "hello friend", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date, "some other desc", socialSetting, "",Privacy.PUBLIC));
 
         ArrayList<MoodEvent> filtered = manager.getFilteredList(null, false, "helo");
         assertEquals("Expect 'hello friend' to match 'helo' by 1 edit distance", 1, filtered.size());
@@ -175,8 +176,8 @@ public class MoodHistoryManagerTest {
     @Test
     public void testFilterByWord_EmptyString() {
         // If user enters empty => no word filtering => all remain
-        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.ANGER, date, "hello test", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date, "something", socialSetting, ""));
+            manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.ANGER, date, "hello test", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date, "something", socialSetting, "",Privacy.PUBLIC));
 
         ArrayList<MoodEvent> filtered = manager.getFilteredList(null, false, "");
         assertEquals("Empty filter means no filtering, so all remain", 2, filtered.size());
@@ -192,11 +193,10 @@ public class MoodHistoryManagerTest {
         // We'll test a scenario with a mood = HAPPINESS, lastWeek = false, and word = "hello"
         // Add data, then see if we get the correct subset
 
-        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "hello world", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date, "random text", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.ANGER, date, "hello friend", socialSetting, ""));
-        manager.addMood(new MoodEvent(TEST_USERNAME, "4", Mood.HAPPINESS, date, "HELLO AGAIN", socialSetting, ""));
-
+        manager.addMood(new MoodEvent(TEST_USERNAME, "1", Mood.HAPPINESS, date, "hello world", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "2", Mood.HAPPINESS, date, "random text", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "3", Mood.ANGER, date, "hello friend", socialSetting, "",Privacy.PUBLIC));
+        manager.addMood(new MoodEvent(TEST_USERNAME, "4", Mood.HAPPINESS, date, "HELLO AGAIN", socialSetting, "", Privacy.PUBLIC));
 
         // Filter: Mood=HAPPINESS, lastWeek=false, word="hello"
         ArrayList<MoodEvent> filtered = manager.getFilteredList(Mood.HAPPINESS, false, "hello");

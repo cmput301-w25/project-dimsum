@@ -1,6 +1,7 @@
 package com.example.baobook;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.GradientDrawable;
@@ -10,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -17,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.util.MoodUtils;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -52,6 +55,7 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
         TextView social = view.findViewById(R.id.social_situation);
         View rootLayout = view.findViewById(R.id.mood_item_root);
         ImageView moodImage = view.findViewById(R.id.mood_image);
+        Button commentButton = view.findViewById(R.id.comment_button);
 
         if (moodEvent != null) {
             // Format date and time
@@ -91,8 +95,13 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
             if (drawable != null) {
                 drawable.setStroke(5, MoodUtils.getMoodColor(moodString)); // Set border color
             }
-        }
 
+        }
+        commentButton.setOnClickListener(v -> {
+            Intent intent = new Intent(getContext(), CommentActivity.class);
+            intent.putExtra("MOOD_EVENT_ID", moodEvent.getId()); // Pass mood event ID to CommentActivity
+            getContext().startActivity(intent);
+        });
         return view;
     }
 }

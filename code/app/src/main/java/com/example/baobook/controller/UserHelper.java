@@ -89,36 +89,36 @@ public class UserHelper {
      *
      * @throws RuntimeException if one or both users do not exist in Firestore.
      */
-//    public void followUser(String currentUser, String targetUser, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
-//        DocumentReference currentUserRef = db.collection(FirestoreConstants.COLLECTION_USERS).document(currentUser);
-//        DocumentReference targetUserRef = db.collection(FirestoreConstants.COLLECTION_USERS).document(targetUser);
-//
-//        db.runTransaction(transaction -> {
-//            DocumentSnapshot currentUserDoc = transaction.get(currentUserRef);
-//            DocumentSnapshot targetUserDoc = transaction.get(targetUserRef);
-//
-//            if (!currentUserDoc.exists() || !targetUserDoc.exists()) {
-//                throw new RuntimeException("One or both users do not exist.");
-//            }
-//
-//            List<String> following = (List<String>) currentUserDoc.get("followings");
-//            List<String> followers = (List<String>) targetUserDoc.get("followers");
-//
-//            if (following != null && !following.contains(targetUser)) {
-//                following.add(targetUser);
-//            }
-//            if (followers != null && !followers.contains(currentUser)) {
-//                followers.add(currentUser);
-//            }
-//
-//            transaction.update(currentUserRef, "followings", following);
-//            transaction.update(targetUserRef, "followers", followers);
-//
-//            return null;
-//        }).addOnSuccessListener(aVoid -> {
-//            onSuccess.onSuccess(null);
-//        }).addOnFailureListener(onFailure);
-//    }
+    public void followUser(String currentUser, String targetUser, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
+        DocumentReference currentUserRef = db.collection(FirestoreConstants.COLLECTION_USERS).document(currentUser);
+        DocumentReference targetUserRef = db.collection(FirestoreConstants.COLLECTION_USERS).document(targetUser);
+
+        db.runTransaction(transaction -> {
+            DocumentSnapshot currentUserDoc = transaction.get(currentUserRef);
+            DocumentSnapshot targetUserDoc = transaction.get(targetUserRef);
+
+            if (!currentUserDoc.exists() || !targetUserDoc.exists()) {
+                throw new RuntimeException("One or both users do not exist.");
+            }
+
+            List<String> following = (List<String>) currentUserDoc.get("followings");
+            List<String> followers = (List<String>) targetUserDoc.get("followers");
+
+            if (following != null && !following.contains(targetUser)) {
+                following.add(targetUser);
+            }
+            if (followers != null && !followers.contains(currentUser)) {
+                followers.add(currentUser);
+            }
+
+            transaction.update(currentUserRef, "followings", following);
+            transaction.update(targetUserRef, "followers", followers);
+
+            return null;
+        }).addOnSuccessListener(aVoid -> {
+            onSuccess.onSuccess(null);
+        }).addOnFailureListener(onFailure);
+    }
 
     /**
      * Allows a user to unfollow another user by updating the "followings" and "followers" lists in Firestore.

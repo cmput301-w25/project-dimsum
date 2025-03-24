@@ -59,6 +59,7 @@ public class UserProfileActivity extends AppCompatActivity implements
         Button followingButton = findViewById(R.id.following_button);
         Button followButton = findViewById(R.id.follow_button);
         Button requestsButton = findViewById(R.id.requests_button);
+        Button moodHistoryButton = findViewById(R.id.mood_history_button);
 
         if(isCurrentUser){
             followButton.setVisibility(Button.GONE);
@@ -67,6 +68,7 @@ public class UserProfileActivity extends AppCompatActivity implements
             requestsButton.setOnClickListener(v -> startActivity(new Intent(this, FollowRequestsActivity.class)));
         }else{
             followButton.setVisibility(Button.VISIBLE);
+            moodHistoryButton.setVisibility(Button.GONE);
             followersButton.setVisibility(Button.GONE);
             followingButton.setVisibility(Button.GONE);
             requestsButton.setVisibility(Button.GONE);
@@ -76,7 +78,6 @@ public class UserProfileActivity extends AppCompatActivity implements
                     status -> {
                         boolean isFollowing = status.first;
                         boolean hasRequested = status.second;
-
                         // Set button text based on follow status
                         if (isFollowing) {
                             followButton.setText("Unfollow");
@@ -85,14 +86,17 @@ public class UserProfileActivity extends AppCompatActivity implements
                         } else {
                             followButton.setText("Follow");
                         }
-
                         // Set follow button action
                         followButton.setOnClickListener(v -> {
                             if (isFollowing) {
                                 // Unfollow the user
-//                                FirestoreHelper.unfollow(username, otherUsername, UserProfileActivity.this);
-                                followButton.setText("Following");
-                            } else {
+                                FirestoreHelper.unfollow(user, otherUser, UserProfileActivity.this);
+                                followButton.setText("Follow");
+                            }else if(hasRequested){
+                                // Send follow request
+                                FirestoreHelper.requestFollow(user, otherUser, UserProfileActivity.this);
+                                followButton.setText("Requested");
+                            }else{
                                 // Send follow request
                                 FirestoreHelper.requestFollow(user, otherUser, UserProfileActivity.this);
                                 followButton.setText("Requested");
@@ -135,7 +139,6 @@ public class UserProfileActivity extends AppCompatActivity implements
             Intent intent = new Intent(UserProfileActivity.this, UserProfileActivity.class);
             startActivity(intent);
         });
-        Button moodHistoryButton = findViewById(R.id.mood_history_button);
         moodHistoryButton.setOnClickListener(v -> {
             // Launch MoodHistory activity
             Intent intent = new Intent(UserProfileActivity.this, MoodHistory.class);
