@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat;
 import com.example.baobook.controller.MoodEventHelper;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.MoodFilterState;
 import com.example.baobook.model.MoodHistoryManager;
 import com.example.baobook.util.UserSession;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -48,10 +49,7 @@ public class MoodHistory extends AppCompatActivity
     private MoodEventArrayAdapter moodArrayAdapter;
     private Button homeButton, mapButton, profileButton;
 
-    // Filter states
-    private Mood filterMood = null;
-    private boolean filterRecentWeek = false;
-    private String filterWord = null;
+    private final MoodFilterState filterState = new MoodFilterState();
 
     // We'll display the "filtered" results in memory, for the ListView
     // So we keep a local list for quick adaptation to the UI
@@ -97,15 +95,13 @@ public class MoodHistory extends AppCompatActivity
         // Filter button -> open dialog
         openFilterButton.setOnClickListener(v -> {
             FilterDialogFragment dialog = new FilterDialogFragment(this);
-            dialog.setExistingFilters(filterMood, filterRecentWeek, filterWord);
+            dialog.setExistingFilters(filterState.getMood(), filterState.isRecentWeek(), filterState.getWord());
             dialog.show(getSupportFragmentManager(), "FilterDialog");
         });
 
         // Clear All -> remove filters
         clearAllButton.setOnClickListener(v -> {
-            filterMood = null;
-            filterRecentWeek = false;
-            filterWord = null;
+            filterState.clear();
             applyFilters();
             Toast.makeText(this, "All filters cleared", Toast.LENGTH_SHORT).show();
         });
@@ -127,9 +123,9 @@ public class MoodHistory extends AppCompatActivity
 
     @Override
     public void onFilterSave(Mood mood, boolean lastWeek, String word) {
-        this.filterMood = mood;
-        this.filterRecentWeek = lastWeek;
-        this.filterWord = word;
+        filterState.setMood(mood);
+        filterState.setRecentWeek(lastWeek);
+        filterState.setWord(word);
         applyFilters();
     }
 
@@ -138,8 +134,7 @@ public class MoodHistory extends AppCompatActivity
      * and rebuilds the filter “chips”.
      */
     private void applyFilters() {
-        MoodHistoryManager manager = MoodHistoryManager.getInstance();
-        ArrayList<MoodEvent> temp = manager.getFilteredList(filterMood, filterRecentWeek, filterWord);
+        ArrayList<MoodEvent> temp = filterState.applyFilters();
 
         filteredList.clear();
         filteredList.addAll(temp);
@@ -150,30 +145,34 @@ public class MoodHistory extends AppCompatActivity
 
     // Show “chips” for each active filter
     private void rebuildActiveFiltersChips() {
+        Mood mood = filterState.getMood();
+        boolean isRecentWeek = filterState.isRecentWeek();
+        String word = filterState.getWord();
+
         activeFiltersContainer.removeAllViews();
 
-        if (filterMood != null) {
+        if (mood != null) {
             activeFiltersContainer.addView(
-                    createChip(filterMood.toString(), v -> {
-                        filterMood = null;
+                    createChip(mood.toString(), v -> {
+                        filterState.setMood(null);
                         applyFilters();
                     })
             );
         }
 
-        if (filterRecentWeek) {
+        if (isRecentWeek) {
             activeFiltersContainer.addView(
                     createChip("Last 7 days", v -> {
-                        filterRecentWeek = false;
+                        filterState.setRecentWeek(false);
                         applyFilters();
                     })
             );
         }
 
-        if (filterWord != null && !filterWord.isEmpty()) {
+        if (word != null && !word.isEmpty()) {
             activeFiltersContainer.addView(
-                    createChip("Word: " + filterWord, v -> {
-                        filterWord = null;
+                    createChip("Word: " + word, v -> {
+                        filterState.setWord(null);
                         applyFilters();
                     })
             );
