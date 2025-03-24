@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center">
+    android:gravity="center"
+    android:background="@drawable/background">
 
     <TextView
         android:id="@+id/textView"
@@ -33,7 +34,7 @@
             android:text="@string/yes"
             android:layout_marginEnd="16dp"
             android:textColor="@color/white"
-            android:background="@drawable/button_gradient"
+            android:background="@color/red"
             />
 
         <androidx.appcompat.widget.AppCompatButton
@@ -43,7 +44,7 @@
             android:text="@string/no"
             android:layout_marginStart="16dp"
             android:textColor="@color/white"
-            android:background="@drawable/button_gradient"/>
+            android:background="@color/red"/>
 
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

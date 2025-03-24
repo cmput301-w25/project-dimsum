@@ -1,4 +1,4 @@
-package com.example.baobook;
+package com.example.baobook.util;
 /*
 Created parallel lists to get the color and emoji for a certain mood
  */

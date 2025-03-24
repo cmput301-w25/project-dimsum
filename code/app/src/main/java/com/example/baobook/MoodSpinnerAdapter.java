@@ -9,6 +9,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.baobook.util.MoodUtils;
+
 import java.util.List;
 //spinner adapter that sets colors, emojis, and text for each mood option
 public class MoodSpinnerAdapter extends ArrayAdapter<String> {

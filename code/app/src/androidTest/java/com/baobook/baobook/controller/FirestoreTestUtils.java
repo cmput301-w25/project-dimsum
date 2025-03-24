@@ -1,7 +1,11 @@
 package com.baobook.baobook.controller;
 
+import com.example.baobook.constant.FirestoreConstants;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.WriteBatch;
+
+import org.junit.After;
+
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +34,10 @@ public class FirestoreTestUtils {
                 .addOnFailureListener(future::completeExceptionally);
 
         return future;
+    }
+    @After
+    public void tearDown() throws RuntimeException, InterruptedException {
+        clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS).join();
     }
 
 }

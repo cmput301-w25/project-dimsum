@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/design_default_color_primary"
-        android:backgroundTint="@color/design_default_color_primary"
+        android:backgroundTint="@color/red"
         android:text="Followers"
         android:textColor="@color/white"
         android:textSize="34sp"
@@ -21,16 +21,18 @@
         android:id="@+id/followers_list"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="@color/beige"
+        android:backgroundTint="@color/white"
         app:layout_constraintTop_toBottomOf="@+id/followers_text" />
 
     <Button
         android:id="@+id/back_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Back"
+        android:backgroundTint="@color/primary_blue"
         android:padding="10dp"
-        android:backgroundTint="@android:color/holo_blue_light"
+        android:text="Back"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

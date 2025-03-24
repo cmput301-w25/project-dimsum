@@ -39,5 +39,8 @@
 
     </string-array>
     <string name="title_activity_maps">MapsActivity</string>
+    <string name="unfollow">Unfollow</string>
+    <string name="requested">Requested</string>
+    <string name="follow">Follow</string>
 
 </resources>

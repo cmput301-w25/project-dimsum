@@ -15,6 +15,11 @@ import com.example.baobook.util.UserSession;
 
 import java.util.ArrayList;
 
+/**
+ * Activity to display a list of users that the current user is following. User can
+ * select a another user in the list and be led to their profile
+ */
+
 public class FollowingActivity extends AppCompatActivity {
     private UserSession userSession;
     private ArrayList<User> followingList;

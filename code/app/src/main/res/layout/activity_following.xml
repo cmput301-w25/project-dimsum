@@ -8,8 +8,8 @@
         android:id="@+id/following_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/design_default_color_primary"
-        android:backgroundTint="@color/design_default_color_primary"
+        android:background="@color/red"
+        android:backgroundTint="@color/red"
         android:text="Following"
         android:textColor="@color/white"
         android:textSize="34sp"
@@ -28,7 +28,7 @@
         android:layout_height="wrap_content"
         android:text="Back"
         android:padding="10dp"
-        android:backgroundTint="@android:color/holo_blue_light"
+        android:backgroundTint="@color/primary_blue"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
 

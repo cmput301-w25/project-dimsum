@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.Privacy;
 import com.example.baobook.model.SocialSetting;
 
 import org.junit.Test;
@@ -24,17 +25,19 @@ public class MoodEventTest {
     private static final String description = "just ate a pizza pop";
     private static final SocialSetting socialSetting = SocialSetting.ALONE;
 
+    private static final Privacy privacy = Privacy.PUBLIC;
+
     @Test
     @Parameters(method="getMoods")
     public void getMood_shouldReturnExpectedMood(Mood mood) {
-        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "",privacy);
         assertEquals(mood, cut.getMood());
     }
 
     @Test
     @Parameters(method="getMoodTransitions")
     public void setMood_shouldChangeMood(Mood mood, Mood newMood) {
-        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "",privacy);
         assertEquals(mood, cut.getMood());
 
         cut.setMood(newMood);
@@ -43,7 +46,7 @@ public class MoodEventTest {
 
     @Test
     public void getTimestamp_shouldReturnExpectedTimestamp() {
-        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "",privacy);
         assertEquals(dateTime, cut.getDateTime());
     }
 
@@ -51,7 +54,7 @@ public class MoodEventTest {
     public void setTimestamp_shouldChangeTimestamp() {
         OffsetDateTime newTimestamp = OffsetDateTime.parse("2025-03-04T14:30:00Z");
 
-        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "",privacy);
         assertEquals(dateTime, cut.getDateTime());
 
         cut.setDateTime(newTimestamp);
@@ -60,7 +63,7 @@ public class MoodEventTest {
 
     @Test
     public void getDescription_shouldReturnExpectedDescription() {
-        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "",privacy );
         assertEquals(description, cut.getDescription());
     }
 
@@ -68,7 +71,7 @@ public class MoodEventTest {
     public void setDescription_shouldChangeDescription() {
         String newDescription = "i'm hungry";
 
-        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "",privacy);
         assertEquals(description, cut.getDescription());
 
         cut.setDescription(newDescription);
@@ -77,7 +80,7 @@ public class MoodEventTest {
 
     @Test
     public void editMoodEvent_shouldChangeAllAttributes() {
-        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "");
+        MoodEvent cut = new MoodEvent(username, id, mood, dateTime, description, socialSetting, "",privacy);
         assertEquals(mood, cut.getMood());
         assertEquals(dateTime, cut.getDateTime());
         assertEquals(description, cut.getDescription());
@@ -86,8 +89,8 @@ public class MoodEventTest {
         OffsetDateTime newTimestamp = OffsetDateTime.parse("2025-03-04T14:30:00Z");
         String newDescription = "i'm hungry";
         SocialSetting newSocial = SocialSetting.PAIR;
-
-        cut.editMoodEvent(newMood, newTimestamp, newDescription, newSocial);
+        Privacy newPrivacy = Privacy.PRIVATE;
+        cut.editMoodEvent(newMood, newTimestamp, newDescription, newSocial,newPrivacy);
         assertEquals(newMood, cut.getMood());
         assertEquals(newTimestamp, cut.getDateTime());
         assertEquals(newDescription, cut.getDescription());

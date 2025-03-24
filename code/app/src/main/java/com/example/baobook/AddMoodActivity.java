@@ -14,12 +14,15 @@ import android.util.Base64;
 import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.Manifest;
 
 import com.example.baobook.controller.MoodEventHelper;
+import com.example.baobook.model.Privacy;
+import com.example.baobook.util.MoodUtils;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -54,7 +57,6 @@ public class AddMoodActivity extends AppCompatActivity {
     private MoodEventHelper moodEventHelper = new MoodEventHelper();
     private LocalDateTime selectedDateTime = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()); // Combines date and time
     private LocalDateTime currentDateTime = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()); // Combines date and time
-
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (!isGranted) {
@@ -90,6 +92,8 @@ public class AddMoodActivity extends AppCompatActivity {
         TextView textDate = findViewById(R.id.text_date);
         TextView textTime = findViewById(R.id.text_time);
         TextView editDescription = findViewById(R.id.edit_description);
+        RadioButton privateRadioButton = findViewById(R.id.privacyRadioButton);
+
 
         capImage = findViewById(R.id.captured_image);
         cameraButton = findViewById(R.id.openCamera);
@@ -199,8 +203,8 @@ public class AddMoodActivity extends AppCompatActivity {
                 String dateStr = textDate.getText().toString().trim();
                 String timeStr = textTime.getText().toString().trim();
                 String description = editDescription.getText().toString().trim();
-                SocialSetting social = SocialSetting.fromString(editSocial.getSelectedItem().toString()) ;
-
+                SocialSetting social = SocialSetting.fromString(editSocial.getSelectedItem().toString());
+                Privacy privacy = privateRadioButton.isChecked() ? Privacy.PUBLIC : Privacy.PRIVATE;
                 if (!isValidDescription(description)) {
                     Toast.makeText(this, "Trigger must be at most 20 chars or 3 words", Toast.LENGTH_SHORT).show();
                     return;
@@ -227,7 +231,7 @@ public class AddMoodActivity extends AppCompatActivity {
                 }
                 // If a photo is captured, upload it first
                 // Create the MoodEvent with the generated ID
-                MoodEvent moodEvent = new MoodEvent(username, id, mood, selectedDateTime.atOffset(ZoneOffset.UTC), description, social, base64Image);
+                MoodEvent moodEvent = new MoodEvent(username, id, mood, selectedDateTime.atOffset(ZoneOffset.UTC), description, social, base64Image,privacy);
                 moodEventHelper.publishMood(moodEvent,
                         aVoid -> {
                             Toast.makeText(this, "Mood event saved!", Toast.LENGTH_SHORT).show();

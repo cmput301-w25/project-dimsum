@@ -44,9 +44,9 @@
         <activity
             android:name=".AddMoodActivity"
             android:exported="false" />
-        <activity
-            android:name=".MainActivity"
-            android:exported="true"></activity>
+        <activity android:name=".MainActivity"
+            android:exported="true">
+        </activity>
         <activity
             android:name=".MoodHistory"
             android:exported="false" />
@@ -89,6 +89,10 @@
         <activity
             android:name=".FollowRequestsActivity"
             android:exported="true" />
+        <activity android:name=".CommentActivity"
+            android:exported="true" />
+
+
     </application>
 
 </manifest>

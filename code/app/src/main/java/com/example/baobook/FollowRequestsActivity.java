@@ -47,6 +47,8 @@ public class FollowRequestsActivity extends AppCompatActivity implements UserArr
             intent.putExtra("username", selectedUser.getUsername());
             startActivity(intent);
         });
+        Button backButton = findViewById(R.id.back_button);
+        backButton.setOnClickListener(v -> {finish();});
     }
 
     /**

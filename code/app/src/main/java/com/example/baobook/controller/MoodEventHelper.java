@@ -1,13 +1,15 @@
 package com.example.baobook.controller;
 
+import android.util.Log;
+
 import com.example.baobook.constant.FirestoreConstants;
+import com.example.baobook.model.Comment;
 import com.example.baobook.model.MoodEvent;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +98,7 @@ public class MoodEventHelper {
      */
     public void getRecentFollowingMoodEvents(String username, OnSuccessListener<List<MoodEvent>> onSuccess, OnFailureListener onFailure) {
         Log.d("MoodEventHelper", "Getting recent mood events for user: " + username);
-        
+
         // First get the list of users being followed from the followings subcollection
         db.collection(FirestoreConstants.COLLECTION_USERS)
                 .document(username)
@@ -104,7 +106,7 @@ public class MoodEventHelper {
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     Log.d("MoodEventHelper", "Got followings collection. Size: " + querySnapshot.size());
-                    
+
                     if (querySnapshot.isEmpty()) {
                         Log.d("MoodEventHelper", "No users being followed");
                         onSuccess.onSuccess(new ArrayList<>());
@@ -120,7 +122,7 @@ public class MoodEventHelper {
                     }
 
                     Log.d("MoodEventHelper", "Querying mood events for " + followingUsernames.size() + " followed users");
-                    
+
                     // Get mood events from all followed users, limit to 3
                     db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
                             .whereIn(FirestoreConstants.FIELD_USERNAME, followingUsernames)
@@ -213,6 +215,46 @@ public class MoodEventHelper {
         String id = moodEvent.getId();
         db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS).document(id).delete()
                 .addOnSuccessListener(onSuccess)
+                .addOnFailureListener(onFailure);
+    }
+
+    /**
+     * Adds a comment to a mood event. Comments are stored as a subcollection for each moodEvent
+     * @param moodEventId The ID of the mood event to add the comment to.
+     * @param comment The comment object to add.
+     * @param onSuccess Callback triggered upon successful addition.
+     * @param onFailure Callback triggered on failure.
+     */
+    public void addComment(String moodEventId, Comment comment, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
+        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
+                .document(moodEventId)
+                .collection(FirestoreConstants.COLLECTION_COMMENTS)
+                .add(comment)
+                .addOnSuccessListener(aVoid-> {
+                    onSuccess.onSuccess(null); // Correct call
+                    Log.d("MoodEventHelper", "Comment added successfully");
+                })
+                .addOnFailureListener(onFailure);
+    }
+    /**
+     * Loads comments for a given mood event.
+     * @param moodEventId The ID of the mood event to load comments for.
+     * @param onSuccess Callback triggered upon successful retrieval.
+     * @param onFailure Callback triggered on failure.
+     */
+    public void loadComments(String moodEventId, OnSuccessListener<List<Comment>> onSuccess, OnFailureListener onFailure) {
+        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
+                .document(moodEventId)
+                .collection(FirestoreConstants.COLLECTION_COMMENTS)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    List<Comment> comments = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        Comment comment = doc.toObject(Comment.class);
+                        comments.add(comment);
+                    }
+                    onSuccess.onSuccess(comments);
+                })
                 .addOnFailureListener(onFailure);
     }
 }

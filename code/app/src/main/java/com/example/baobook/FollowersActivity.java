@@ -17,6 +17,9 @@ import com.example.baobook.util.UserSession;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Activity to display a list of followers of the current user.
+ */
 public class FollowersActivity extends AppCompatActivity {
     private UserSession userSession;
     private ArrayList<User> followerList;
