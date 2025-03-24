@@ -208,11 +208,12 @@ public class MapsActivity extends FragmentActivity
                     LatLng latLng = new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude());
                     Marker marker = mMap.addMarker(new MarkerOptions()
                             .position(latLng)
-                            .title(String.format("@%s: %s", getMoodEmoji(event.getUsername()), event.getMood().toString()))
+                            .title(String.format("%s: @%s", event.getMood().toString(), event.getMood().toString()))
                             .icon(createMoodMarker(this, event)));
 
                     if (marker != null) {
                         marker.setTag(event);  // Associate the marker with the MoodEvent.
+                        marker.showInfoWindow();
                     }
                     moodMarkers.add(marker);
                 }
