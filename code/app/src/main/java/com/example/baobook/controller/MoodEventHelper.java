@@ -1,16 +1,9 @@
 package com.example.baobook.controller;
 
-
-import android.util.Log;
-
-
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.model.MoodEvent;
-import com.example.baobook.model.Comment;
-import com.example.baobook.model.Privacy;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -58,45 +51,102 @@ public class MoodEventHelper {
      * @param onSuccess  Callback triggered upon successful retrieval.
      * @param onFailure  Callback triggered on failure.
      */
-    public void getMoodEventsByFollowing(String username, OnSuccessListener<List<MoodEvent>> onSuccess, OnFailureListener onFailure) {
+//    public void getMoodEventsByFollowing(String username, OnSuccessListener<List<MoodEvent>> onSuccess, OnFailureListener onFailure) {
+//        db.collection(FirestoreConstants.COLLECTION_USERS)
+//                .document(username)
+//                .get()
+//                .addOnSuccessListener(documentSnapshot -> {
+//                    if (documentSnapshot.exists()) {
+//                        List<String> followingList = (List<String>) documentSnapshot.get(FirestoreConstants.FIELD_FOLLOWINGS);
+//
+//                        // If the following list is empty, return an empty list.
+//                        if (followingList == null || followingList.isEmpty()) {
+//                            onSuccess.onSuccess(new ArrayList<>());
+//                            return;
+//                        }
+//
+//                        // Get mood events from all followed users.
+//                        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
+//                                .whereIn(FirestoreConstants.FIELD_USERNAME, followingList)
+//                                 .orderBy("timestamp", Query.Direction.DESCENDING) // Order by newest date first.
+//                                .get()
+//                                .addOnSuccessListener(querySnapshot -> {
+//                                    List<MoodEvent> moodEvents = new ArrayList<>();
+//                                    for (QueryDocumentSnapshot doc : querySnapshot) {
+//                                        MoodEvent moodEvent = doc.toObject(MoodEvent.class);
+//                                        moodEvents.add(moodEvent);
+//                                    }
+//                                    onSuccess.onSuccess(moodEvents);
+//                                })
+//                                .addOnFailureListener(onFailure);
+//                    } else {
+//                        onFailure.onFailure(new RuntimeException("User not found: " + username));
+//                    }
+//                })
+//                .addOnFailureListener(onFailure);
+//    }
+
+    /**
+     * Gets the 3 most recent mood events from users that the given user is following.
+     * MoodEvents are returned in reverse chronological order (newest first).
+     * @param username  The username of the user to get following MoodEvents from.
+     * @param onSuccess  Callback triggered upon successful retrieval.
+     * @param onFailure  Callback triggered on failure.
+     */
+    public void getRecentFollowingMoodEvents(String username, OnSuccessListener<List<MoodEvent>> onSuccess, OnFailureListener onFailure) {
+        Log.d("MoodEventHelper", "Getting recent mood events for user: " + username);
+
+        // First get the list of users being followed from the followings subcollection
         db.collection(FirestoreConstants.COLLECTION_USERS)
                 .document(username)
-                .collection(FirestoreConstants.COLLECTION_FOLLOWINGS) // Access the subcollection
+                .collection(FirestoreConstants.COLLECTION_FOLLOWINGS)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
-                    List<String> followingList = new ArrayList<>();
+                    Log.d("MoodEventHelper", "Got followings collection. Size: " + querySnapshot.size());
 
-                    for (DocumentSnapshot doc : querySnapshot.getDocuments()) {
-                        String followedUser = doc.getId(); // Assuming the document ID is the username of the followed user
-                        Log.d("MoodEventHelper", "Found followed user: " + followedUser);
-                        followingList.add(followedUser);
-                    }
-
-                    if (followingList.isEmpty()) {
+                    if (querySnapshot.isEmpty()) {
+                        Log.d("MoodEventHelper", "No users being followed");
                         onSuccess.onSuccess(new ArrayList<>());
                         return;
                     }
 
-                    // Query mood events using whereIn for the followed users
+                    // Extract usernames from the following documents
+                    List<String> followingUsernames = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : querySnapshot) {
+                        String followedUsername = doc.getId();
+                        Log.d("MoodEventHelper", "Found followed user: " + followedUsername);
+                        followingUsernames.add(followedUsername);
+                    }
+
+                    Log.d("MoodEventHelper", "Querying mood events for " + followingUsernames.size() + " followed users");
+
+                    // Get mood events from all followed users, limit to 3
                     db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
-                            .whereIn(FirestoreConstants.FIELD_USERNAME, followingList)
+                            .whereIn(FirestoreConstants.FIELD_USERNAME, followingUsernames)
                             .orderBy("timestamp", Query.Direction.DESCENDING)
+                            .limit(3)
                             .get()
-                            .addOnSuccessListener(eventsSnapshot -> {
+                            .addOnSuccessListener(moodSnapshot -> {
+                                Log.d("MoodEventHelper", "Got mood events. Size: " + moodSnapshot.size());
                                 List<MoodEvent> moodEvents = new ArrayList<>();
-                                for (QueryDocumentSnapshot doc : eventsSnapshot) {
+                                for (QueryDocumentSnapshot doc : moodSnapshot) {
                                     MoodEvent moodEvent = doc.toObject(MoodEvent.class);
-                                    if(moodEvent.getPrivacy() == Privacy.PUBLIC){ //only add PUBLIC mood events
-                                        Log.d("MoodEventHelper", "Found mood event: " + moodEvent);
-                                        moodEvents.add(moodEvent);
-                                    }
+                                    Log.d("MoodEventHelper", "Found mood event from: " + moodEvent.getUsername());
+                                    moodEvents.add(moodEvent);
                                 }
                                 onSuccess.onSuccess(moodEvents);
                             })
-                            .addOnFailureListener(onFailure);
+                            .addOnFailureListener(e -> {
+                                Log.e("MoodEventHelper", "Error getting mood events", e);
+                                onFailure.onFailure(e);
+                            });
                 })
-                .addOnFailureListener(onFailure);
+                .addOnFailureListener(e -> {
+                    Log.e("MoodEventHelper", "Error getting followings collection", e);
+                    onFailure.onFailure(e);
+                });
     }
+
     /**
      * Publishes a new MoodEvent to Firestore.
      * Checks if the MoodEvent with the given ID already exists.

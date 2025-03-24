@@ -31,12 +31,13 @@
         <item>Surprise</item>
     </string-array>
 
-    <string-array name = "social_options">
+    <string-array name="social_options">
         <item>Alone</item>
         <item>Pair</item>
         <item>Small group</item>
         <item>Crowd</item>
 
     </string-array>
+    <string name="title_activity_maps">MapsActivity</string>
 
 </resources>

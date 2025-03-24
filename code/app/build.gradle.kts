@@ -1,11 +1,19 @@
+val MAPS_API_KEY: String = project.findProperty("MAPS_API_KEY") as String? ?: ""
+
 plugins {
     alias(libs.plugins.android.application)
     id("com.google.gms.google-services")
+    alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
 }
 
 android {
     namespace = "com.example.baobook"
     compileSdk = 35
+
+    buildFeatures {
+        buildConfig = true
+        viewBinding = true
+    }
 
     defaultConfig {
         applicationId = "com.example.baobook"
@@ -15,6 +23,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // API keys
+        resValue("string", "google_maps_key", MAPS_API_KEY)
+        buildConfigField("String", "MAPS_API_KEY", "\"$MAPS_API_KEY\"")
     }
 
     buildTypes {
@@ -33,6 +45,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.play.services.location)
     androidTestImplementation("androidx.test.uiautomator:uiautomator:2.2.0")
     implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
     implementation("com.google.firebase:firebase-storage:20.3.0")
@@ -50,6 +63,7 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.jackson.databind)
     implementation(libs.espresso.intents)
+    implementation(libs.maps)
     testImplementation(libs.junit)
     testImplementation(libs.junit.params)
     testImplementation(libs.mockito.core)

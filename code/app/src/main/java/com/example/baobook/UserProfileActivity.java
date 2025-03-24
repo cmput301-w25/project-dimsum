@@ -128,8 +128,15 @@ public class UserProfileActivity extends AppCompatActivity implements
         });
         Button home = findViewById(R.id.home_button);
         home.setOnClickListener(v-> {
-            //launch home activity
+            // Launch Home activity
             Intent intent = new Intent(UserProfileActivity.this, Home.class);
+            startActivity(intent);
+            finish();
+        });
+        Button maps = findViewById(R.id.map_button);
+        maps.setOnClickListener(v-> {
+            // Launch MapsActivity
+            Intent intent = new Intent(UserProfileActivity.this, MapsActivity.class);
             startActivity(intent);
             finish();
         });
