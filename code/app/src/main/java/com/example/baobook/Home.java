@@ -10,6 +10,7 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -18,12 +19,15 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.controller.FirestoreHelper;
 import com.example.baobook.controller.MoodEventHelper;
+import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 //home activity where users will be able to see their following mood events and add new ones
@@ -36,6 +40,7 @@ public class Home extends AppCompatActivity {
     private FirestoreHelper firestoreHelper = new FirestoreHelper();
     private MoodEventArrayAdapter moodArrayAdapter;
     private ArrayList<MoodEvent> moodEventsList = new ArrayList<>();
+    private Mood currentFilter = null;
 
     // ActivityResultLauncher to handle the result from AddMoodActivity
     private final ActivityResultLauncher<Intent> addMoodLauncher =
@@ -91,21 +96,48 @@ public class Home extends AppCompatActivity {
             Intent intent = new Intent(Home.this, MapsActivity.class);
             startActivity(intent);
         });
+
         // Profile button
         Button profileButton = findViewById(R.id.profile_button);
         profileButton.setOnClickListener(v -> {
             Intent intent = new Intent(Home.this, UserProfileActivity.class);
             startActivity(intent);
         });
+
+        // Search button
         Button searchButton = findViewById(R.id.btn_search);
         searchButton.setOnClickListener(v -> {
-            // Handle search button click
             Intent intent = new Intent(Home.this, SearchActivity.class);
             startActivity(intent);
         });
 
+        // Filter button
+        MaterialButton filterButton = findViewById(R.id.btn_filter);
+        filterButton.setOnClickListener(v -> showFilterDialog());
+
         // Load recent mood events from followed users
         loadRecentFollowingMoodEvents();
+    }
+
+    private void showFilterDialog() {
+        String[] emotions = {"Happiness", "Sadness", "Disgust", "Fear", "Surprise", "Anger", "Shame", "Confusion", "Clear Filter"};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Filter by Emotional State");
+        builder.setItems(emotions, (dialog, which) -> {
+            if (which == emotions.length - 1) {
+                // Clear filter
+                currentFilter = null;
+            } else {
+                try {
+                    currentFilter = Mood.fromString(emotions[which]);
+                } catch (IllegalArgumentException e) {
+                    Toast.makeText(this, "Invalid mood selection", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+            loadRecentFollowingMoodEvents();
+        });
+        builder.show();
     }
 
     private void loadRecentFollowingMoodEvents() {
@@ -121,7 +153,18 @@ public class Home extends AppCompatActivity {
                 moodEvents -> {
                     Log.d("Home", "Received " + moodEvents.size() + " mood events");
                     moodEventsList.clear();
-                    moodEventsList.addAll(moodEvents);
+                    
+                    // Apply filter if set
+                    if (currentFilter != null) {
+                        for (MoodEvent event : moodEvents) {
+                            if (event.getMood() == currentFilter) {
+                                moodEventsList.add(event);
+                            }
+                        }
+                    } else {
+                        moodEventsList.addAll(moodEvents);
+                    }
+                    
                     Log.d("Home", "Updated moodEventsList. New size: " + moodEventsList.size());
                     moodArrayAdapter.notifyDataSetChanged();
                 },
