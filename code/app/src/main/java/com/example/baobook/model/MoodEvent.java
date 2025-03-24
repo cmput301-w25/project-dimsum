@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.firestore.Exclude;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.PropertyName;
 
 import java.io.Serializable;
@@ -30,6 +31,7 @@ public class MoodEvent implements Serializable {
     private String description; // trigger description
     private String base64image;
     private SocialSetting social;
+    private GeoPoint location;
 
     // No-argument constructor required for Firestore
     public MoodEvent() {}
@@ -54,6 +56,29 @@ public class MoodEvent implements Serializable {
         this.description = description;
         this.social = social;
         this.base64image = base64image;
+    }
+
+    /***
+     * For MoodEvents with an attached location.
+     * @param username
+     * @param id
+     * @param mood
+     * @param dateTime
+     * @param description
+     * @param social
+     * @param base64image
+     * @param location
+     */
+    public MoodEvent(String username, String id, Mood mood, OffsetDateTime dateTime, String description, SocialSetting social, String base64image, GeoPoint location) {
+        this.username = username;
+        this.id = id;
+        this.mood = mood;
+        this.timestamp = dateTime.toInstant().toEpochMilli();
+        this.dateTime = dateTime;
+        this.description = description;
+        this.social = social;
+        this.base64image = base64image;
+        this.location = location;
     }
 
     public String getId() { return id; }
@@ -92,6 +117,10 @@ public class MoodEvent implements Serializable {
     public String getBase64image() {return base64image;}
 
     public void setBase64image(String base64image) {this.base64image = base64image;}
+
+    public GeoPoint getLocation() {return location;}
+
+    public void setLocation(GeoPoint location) {this.location = location;}
 
     /**
      * Edits the current mood event with new details.
