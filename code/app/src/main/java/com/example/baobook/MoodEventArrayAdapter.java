@@ -45,6 +45,7 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
 
         MoodEvent moodEvent = getItem(position);
 
+        TextView usernameText = view.findViewById(R.id.username_text);
         TextView moodText = view.findViewById(R.id.mood_state);
         TextView dateText = view.findViewById(R.id.mood_date);
         TextView timeText = view.findViewById(R.id.mood_time);
@@ -54,6 +55,9 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
         ImageView moodImage = view.findViewById(R.id.mood_image);
 
         if (moodEvent != null) {
+            // Set username
+            usernameText.setText("Posted by: " + moodEvent.getUsername());
+
             // Format date and time
             DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.getDefault());
             DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
