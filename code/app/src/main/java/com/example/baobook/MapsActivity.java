@@ -1,7 +1,7 @@
 package com.example.baobook;
 
-import static com.example.baobook.MoodUtils.getMoodColor;
-import static com.example.baobook.MoodUtils.getMoodEmoji;
+import static com.example.baobook.util.MoodUtils.getMoodColor;
+import static com.example.baobook.util.MoodUtils.getMoodEmoji;
 
 import android.Manifest;
 import androidx.core.app.ActivityCompat;
