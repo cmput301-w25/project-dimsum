@@ -80,26 +80,25 @@ public class UserProfileActivity extends AppCompatActivity implements
                         boolean hasRequested = status.second;
                         // Set button text based on follow status
                         if (isFollowing) {
-                            followButton.setText("Unfollow");
+                            followButton.setText(R.string.unfollow);
                         } else if (hasRequested) {
-                            followButton.setText("Requested");
+                            followButton.setText(R.string.requested);
                         } else {
-                            followButton.setText("Follow");
+                            followButton.setText(R.string.follow);
                         }
                         // Set follow button action
                         followButton.setOnClickListener(v -> {
                             if (isFollowing) {
                                 // Unfollow the user
                                 FirestoreHelper.unfollow(user, otherUser, UserProfileActivity.this);
-                                followButton.setText("Follow");
+                                followButton.setText(R.string.follow);
                             }else if(hasRequested){
                                 // Send follow request
-                                FirestoreHelper.requestFollow(user, otherUser, UserProfileActivity.this);
-                                followButton.setText("Requested");
+                                Toast.makeText(UserProfileActivity.this, "Follow already sent!", Toast.LENGTH_SHORT).show();
                             }else{
                                 // Send follow request
                                 FirestoreHelper.requestFollow(user, otherUser, UserProfileActivity.this);
-                                followButton.setText("Requested");
+                                followButton.setText(R.string.requested);
                             }
                         });
                     },
