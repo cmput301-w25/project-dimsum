@@ -27,13 +27,20 @@ import java.util.Locale;
 
 public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
 
+    private MoodEventOptionsFragment.MoodEventOptionsDialogListener listener;
+
     public MoodEventArrayAdapter(Context context, ArrayList<MoodEvent> moods) {
         super(context, 0, moods);
+        if (context instanceof MoodEventOptionsFragment.MoodEventOptionsDialogListener) {
+            listener = (MoodEventOptionsFragment.MoodEventOptionsDialogListener) context;
+        }
     }
+
     private Bitmap base64ToBitmap(String base64Image) {
         byte[] decodedBytes = Base64.decode(base64Image, Base64.DEFAULT);
         return BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
     }
+
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -100,12 +107,26 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
                 drawable.setStroke(5, MoodUtils.getMoodColor(moodString)); // Set border color
             }
 
+            // Set up long press listener
+            rootLayout.setOnLongClickListener(v -> {
+                Log.d("MoodEventArrayAdapter", "Long press detected on mood item");
+                if (listener != null) {
+                    Log.d("MoodEventArrayAdapter", "Listener is not null, showing options dialog");
+                    MoodEventOptionsFragment fragment = new MoodEventOptionsFragment(moodEvent);
+                    fragment.show(((androidx.fragment.app.FragmentActivity) getContext()).getSupportFragmentManager(), "MoodOptions");
+                } else {
+                    Log.e("MoodEventArrayAdapter", "Listener is null!");
+                }
+                return true;
+            });
         }
+
         commentButton.setOnClickListener(v -> {
             Intent intent = new Intent(getContext(), CommentActivity.class);
             intent.putExtra("MOOD_EVENT_ID", moodEvent.getId()); // Pass mood event ID to CommentActivity
             getContext().startActivity(intent);
         });
+
         return view;
     }
 }

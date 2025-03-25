@@ -85,13 +85,6 @@ public class MoodHistory extends AppCompatActivity
             addMoodLauncher.launch(intent);
         });
 
-        // If user clicks an item -> edit/delete
-        moodList.setOnItemClickListener((parent, view, position, id) -> {
-            MoodEvent selectedMoodEvent = filteredList.get(position);
-            MoodEventOptionsFragment fragment = new MoodEventOptionsFragment(selectedMoodEvent);
-            fragment.show(getSupportFragmentManager(), "MoodOptionsDialog");
-        });
-
         // Filter button -> open dialog
         openFilterButton.setOnClickListener(v -> {
             FilterDialogFragment dialog = new FilterDialogFragment(this);
@@ -131,7 +124,7 @@ public class MoodHistory extends AppCompatActivity
 
     /**
      * Calls the manager to get a filtered list, updates the UI with results,
-     * and rebuilds the filter “chips”.
+     * and rebuilds the filter "chips".
      */
     private void applyFilters() {
         ArrayList<MoodEvent> temp = filterState.applyFilters();
@@ -143,7 +136,7 @@ public class MoodHistory extends AppCompatActivity
         rebuildActiveFiltersChips();
     }
 
-    // Show “chips” for each active filter
+    // Show "chips" for each active filter
     private void rebuildActiveFiltersChips() {
         Mood mood = filterState.getMood();
         boolean isRecentWeek = filterState.isRecentWeek();
@@ -198,7 +191,7 @@ public class MoodHistory extends AppCompatActivity
     }
 
     /**
-     * Load from Firestore, clear the manager’s list, add each mood,
+     * Load from Firestore, clear the manager's list, add each mood,
      * then show them in the UI with no filters initially.
      */
     private void loadMoodsFromFirestore() {
