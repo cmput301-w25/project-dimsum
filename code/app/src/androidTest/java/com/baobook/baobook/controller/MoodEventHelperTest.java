@@ -147,48 +147,6 @@ public class MoodEventHelperTest {
     }
 
     @Test
-    public void getMoodEventsByFollowing_shouldReturnFollowingMoodEvents() throws ExecutionException, InterruptedException, TimeoutException {
-        CompletableFuture<List<MoodEvent>> future = new CompletableFuture<>();
-        List<MoodEvent> expected = Arrays.asList(moodEvent3, moodEvent2);
-
-        // Set up Firestore data
-        Task<Void> setMoodEvent2 = db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
-                .document("2")
-                .set(moodEvent2);
-
-        Task<Void> setMoodEvent3 = db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
-                .document("3")
-                .set(moodEvent3);
-
-        Task<Void> setFollowing1 = db.collection(FirestoreConstants.COLLECTION_USERS)
-                .document(username1)
-                .collection(FirestoreConstants.COLLECTION_FOLLOWINGS)
-                .document("following1")
-                .set(Collections.emptyMap());
-
-        Task<Void> setFollowing2 = db.collection(FirestoreConstants.COLLECTION_USERS)
-                .document(username1)
-                .collection(FirestoreConstants.COLLECTION_FOLLOWINGS)
-                .document("following2")
-                .set(Collections.emptyMap());
-
-        // Ensure all tasks are completed before proceeding
-        Tasks.whenAll(setMoodEvent2, setMoodEvent3, setFollowing1, setFollowing2)
-                .addOnSuccessListener(aVoid -> {
-                    moodEventHelper.getMoodEventsByFollowing(username1,
-                            future::complete,
-                            future::completeExceptionally
-                    );
-                })
-                .addOnFailureListener(future::completeExceptionally);
-
-        // Wait for the result and assert
-        List<MoodEvent> moodEvents = future.get(5, TimeUnit.SECONDS);
-        assertEquals(expected, moodEvents);
-    }
-
-
-    @Test
     public void publishMood_shouldPublishMoodToFirestore() throws ExecutionException, InterruptedException, TimeoutException {
         CompletableFuture<Void> future = new CompletableFuture<>();
 
@@ -383,6 +341,46 @@ public class MoodEventHelperTest {
         assertEquals(comment.getAuthorUsername(), storedComment.getAuthorUsername(), "Comment username should match");
     }
 
+    @Test
+    public void getRecentFollowingMoodEvents_shouldReturnThreeMostRecentEvents() throws ExecutionException, InterruptedException, TimeoutException {
+        CompletableFuture<List<MoodEvent>> future = new CompletableFuture<>();
+        List<MoodEvent> expected = Arrays.asList(moodEvent3, moodEvent2);
+
+        // Set up Firestore data
+        Task<Void> setMoodEvent2 = db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
+                .document("2")
+                .set(moodEvent2);
+
+        Task<Void> setMoodEvent3 = db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
+                .document("3")
+                .set(moodEvent3);
+
+        Task<Void> setFollowing1 = db.collection(FirestoreConstants.COLLECTION_USERS)
+                .document(username1)
+                .collection(FirestoreConstants.COLLECTION_FOLLOWINGS)
+                .document("following1")
+                .set(Collections.emptyMap());
+
+        Task<Void> setFollowing2 = db.collection(FirestoreConstants.COLLECTION_USERS)
+                .document(username1)
+                .collection(FirestoreConstants.COLLECTION_FOLLOWINGS)
+                .document("following2")
+                .set(Collections.emptyMap());
+
+        // Ensure all tasks are completed before proceeding
+        Tasks.whenAll(setMoodEvent2, setMoodEvent3, setFollowing1, setFollowing2)
+                .addOnSuccessListener(aVoid -> {
+                    moodEventHelper.getRecentFollowingMoodEvents(username1,
+                            future::complete,
+                            future::completeExceptionally
+                    );
+                })
+                .addOnFailureListener(future::completeExceptionally);
+
+        // Wait for the result and assert
+        List<MoodEvent> moodEvents = future.get(5, TimeUnit.SECONDS);
+        assertEquals(expected, moodEvents);
+    }
 
     private CompletableFuture<Void> addDocumentToCollection(Object document, String uniqueId, String collectionName) {
         CompletableFuture<Void> future = new CompletableFuture<>();
