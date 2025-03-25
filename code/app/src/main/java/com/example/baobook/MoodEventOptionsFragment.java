@@ -45,6 +45,7 @@ public class MoodEventOptionsFragment extends DialogFragment {
 
     public MoodEventOptionsFragment(MoodEvent clickedMood) {
         this.moodEvent = clickedMood;
+        Log.d(TAG, "MoodEventOptionsFragment created with mood: " + clickedMood.getMood());
     }
 
     @Override
@@ -53,6 +54,7 @@ public class MoodEventOptionsFragment extends DialogFragment {
         try {
             if (context instanceof MoodEventOptionsDialogListener) {
                 listener = (MoodEventOptionsDialogListener) context;
+                Log.d(TAG, "Listener attached successfully");
             } else {
                 throw new RuntimeException(context + " must implement MoodEventOptionsDialogListener");
             }
@@ -65,10 +67,14 @@ public class MoodEventOptionsFragment extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
+        Log.d(TAG, "Creating dialog");
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        Dialog dialog = null;
+
         try {
             LayoutInflater inflater = LayoutInflater.from(requireContext());
             View view = inflater.inflate(R.layout.mood_event_details, null);
+            Log.d(TAG, "Dialog layout inflated");
 
             ImageView moodImage = view.findViewById(R.id.mood_image);
             TextView moodState = view.findViewById(R.id.mood_state);
@@ -97,30 +103,40 @@ public class MoodEventOptionsFragment extends DialogFragment {
             }
 
             editButton.setOnClickListener(v -> {
+                Log.d(TAG, "Edit button clicked");
                 if (listener != null) {
                     listener.onEditMoodEvent(moodEvent);
                     dismiss();
+                } else {
+                    Log.e(TAG, "Listener is null when edit button clicked");
                 }
             });
 
             deleteButton.setOnClickListener(v -> {
+                Log.d(TAG, "Delete button clicked");
                 if (listener != null) {
                     listener.onDeleteMoodEvent(moodEvent);
                     dismiss();
+                } else {
+                    Log.e(TAG, "Listener is null when delete button clicked");
                 }
             });
 
-            builder.setView(view)
+            dialog = builder.setView(view)
                     .setTitle("Mood Event Details")
-                    .setNegativeButton("Cancel", null);
+                    .setNegativeButton("Cancel", null)
+                    .create();
+            Log.d(TAG, "Dialog created successfully");
 
         } catch (Exception e) {
             Log.e(TAG, "Error creating dialog: " + e.getMessage());
             Toast.makeText(getActivity(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            builder.setMessage("An error occurred while creating the dialog.")
-                    .setPositiveButton("OK", null);
+            dialog = builder.setMessage("An error occurred while creating the dialog.")
+                    .setPositiveButton("OK", null)
+                    .create();
         }
-        return builder.create();
+
+        return dialog;
     }
 
     private Bitmap base64ToBitmap(String base64Image) {
