@@ -1,22 +1,20 @@
 package com.example.baobook;
 
-import static com.example.baobook.util.MoodUtils.getMoodColor;
-import static com.example.baobook.util.MoodUtils.getMoodEmoji;
-
 import android.Manifest;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PorterDuff;
-import android.graphics.PorterDuffXfermode;
-import android.graphics.drawable.Drawable;
+import android.graphics.Path;
+import android.graphics.Rect;
+import android.graphics.RectF;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -29,6 +27,7 @@ import com.example.baobook.controller.MoodEventHelper;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.MoodFilterState;
+import com.example.baobook.util.MoodUtils;
 import com.example.baobook.util.UserSession;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -45,6 +44,10 @@ import com.example.baobook.databinding.ActivityMapsBinding;
 import com.google.firebase.firestore.GeoPoint;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import static com.example.baobook.util.MoodUtils.getMoodColor;
 
 public class MapsActivity extends FragmentActivity
         implements OnMapReadyCallback, FilterDialogFragment.OnFilterSaveListener,
@@ -55,6 +58,7 @@ public class MapsActivity extends FragmentActivity
     private UserSession userSession;
     private GoogleMap mMap;
     private FusedLocationProviderClient fusedLocationClient;
+    private Location currentLocation;
     private LinearLayout activeFiltersContainer;
     private final ArrayList<MoodEvent> allMoodEvents = new ArrayList<>();
     private final ArrayList<MoodEvent> filteredList = new ArrayList<>();
@@ -76,7 +80,6 @@ public class MapsActivity extends FragmentActivity
 
         // Initialize views
         Button homeButton = findViewById(R.id.home_button);
-//        Button mapButton = findViewById(R.id.map_button);
         Button profileButton = findViewById(R.id.profile_button);
         Button openFilterButton = findViewById(R.id.open_filter_button);
         Button clearAllButton = findViewById(R.id.clear_all_button);
@@ -111,8 +114,6 @@ public class MapsActivity extends FragmentActivity
             applyFilters();
             Toast.makeText(this, "All filters cleared", Toast.LENGTH_SHORT).show();
         });
-
-        // Initialize mood events cache.
     }
 
     @Override
@@ -130,15 +131,7 @@ public class MapsActivity extends FragmentActivity
         }
 
         // Load mood events from firestore and render them on the map.
-        moodEventHelper.getMoodEventsByUser(userSession.getUsername(), moodEvents -> {
-            allMoodEvents.addAll(moodEvents);  // Cache all mood events.
-            filteredList.addAll(moodEvents);  // We start off with no filters.
-            renderMoodEventsOnMap();
-        }, e -> {
-            Log.e("Firestore", "Error loading moods", e);
-            Toast.makeText(this, "Failed to load moods.", Toast.LENGTH_SHORT).show();
-        });
-
+        loadMoodEvents();
         mMap.setOnMarkerClickListener(marker -> {
             MoodEvent event = (MoodEvent) marker.getTag();
 
@@ -151,6 +144,63 @@ public class MapsActivity extends FragmentActivity
             return true; // prevent default info window
         });
 
+    }
+
+    private void loadMoodEvents() {
+        CompletableFuture<List<MoodEvent>> userMoodEvents = new CompletableFuture<>();
+        CompletableFuture<List<MoodEvent>> followingMoodEvents = new CompletableFuture<>();
+
+        moodEventHelper.getMoodEventsByUser(userSession.getUsername(),
+                userMoodEvents::complete,
+                userMoodEvents::completeExceptionally
+        );
+        moodEventHelper.getRecentFollowingMoodEvents(userSession.getUsername(),
+                followingMoodEvents::complete,
+                followingMoodEvents::completeExceptionally
+        );
+
+        CompletableFuture
+                .allOf(userMoodEvents, followingMoodEvents)
+                .thenRun(() -> {
+                    try {
+                        List<MoodEvent> userEvents = userMoodEvents.get();
+                        allMoodEvents.addAll(userEvents);
+                        filteredList.addAll(userEvents);
+                    } catch (Exception e) {
+                        Log.e("Firestore", "Error loading your own moods", e);
+                        runOnUiThread(() ->
+                                Toast.makeText(this, "Failed to load your own moods.", Toast.LENGTH_SHORT).show()
+                        );
+                    }
+
+                    try {
+                        List<MoodEvent> followingEvents = followingMoodEvents.get();
+                        filterBy5kmRadius(followingEvents);
+                        allMoodEvents.addAll(followingEvents);
+                        filteredList.addAll(followingEvents);
+                    } catch (Exception e) {
+                        Log.e("Firestore", "Error loading following moods", e);
+                        runOnUiThread(() ->
+                                Toast.makeText(this, "Failed to load following moods.", Toast.LENGTH_SHORT).show()
+                        );
+                    }
+
+                    runOnUiThread(this::renderMoodEventsOnMap);
+                });
+    }
+
+    private void filterBy5kmRadius(List<MoodEvent> moodEvents) {
+        moodEvents.removeIf(moodEvent -> {
+            GeoPoint geoPoint = moodEvent.getLocation();
+            if (geoPoint == null) return true; // Remove if no location
+
+            Location eventLocation = new Location("");
+            eventLocation.setLatitude(geoPoint.getLatitude());
+            eventLocation.setLongitude(geoPoint.getLongitude());
+
+            float distance = currentLocation.distanceTo(eventLocation);
+            return distance > 5000;
+        });
     }
 
     @Override
@@ -186,6 +236,7 @@ public class MapsActivity extends FragmentActivity
                 .addOnSuccessListener(this, location -> {
                     if (location != null) {
                         LatLng userLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+                        currentLocation = location;
                         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 16f));
                         Marker userMarker = mMap.addMarker(new MarkerOptions().position(userLatLng).title("You are here"));
                         if (userMarker != null) userMarker.showInfoWindow();
@@ -237,8 +288,8 @@ public class MapsActivity extends FragmentActivity
                 LatLng latLng = new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude());
                 Marker marker = mMap.addMarker(new MarkerOptions()
                         .position(latLng)
-                        .title(String.format("%s: @%s", moodEvent.getMood().toString(), userSession.getUser().getUsername()))
-                        .icon(createMoodMarker(this, moodEvent)));
+                        .icon(createMoodMarker(moodEvent))
+                        .anchor(0.5f, 1f));  // Translate the marker so that it points to the accurate location.
 
                 if (marker != null) {
                     marker.setTag(moodEvent);  // Associate the marker with the MoodEvent.
@@ -310,58 +361,50 @@ public class MapsActivity extends FragmentActivity
         filterState.setWord(word);
         applyFilters();
     }
-    public static BitmapDescriptor createMoodMarker(Context context, MoodEvent moodEvent) {
-        int size = 120;          // total size of the bitmap
-        int borderWidth = 12;     // thickness of the border
 
-        // Load and crop the profile image into a circle
-        // Todo: load the moodEvent's author's profile picture here.
-        Bitmap rawIcon = getBitmapFromVectorDrawable(context, R.drawable.default_profile_picture, size, size);
-        Bitmap circularBitmap = getCircularBitmap(rawIcon, size - 2 * borderWidth);
+    private BitmapDescriptor createMoodMarker(MoodEvent moodEvent) {
+        String text = String.format("%s: @%s",
+                moodEvent.getMood().toString(),
+                moodEvent.getUsername());
 
-        // Create output bitmap
-        Bitmap output = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(output);
+        Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        textPaint.setColor(Color.WHITE);
+        textPaint.setTextSize(40);
+        textPaint.setTextAlign(Paint.Align.LEFT);
 
-        // Draw the colored border
-        Paint borderPaint = new Paint();
-        borderPaint.setColor(getMoodColor(moodEvent.getMood().toString()));
-        borderPaint.setAntiAlias(true);
-        canvas.drawCircle(size / 2f, size / 2f, size / 2f, borderPaint);
+        Rect textBounds = new Rect();
+        textPaint.getTextBounds(text, 0, text.length(), textBounds);
 
-        // Draw the circular image in the center
-        canvas.drawBitmap(circularBitmap, borderWidth, borderWidth, null);
-
-        return BitmapDescriptorFactory.fromBitmap(output);
-    }
-
-    public static Bitmap getCircularBitmap(Bitmap bitmap, int diameter) {
-        Bitmap output = Bitmap.createBitmap(diameter, diameter, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(output);
-
-        final Paint paint = new Paint();
-        paint.setAntiAlias(true);
-
-        float radius = diameter / 2f;
-        canvas.drawCircle(radius, radius, radius, paint);
-
-        paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-
-        Bitmap scaled = Bitmap.createScaledBitmap(bitmap, diameter, diameter, false);
-        canvas.drawBitmap(scaled, 0, 0, paint);
-
-        return output;
-    }
-
-    public static Bitmap getBitmapFromVectorDrawable(Context context, int drawableId, int width, int height) {
-        Drawable drawable = ContextCompat.getDrawable(context, drawableId);
-        if (drawable == null) return null;
+        int padding = 20;
+        int pointerHeight = 20;
+        int width = textBounds.width() + padding * 2;
+        int height = textBounds.height() + padding * 2 + pointerHeight;
 
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
-        drawable.setBounds(0, 0, width, height);
-        drawable.draw(canvas);
-        return bitmap;
+
+        Paint bgPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        bgPaint.setColor(MoodUtils.getMoodColor(moodEvent.getMood().toString()));
+
+        // Draw the rounded bubble (excluding pointer)
+        RectF bubbleRect = new RectF(0, 0, width, height - pointerHeight);
+        canvas.drawRoundRect(bubbleRect, 30, 30, bgPaint);
+
+        // Draw the little triangle pointer
+        Path pointer = new Path();
+        float centerX = width / 2f;
+        pointer.moveTo(centerX - 20, height - pointerHeight);
+        pointer.lineTo(centerX + 20, height - pointerHeight);
+        pointer.lineTo(centerX, height);
+        pointer.close();
+        canvas.drawPath(pointer, bgPaint);
+
+        // Draw the text
+        float x = padding;
+        float y = padding - textBounds.top; // aligns text vertically
+        canvas.drawText(text, x, y, textPaint);
+
+        return BitmapDescriptorFactory.fromBitmap(bitmap);
     }
 
     @Override
