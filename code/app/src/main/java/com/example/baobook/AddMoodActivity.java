@@ -21,6 +21,7 @@ import android.widget.Toast;
 import android.Manifest;
 
 import com.example.baobook.controller.MoodEventHelper;
+import com.example.baobook.model.PendingActionManager;
 import com.example.baobook.model.Privacy;
 import com.example.baobook.util.MoodUtils;
 import com.google.android.material.snackbar.Snackbar;
@@ -232,16 +233,26 @@ public class AddMoodActivity extends AppCompatActivity {
                 // If a photo is captured, upload it first
                 // Create the MoodEvent with the generated ID
                 MoodEvent moodEvent = new MoodEvent(username, id, mood, selectedDateTime.atOffset(ZoneOffset.UTC), description, social, base64Image,privacy);
-                moodEventHelper.publishMood(moodEvent,
-                        aVoid -> {
-                            Toast.makeText(this, "Mood event saved!", Toast.LENGTH_SHORT).show();
-                            Intent resultIntent = new Intent();
-                            resultIntent.putExtra("moodEvent", moodEvent);
-                            setResult(RESULT_OK, resultIntent);
-                            finish();
-                        },
-                        e -> Toast.makeText(this, "Failed to save mood event", Toast.LENGTH_SHORT).show()
-                );
+                if (NetworkUtil.isNetworkAvailable(this)) {
+                    moodEventHelper.publishMood(moodEvent,
+                            aVoid -> {
+                                Toast.makeText(this, "Mood event saved!", Toast.LENGTH_SHORT).show();
+                                Intent resultIntent = new Intent();
+                                resultIntent.putExtra("moodEvent", moodEvent);
+                                setResult(RESULT_OK, resultIntent);
+                                finish();
+                            },
+                            e -> Toast.makeText(this, "Failed to save mood event", Toast.LENGTH_SHORT).show()
+                    );
+                }
+                else {
+                    PendingActionManager.addAction(new PendingAction(PendingAction.ActionType.ADD, moodEvent));
+                    Toast.makeText(this, "Saved offline. Will sync later.", Toast.LENGTH_SHORT).show();
+                    Intent resultIntent = new Intent();
+                    resultIntent.putExtra("moodEvent", moodEvent);
+                    setResult(RESULT_OK, resultIntent);
+                    finish();
+                }
 
 
             } catch (Exception e) {
