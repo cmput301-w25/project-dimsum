@@ -1,6 +1,10 @@
 package com.example.baobook;
 
+import static androidx.core.content.ContextCompat.registerReceiver;
+
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -20,10 +24,13 @@ import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.MoodFilterState;
 import com.example.baobook.model.MoodHistoryManager;
+import com.example.baobook.model.PendingActionManager;
 import com.example.baobook.util.UserSession;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+
+
 
 /**
  * Activity that displays the mood history list.
@@ -54,6 +61,26 @@ public class MoodHistory extends AppCompatActivity
     // We'll display the "filtered" results in memory, for the ListView
     // So we keep a local list for quick adaptation to the UI
     private ArrayList<MoodEvent> filteredList = new ArrayList<>();
+
+    private ConnectivityReceiver connectivityReceiver;
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        connectivityReceiver = new ConnectivityReceiver();
+        IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(connectivityReceiver, filter);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (connectivityReceiver != null) {
+            unregisterReceiver(connectivityReceiver);
+            connectivityReceiver = null;
+        }
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -229,23 +256,37 @@ public class MoodHistory extends AppCompatActivity
 
     @Override
     public void onMoodEdited(MoodEvent updatedMoodEvent) {
-        moodEventHelper.updateMood(updatedMoodEvent, aVoid -> {
-            Toast.makeText(this, "Mood updated!", Toast.LENGTH_SHORT).show();
-            loadMoodsFromFirestore();
-        }, e -> {
-            Log.e("Firestore", "Error updating mood", e);
-            Toast.makeText(this, "Failed to update mood.", Toast.LENGTH_SHORT).show();
-        });
+        if (NetworkUtil.isNetworkAvailable(this)) {
+            moodEventHelper.updateMood(updatedMoodEvent, aVoid -> {
+                Toast.makeText(this, "Mood updated!", Toast.LENGTH_SHORT).show();
+                loadMoodsFromFirestore();
+            }, e -> {
+                Log.e("Firestore", "Error updating mood", e);
+                Toast.makeText(this, "Failed to update mood.", Toast.LENGTH_SHORT).show();
+            });
+        } else {
+            PendingActionManager.addAction(new PendingAction(PendingAction.ActionType.EDIT, updatedMoodEvent));
+            Toast.makeText(this, "Update saved offline. Will sync later.", Toast.LENGTH_SHORT).show();
+        }
+        filterState.clear();
+        applyFilters();
     }
 
     @Override
     public void onDeleteMoodEvent(MoodEvent mood) {
-        moodEventHelper.deleteMood(mood, aVoid -> {
-            Toast.makeText(this, "Mood deleted!", Toast.LENGTH_SHORT).show();
-            loadMoodsFromFirestore();
-        }, e -> {
-            Log.e("Firestore", "Error deleting mood", e);
-            Toast.makeText(this, "Failed to delete mood.", Toast.LENGTH_SHORT).show();
-        });
+        if (NetworkUtil.isNetworkAvailable(this)) {
+            moodEventHelper.deleteMood(mood, aVoid -> {
+                Toast.makeText(this, "Mood deleted!", Toast.LENGTH_SHORT).show();
+                loadMoodsFromFirestore();
+            }, e -> {
+                Log.e("Firestore", "Error deleting mood", e);
+                Toast.makeText(this, "Failed to delete mood.", Toast.LENGTH_SHORT).show();
+            });
+        } else {
+            PendingActionManager.addAction(new PendingAction(PendingAction.ActionType.DELETE, mood));
+            Toast.makeText(this, "Delete saved offline. Will sync later.", Toast.LENGTH_SHORT).show();
+        }
+        filterState.clear();
+        applyFilters();
     }
 }
