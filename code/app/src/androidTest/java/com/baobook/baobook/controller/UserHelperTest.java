@@ -3,6 +3,8 @@ package com.baobook.baobook.controller;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import android.util.Pair;
+
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.example.baobook.constant.FirestoreConstants;
@@ -34,7 +36,7 @@ public class UserHelperTest {
         userHelper = new UserHelper();
         db = FirebaseFirestore.getInstance();
         try {
-            db.useEmulator("10.0.2.2", 8080);
+            db.useEmulator("127.0.0.1", 8080);  // Use this if 10.0.2.2 is not working
             resetDatabase();
         } catch (IllegalStateException e) {
             // pass
@@ -128,6 +130,48 @@ public class UserHelperTest {
 
         future.get(10, TimeUnit.SECONDS);
     }
+    @Test
+    public void checkFollowStatus_whenFollowing_shouldReturnTrue() throws ExecutionException, InterruptedException, TimeoutException {
+        CompletableFuture<Object> future = new CompletableFuture<>();
+
+        // Set up following status
+        userHelper.followUser(username1, username2,
+                aVoid -> userHelper.checkFollowStatus(username1, username2, future::complete, future::completeExceptionally),
+                future::completeExceptionally);
+
+        Pair<Boolean, Boolean> result = (Pair<Boolean, Boolean>) future.get(5, TimeUnit.SECONDS);
+        assertEquals(true, result.first); // isFollowing
+        assertEquals(false, result.second); // hasRequested
+    }
+
+    @Test
+    public void checkFollowStatus_whenNotFollowing_shouldReturnFalse() throws ExecutionException, InterruptedException, TimeoutException {
+        CompletableFuture<Pair<Boolean, Boolean>> future = new CompletableFuture<>();
+
+        userHelper.checkFollowStatus(username1, username2, future::complete, future::completeExceptionally);
+
+        Pair<Boolean, Boolean> result = future.get(5, TimeUnit.SECONDS);
+        assertEquals(false, result.first); // isFollowing
+        assertEquals(false, result.second); // hasRequested
+    }
+
+    @Test
+    public void checkFollowStatus_whenRequestPending_shouldReturnHasRequested() throws ExecutionException, InterruptedException, TimeoutException {
+        CompletableFuture<Pair<Boolean, Boolean>> future = new CompletableFuture<>();
+
+        // Simulate a follow request (not accepted yet)
+        db.collection(FirestoreConstants.COLLECTION_USERS)
+                .document(username2)
+                .collection(FirestoreConstants.COLLECTION_REQUESTS)
+                .document(username1)
+                .set(new Object())
+                .addOnSuccessListener(aVoid -> userHelper.checkFollowStatus(username1, username2, future::complete, future::completeExceptionally));
+
+        Pair<Boolean, Boolean> result = future.get(5, TimeUnit.SECONDS);
+        assertEquals(false, result.first); // isFollowing
+        assertEquals(true, result.second); // hasRequested
+    }
+
 
     private CompletableFuture<Void> verifyUserInList(String currentUser, String targetUser, String targetField) {
         CompletableFuture<Void> future = new CompletableFuture<>();

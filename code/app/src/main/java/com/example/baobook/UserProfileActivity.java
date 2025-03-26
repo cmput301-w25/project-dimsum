@@ -7,6 +7,7 @@ import com.example.baobook.model.MoodEvent;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -62,18 +63,19 @@ public class UserProfileActivity extends AppCompatActivity implements
         Button moodHistoryButton = findViewById(R.id.mood_history_button);
 
         if(isCurrentUser){
-            followButton.setVisibility(Button.GONE);
+            followButton.setVisibility(View.GONE);
             followingButton.setOnClickListener(v -> startActivity(new Intent(this, FollowingActivity.class)));
             followersButton.setOnClickListener(v -> startActivity(new Intent(this, FollowersActivity.class)));
             requestsButton.setOnClickListener(v -> startActivity(new Intent(this, FollowRequestsActivity.class)));
         }else{
             followButton.setVisibility(Button.VISIBLE);
-            moodHistoryButton.setVisibility(Button.GONE);
+            moodHistoryButton.setVisibility(View.GONE);
             followersButton.setVisibility(Button.GONE);
             followingButton.setVisibility(Button.GONE);
             requestsButton.setVisibility(Button.GONE);
             User otherUser = new User();
             otherUser.setUsername(otherUsername);
+
             userHelper.checkFollowStatus(username, otherUsername,
                     status -> {
                         boolean isFollowing = status.first;
@@ -86,6 +88,7 @@ public class UserProfileActivity extends AppCompatActivity implements
                         } else {
                             followButton.setText(R.string.follow);
                         }
+                        Log.d("FollowCheck", "isFollowing: " + isFollowing + ", hasRequested: " + hasRequested);
                         // Set follow button action
                         followButton.setOnClickListener(v -> {
                             if (isFollowing) {
@@ -104,11 +107,6 @@ public class UserProfileActivity extends AppCompatActivity implements
                     },
                     e -> Log.e("FollowCheck", "Error checking follow status: " + e.getMessage())
             );
-            followButton.setOnClickListener(v -> {
-                // Handle follow button click
-                Toast.makeText(UserProfileActivity.this, "Follow request sent!", Toast.LENGTH_SHORT).show();
-                FirestoreHelper.requestFollow(user, otherUser, UserProfileActivity.this);
-            });
         }
         // Floating Action Button to add a new mood
         FloatingActionButton addButton = findViewById(R.id.add_button);

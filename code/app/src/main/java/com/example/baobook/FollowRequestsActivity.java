@@ -56,12 +56,12 @@ public class FollowRequestsActivity extends AppCompatActivity implements UserArr
      */
     private void loadFollowRequests() {
         FirestoreHelper.loadFollow(userSession.getUsername(), FirestoreConstants.COLLECTION_REQUESTS, users -> {
-            Log.e("FirestoreDebug", "loadFollow called for user: ");
+            Log.d("FirestoreDebug", "loadFollowRequests called for user: " + userSession.getUsername());
             if (users != null) {
                 if(users.isEmpty()){
-                    Log.e("FollowRequestsActivity", "User has no requests.");
+                    Log.d("FollowRequestsActivity", "User has no requests.");
                 }
-                Log.e("FollowRequestsActivity", "Found " + users.size() + " requests");
+                Log.d("FollowRequestsActivity", "Found " + users.size() + " requests");
                 requestedList.clear();
                 requestedList.addAll(users);
                 adapter.notifyDataSetChanged();

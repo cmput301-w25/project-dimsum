@@ -5,6 +5,7 @@ import android.util.Log;
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.model.Comment;
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.Privacy;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -85,15 +86,20 @@ public class MoodEventHelper {
                     db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
                             .whereIn(FirestoreConstants.FIELD_USERNAME, followingUsernames)
                             .orderBy("timestamp", Query.Direction.DESCENDING)
-                            .limit(3)
+                            .limit(15) //increased limit to 15 to get more mood events to filter through
                             .get()
                             .addOnSuccessListener(moodSnapshot -> {
                                 Log.d("MoodEventHelper", "Got mood events. Size: " + moodSnapshot.size());
                                 List<MoodEvent> moodEvents = new ArrayList<>();
                                 for (QueryDocumentSnapshot doc : moodSnapshot) {
                                     MoodEvent moodEvent = doc.toObject(MoodEvent.class);
-                                    Log.d("MoodEventHelper", "Found mood event from: " + moodEvent.getUsername());
-                                    moodEvents.add(moodEvent);
+                                    if(moodEvents.size()<=3){
+                                        if(moodEvent.getPrivacy()== Privacy.PUBLIC){
+                                            Log.d("MoodEventHelper", "Found public mood event from: " + moodEvent.getUsername());
+                                            moodEvents.add(moodEvent);
+                                        }
+                                        Log.d("MoodEventHelper","Found private mood event from: " + moodEvent.getUsername());
+                                    }
                                 }
                                 onSuccess.onSuccess(moodEvents);
                             })

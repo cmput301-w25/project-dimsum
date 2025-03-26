@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.Privacy;
 import com.example.baobook.util.MoodUtils;
 
 import java.time.format.DateTimeFormatter;
@@ -60,6 +61,7 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
         TextView dateText = view.findViewById(R.id.mood_date);
         TextView timeText = view.findViewById(R.id.mood_time);
         TextView descriptionText = view.findViewById(R.id.mood_description);
+        TextView publicText = view.findViewById(R.id.public_text);
         TextView social = view.findViewById(R.id.social_situation);
         View rootLayout = view.findViewById(R.id.mood_item_root);
         ImageView moodImage = view.findViewById(R.id.mood_image);
@@ -82,7 +84,7 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
             dateText.setText("Date: " + dateFormat.format(moodEvent.getDateTime().toLocalDate()));
             timeText.setText("Time: " + timeFormat.format(moodEvent.getDateTime().toLocalTime()));
             descriptionText.setText("Trigger: " + moodEvent.getDescription());
-
+            publicText.setText(moodEvent.getPrivacy()== Privacy.PRIVATE ? "Private" : "Public");
             String description = moodEvent.getDescription();
             if (description == null || description.trim().isEmpty()) {
                 descriptionText.setVisibility(View.GONE);

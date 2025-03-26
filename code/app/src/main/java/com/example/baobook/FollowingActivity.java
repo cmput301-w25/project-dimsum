@@ -53,15 +53,11 @@ public class FollowingActivity extends AppCompatActivity {
      */
     private void loadFollowing() {
         FirestoreHelper.loadFollow(userSession.getUsername(), FirestoreConstants.COLLECTION_FOLLOWINGS, users -> {
-            Log.e("FirestoreDebug", "loadFollow called for user: ");
             if (users != null) {
-                if(users.isEmpty()){
-                    Log.e("FollowingActivity", "User has no followers.");
-                }
-                Log.e("FollowingActivity", "Found " + users.size() + " following");
                 followingList.clear();
                 followingList.addAll(users);
                 adapter.notifyDataSetChanged();
+                Log.d("FollowingActivity", "Found " + users.size() + " following");
             }else{
                 Log.e("FollowingActivity", "users is null.");
             }

@@ -63,9 +63,9 @@ public class UserHelper {
                 .get();
 
         Task<DocumentSnapshot> requestTask = db.collection(FirestoreConstants.COLLECTION_USERS)
-                .document(currentUser)
-                .collection(FirestoreConstants.COLLECTION_REQUESTS)
                 .document(targetUser)
+                .collection(FirestoreConstants.COLLECTION_REQUESTS)
+                .document(currentUser)
                 .get();
 
         Tasks.whenAllSuccess(followingTask, requestTask)
