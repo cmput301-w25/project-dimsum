@@ -56,6 +56,7 @@ public class MapsActivity extends FragmentActivity
     private GoogleMap mMap;
     private FusedLocationProviderClient fusedLocationClient;
     private LinearLayout activeFiltersContainer;
+    private final ArrayList<MoodEvent> allMoodEvents = new ArrayList<>();
     private final ArrayList<MoodEvent> filteredList = new ArrayList<>();
     private final MoodFilterState filterState = new MoodFilterState();
     // We'll display the "filtered" results in memory, for the ListView
@@ -110,6 +111,8 @@ public class MapsActivity extends FragmentActivity
             applyFilters();
             Toast.makeText(this, "All filters cleared", Toast.LENGTH_SHORT).show();
         });
+
+        // Initialize mood events cache.
     }
 
     @Override
@@ -126,7 +129,16 @@ public class MapsActivity extends FragmentActivity
                     LOCATION_PERMISSION_REQUEST_CODE);
         }
 
-        loadMoodsFromFirestore();
+        // Load mood events from firestore and render them on the map.
+        moodEventHelper.getMoodEventsByUser(userSession.getUsername(), moodEvents -> {
+            allMoodEvents.addAll(moodEvents);  // Cache all mood events.
+            filteredList.addAll(moodEvents);  // We start off with no filters.
+            renderMoodEventsOnMap();
+        }, e -> {
+            Log.e("Firestore", "Error loading moods", e);
+            Toast.makeText(this, "Failed to load moods.", Toast.LENGTH_SHORT).show();
+        });
+
         mMap.setOnMarkerClickListener(marker -> {
             MoodEvent event = (MoodEvent) marker.getTag();
 
@@ -150,7 +162,9 @@ public class MapsActivity extends FragmentActivity
     @Override
     public void onDeleteMoodEvent(MoodEvent mood) {
         moodEventHelper.deleteMood(mood, aVoid -> {
-            loadMoodsFromFirestore();
+            allMoodEvents.remove(mood);  // Remove the mood event from cache.
+            filteredList.remove(mood);  // Remove it from the filtered list if it is present.
+            renderMoodEventsOnMap();
             Toast.makeText(this, "Mood deleted!", Toast.LENGTH_SHORT).show();
         }, e -> {
             Log.e("Firestore", "Error deleting mood", e);
@@ -186,7 +200,7 @@ public class MapsActivity extends FragmentActivity
      * and rebuilds the filter “chips”.
      */
     private void applyFilters() {
-        ArrayList<MoodEvent> moodEvents = filterState.applyFilters();
+        ArrayList<MoodEvent> moodEvents = filterState.applyFilters(allMoodEvents);
 
         filteredList.clear();
         filteredList.addAll(moodEvents);
@@ -201,21 +215,36 @@ public class MapsActivity extends FragmentActivity
         }
         moodMarkers.clear();
 
-        for (MoodEvent event : filteredList) {
-            if (event.getLocation() != null) {  // Todo: remove this condition when all MoodEvents have locations.
-                GeoPoint geoPoint = event.getLocation();
-                if (geoPoint != null) {
-                    LatLng latLng = new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude());
-                    Marker marker = mMap.addMarker(new MarkerOptions()
-                            .position(latLng)
-                            .title(String.format("@%s: %s", getMoodEmoji(event.getUsername()), event.getMood().toString()))
-                            .icon(createMoodMarker(this, event)));
+        for (MoodEvent moodEvent : filteredList) {
+            addMarker(moodEvent);
+        }
+    }
 
-                    if (marker != null) {
-                        marker.setTag(event);  // Associate the marker with the MoodEvent.
-                    }
-                    moodMarkers.add(marker);
+    private void renderMoodEventOnMap(MoodEvent moodEvent) {
+        for (Marker m : moodMarkers) {
+            if (m.getTag() == moodEvent) {
+                m.remove();
+            }
+        }
+
+        addMarker(moodEvent);
+    }
+
+    private void addMarker(MoodEvent moodEvent) {
+        if (moodEvent.getLocation() != null) {  // Todo: remove this condition when all MoodEvents have locations.
+            GeoPoint geoPoint = moodEvent.getLocation();
+            if (geoPoint != null) {
+                LatLng latLng = new LatLng(geoPoint.getLatitude(), geoPoint.getLongitude());
+                Marker marker = mMap.addMarker(new MarkerOptions()
+                        .position(latLng)
+                        .title(String.format("%s: @%s", moodEvent.getMood().toString(), userSession.getUser().getUsername()))
+                        .icon(createMoodMarker(this, moodEvent)));
+
+                if (marker != null) {
+                    marker.setTag(moodEvent);  // Associate the marker with the MoodEvent.
+                    marker.showInfoWindow();
                 }
+                moodMarkers.add(marker);
             }
         }
     }
@@ -272,21 +301,6 @@ public class MapsActivity extends FragmentActivity
 
         layout.setPadding(16, 8, 16, 8);
         return layout;
-    }
-
-    /**
-     * Load from Firestore, clear the manager’s list, add each mood,
-     * then show them in the UI with no filters initially.
-     */
-    private void loadMoodsFromFirestore() {
-        moodEventHelper.getMoodEventsByUser(userSession.getUsername(), moodEvents -> {
-            filteredList.clear();
-            filteredList.addAll(moodEvents);
-            renderMoodEventsOnMap();
-        }, e -> {
-            Log.e("Firestore", "Error loading moods", e);
-            Toast.makeText(this, "Failed to load moods.", Toast.LENGTH_SHORT).show();
-        });
     }
 
     @Override
@@ -353,11 +367,25 @@ public class MapsActivity extends FragmentActivity
     @Override
     public void onMoodEdited(MoodEvent updatedMoodEvent) {
         moodEventHelper.updateMood(updatedMoodEvent, aVoid -> {
-            Toast.makeText(this, "Mood updated!", Toast.LENGTH_SHORT).show();
-            loadMoodsFromFirestore();
-        }, e -> {
-            Log.e("Firestore", "Error updating mood", e);
-            Toast.makeText(this, "Failed to update mood.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Mood updated!", Toast.LENGTH_SHORT).show();
+
+                    // Update the cache.
+                    for (MoodEvent moodEvent : allMoodEvents) {
+                        if (moodEvent.getId().equals(updatedMoodEvent.getId())) {
+                            moodEvent.updateMoodEvent(updatedMoodEvent);
+                        }
+                    }
+                    for (MoodEvent moodEvent : filteredList) {
+                        if (moodEvent.getId().equals(updatedMoodEvent.getId())) {
+                            moodEvent.updateMoodEvent(updatedMoodEvent);
+                        }
+                    }
+
+                    // Refresh the map marker.
+                    renderMoodEventOnMap(updatedMoodEvent);
+                }, e -> {
+                    Log.e("Firestore", "Error updating mood", e);
+                    Toast.makeText(this, "Failed to update mood.", Toast.LENGTH_SHORT).show();
         });
     }
 }

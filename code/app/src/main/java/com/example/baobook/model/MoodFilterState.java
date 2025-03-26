@@ -18,6 +18,10 @@ public class MoodFilterState {
                 .getFilteredList(mood, isRecentWeek, word);
     }
 
+    public ArrayList<MoodEvent> applyFilters(ArrayList<MoodEvent> moodEventsList) {
+        return MoodHistoryManager.getFilteredList(moodEventsList, mood, isRecentWeek, word);
+    }
+
     public Mood getMood() {
         return mood;
     }

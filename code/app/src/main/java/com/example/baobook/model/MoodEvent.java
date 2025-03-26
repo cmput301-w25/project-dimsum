@@ -146,6 +146,14 @@ public class MoodEvent implements Serializable {
         setPrivacy(privacy);
     }
 
+    public void updateMoodEvent(MoodEvent updatedMoodEvent) {
+        setMood(updatedMoodEvent.getMood());
+        setDateTime(updatedMoodEvent.getDateTime());
+        setDescription(updatedMoodEvent.getDescription());
+        setSocial(updatedMoodEvent.getSocial());
+        setPrivacy(updatedMoodEvent.getPrivacy());
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

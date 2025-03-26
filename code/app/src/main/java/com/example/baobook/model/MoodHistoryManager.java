@@ -6,9 +6,7 @@ package com.example.baobook.model;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -134,7 +132,58 @@ public class MoodHistoryManager {
             for (MoodEvent me : temp) {
                 String desc = (me.getDescription() == null) ? "" : me.getDescription().toLowerCase();
                 // If none of the words in the description match partially, mark for removal
-                if (!descriptionContainsWord(desc, lower)) {
+                if (descriptionContainsWord(desc, lower)) {
+                    toRemove.add(me);
+                }
+            }
+            temp.removeAll(toRemove);
+        }
+
+        // Sort descending by date/time
+        temp.sort(Comparator.comparing(MoodEvent::getDateTime).reversed());
+
+        return temp;
+    }
+
+    public static ArrayList<MoodEvent> getFilteredList(ArrayList<MoodEvent> moodEvents,
+                                                       Mood filterMood,
+                                                       boolean filterRecentWeek,
+                                                       String filterWord) {
+        // Start with a copy of the entire list
+        ArrayList<MoodEvent> temp = new ArrayList<>(moodEvents);
+
+        // 1) Filter by mood (if not null)
+        if (filterMood != null) {
+            ArrayList<MoodEvent> toRemove = new ArrayList<>();
+            for (MoodEvent me : temp) {
+                if (me.getMood() != filterMood) {
+                    toRemove.add(me);
+                }
+            }
+            temp.removeAll(toRemove);
+        }
+
+        // 2) Filter by last 7 days
+        if (filterRecentWeek) {
+            OffsetDateTime oneWeekAgo = OffsetDateTime.now().minusWeeks(1);
+            ArrayList<MoodEvent> toRemove = new ArrayList<>();
+            for (MoodEvent me : temp) {
+                OffsetDateTime dateTime = me.getDateTime();
+                if (dateTime.isBefore(oneWeekAgo)) {
+                    toRemove.add(me);
+                }
+            }
+            temp.removeAll(toRemove);
+        }
+
+        // 3) Filter by single word in description (partial match on tokens)
+        if (filterWord != null && !filterWord.trim().isEmpty()) {
+            String lower = filterWord.toLowerCase();
+            ArrayList<MoodEvent> toRemove = new ArrayList<>();
+            for (MoodEvent me : temp) {
+                String desc = (me.getDescription() == null) ? "" : me.getDescription().toLowerCase();
+                // If none of the words in the description match partially, mark for removal
+                if (descriptionContainsWord(desc, lower)) {
                     toRemove.add(me);
                 }
             }
@@ -154,14 +203,14 @@ public class MoodHistoryManager {
      * @param word        the keyword to search for
      * @return true if the description matches criteria
      */
-    private boolean descriptionContainsWord(String description, String word) {
+    private static boolean descriptionContainsWord(String description, String word) {
         String[] tokens = description.split("\\s+");
         for (String token : tokens) {
             if (token.contains(word) || (levenshteinDistance(token, word) <= 1)) {
-                return true;
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     /**
@@ -171,7 +220,7 @@ public class MoodHistoryManager {
      * @param s2 second string
      * @return the Levenshtein distance
      */
-    private int levenshteinDistance(String s1, String s2) {
+    private static int levenshteinDistance(String s1, String s2) {
         int len1 = s1.length();
         int len2 = s2.length();
         int[][] dp = new int[len1 + 1][len2 + 1];
