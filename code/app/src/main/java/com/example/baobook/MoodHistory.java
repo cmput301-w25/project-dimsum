@@ -222,6 +222,12 @@ public class MoodHistory extends AppCompatActivity
      * then show them in the UI with no filters initially.
      */
     private void loadMoodsFromFirestore() {
+        //skip firestore loading when offline bc otherwise list overriden
+        if (!NetworkUtil.isNetworkAvailable(this)) {
+            Log.d("Offline", "Skipping Firestore load — no network");
+            return;
+        }
+
         moodEventHelper.getMoodEventsByUser(userSession.getUsername(), moodEvents -> {
             MoodHistoryManager manager = MoodHistoryManager.getInstance();
             manager.clearMoods();
@@ -243,7 +249,10 @@ public class MoodHistory extends AppCompatActivity
                             MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("moodEvent");
                             if (mood != null) {
                                 Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
+                                filteredList.add(0, mood);
+                                moodArrayAdapter.notifyDataSetChanged();
                                 loadMoodsFromFirestore();
+
                             }
                         }
                     }

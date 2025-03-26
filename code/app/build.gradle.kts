@@ -45,6 +45,8 @@ android {
 }
 
 dependencies {
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation(libs.play.services.location)
     androidTestImplementation("androidx.test.uiautomator:uiautomator:2.2.0")
     implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
