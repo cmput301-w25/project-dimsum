@@ -59,6 +59,7 @@ public class FollowersActivity extends AppCompatActivity {
                 followerList.clear();
                 followerList.addAll(users);
                 adapter.notifyDataSetChanged();
+                Log.d("FollowersActivity", "Found " + users.size() + " followers");
             } else {
                 Log.e("FollowersActivity", "User has no followers.");
             }

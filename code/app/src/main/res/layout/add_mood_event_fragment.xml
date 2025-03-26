@@ -63,12 +63,15 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/text_time" />
 
-    <RadioButton
-        android:id="@+id/privacyRadioButton"
-        android:layout_width="match_parent"
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/privacySwitch"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Make post private? "
-        app:layout_constraintTop_toBottomOf="@+id/edit_description"/>
+        android:layout_margin="16dp"
+        android:text="Make post private?"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/edit_description"
+        />
 
     <TextView
         android:id="@+id/textView2"
@@ -77,7 +80,7 @@
         android:text="Show how you're feeling?"
         android:layout_marginTop="24dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/privacyRadioButton" />
+        app:layout_constraintTop_toBottomOf="@id/privacySwitch" />
 
     <ImageButton
         android:id="@+id/openCamera"
@@ -107,6 +110,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/save_button"
         app:layout_constraintStart_toStartOf="parent"
+        android:backgroundTint="@color/red"
         android:layout_marginEnd="8dp" />
 
     <Button
@@ -116,6 +120,7 @@
         android:text="Save"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        android:backgroundTint="@color/primary_blue"
         app:layout_constraintStart_toEndOf="@id/cancel_button" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

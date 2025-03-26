@@ -5,6 +5,7 @@ import android.util.Log;
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.model.Comment;
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.Privacy;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -48,48 +49,6 @@ public class MoodEventHelper {
     }
 
     /**
-     * Gets all MoodEvents from a given user's following list.
-     * MoodEvents are returned in chronological order, newest first.
-     * @param username  The username of the user to get following MoodEvents from.
-     * @param onSuccess  Callback triggered upon successful retrieval.
-     * @param onFailure  Callback triggered on failure.
-     */
-//    public void getMoodEventsByFollowing(String username, OnSuccessListener<List<MoodEvent>> onSuccess, OnFailureListener onFailure) {
-//        db.collection(FirestoreConstants.COLLECTION_USERS)
-//                .document(username)
-//                .get()
-//                .addOnSuccessListener(documentSnapshot -> {
-//                    if (documentSnapshot.exists()) {
-//                        List<String> followingList = (List<String>) documentSnapshot.get(FirestoreConstants.FIELD_FOLLOWINGS);
-//
-//                        // If the following list is empty, return an empty list.
-//                        if (followingList == null || followingList.isEmpty()) {
-//                            onSuccess.onSuccess(new ArrayList<>());
-//                            return;
-//                        }
-//
-//                        // Get mood events from all followed users.
-//                        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
-//                                .whereIn(FirestoreConstants.FIELD_USERNAME, followingList)
-//                                 .orderBy("timestamp", Query.Direction.DESCENDING) // Order by newest date first.
-//                                .get()
-//                                .addOnSuccessListener(querySnapshot -> {
-//                                    List<MoodEvent> moodEvents = new ArrayList<>();
-//                                    for (QueryDocumentSnapshot doc : querySnapshot) {
-//                                        MoodEvent moodEvent = doc.toObject(MoodEvent.class);
-//                                        moodEvents.add(moodEvent);
-//                                    }
-//                                    onSuccess.onSuccess(moodEvents);
-//                                })
-//                                .addOnFailureListener(onFailure);
-//                    } else {
-//                        onFailure.onFailure(new RuntimeException("User not found: " + username));
-//                    }
-//                })
-//                .addOnFailureListener(onFailure);
-//    }
-
-    /**
      * Gets the 3 most recent mood events from users that the given user is following.
      * MoodEvents are returned in reverse chronological order (newest first).
      * @param username  The username of the user to get following MoodEvents from.
@@ -127,15 +86,20 @@ public class MoodEventHelper {
                     db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
                             .whereIn(FirestoreConstants.FIELD_USERNAME, followingUsernames)
                             .orderBy("timestamp", Query.Direction.DESCENDING)
-                            .limit(3)
+                            .limit(15) //increased limit to 15 to get more mood events to filter through
                             .get()
                             .addOnSuccessListener(moodSnapshot -> {
                                 Log.d("MoodEventHelper", "Got mood events. Size: " + moodSnapshot.size());
                                 List<MoodEvent> moodEvents = new ArrayList<>();
                                 for (QueryDocumentSnapshot doc : moodSnapshot) {
                                     MoodEvent moodEvent = doc.toObject(MoodEvent.class);
-                                    Log.d("MoodEventHelper", "Found mood event from: " + moodEvent.getUsername());
-                                    moodEvents.add(moodEvent);
+                                    if(moodEvents.size()<=3){
+                                        if(moodEvent.getPrivacy()== Privacy.PUBLIC){
+                                            Log.d("MoodEventHelper", "Found public mood event from: " + moodEvent.getUsername());
+                                            moodEvents.add(moodEvent);
+                                        }
+                                        Log.d("MoodEventHelper","Found private mood event from: " + moodEvent.getUsername());
+                                    }
                                 }
                                 onSuccess.onSuccess(moodEvents);
                             })

@@ -31,6 +31,7 @@ import java.io.ByteArrayOutputStream;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
@@ -92,7 +93,7 @@ public class AddMoodActivity extends AppCompatActivity {
         TextView textDate = findViewById(R.id.text_date);
         TextView textTime = findViewById(R.id.text_time);
         TextView editDescription = findViewById(R.id.edit_description);
-        RadioButton privateRadioButton = findViewById(R.id.privacyRadioButton);
+        SwitchCompat privateSwitch = findViewById(R.id.privacySwitch);
 
 
         capImage = findViewById(R.id.captured_image);
@@ -195,7 +196,13 @@ public class AddMoodActivity extends AppCompatActivity {
             );
             timePickerDialog.show();
         });
-
+        privateSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) { //checked = private
+                privateSwitch.setText("Make post public?");
+            } else {
+                privateSwitch.setText("Make post private?");
+            }
+        });
         // Save Button
         findViewById(R.id.save_button).setOnClickListener(v -> {
             try {
@@ -204,7 +211,7 @@ public class AddMoodActivity extends AppCompatActivity {
                 String timeStr = textTime.getText().toString().trim();
                 String description = editDescription.getText().toString().trim();
                 SocialSetting social = SocialSetting.fromString(editSocial.getSelectedItem().toString());
-                Privacy privacy = privateRadioButton.isChecked() ? Privacy.PUBLIC : Privacy.PRIVATE;
+                Privacy privacy = privateSwitch.isChecked() ? Privacy.PRIVATE : Privacy.PUBLIC;
                 if (!isValidDescription(description)) {
                     Toast.makeText(this, "Trigger must be at most 20 chars or 3 words", Toast.LENGTH_SHORT).show();
                     return;

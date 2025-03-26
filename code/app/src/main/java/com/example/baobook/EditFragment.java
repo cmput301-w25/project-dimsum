@@ -17,6 +17,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.DialogFragment;
 
 import com.example.baobook.model.Mood;
@@ -100,7 +101,7 @@ public class EditFragment extends DialogFragment {
         TextView editTime = view.findViewById(R.id.text_time);
         EditText editDescription = view.findViewById(R.id.edit_description);
         Spinner editSocial = view.findViewById(R.id.social_spinner);
-        RadioButton privateRadioButton = view.findViewById(R.id.privateRadioButton);
+        SwitchCompat privacySwitch = view.findViewById(R.id.privacySwitch);
 
         // Initialize the Spinner with MoodUtils
         MoodSpinnerAdapter adapter = new MoodSpinnerAdapter(
@@ -120,7 +121,7 @@ public class EditFragment extends DialogFragment {
             editDate.setText(dateFormat.format(dateTime));
             editTime.setText(timeFormat.format(dateTime));
             editDescription.setText(moodEvent.getDescription());
-            privateRadioButton.setChecked(moodEvent.getPrivacy() == Privacy.PRIVATE);
+            privacySwitch.setChecked(moodEvent.getPrivacy() == Privacy.PRIVATE);
             int socialPosition = getSpinnerIndex(editSocial, moodEvent.getSocial().toString());
             editSocial.setSelection(socialPosition);
         }
@@ -168,7 +169,7 @@ public class EditFragment extends DialogFragment {
                 String newDescription = editDescription.getText().toString().trim();
                 SocialSetting newSocial = SocialSetting.fromString(editSocial.getSelectedItem().toString());
                 OffsetDateTime dateTime = OffsetDateTime.of(selectedDate, selectedTime, ZoneOffset.UTC);
-                Privacy newPrivacy = privateRadioButton.isChecked() ? Privacy.PRIVATE : Privacy.PUBLIC;
+                Privacy newPrivacy = privacySwitch.isChecked() ? Privacy.PRIVATE : Privacy.PUBLIC;
 
                 if (!isValidDescription(newDescription)) {
                     Toast.makeText(getContext(), "Trigger must be at most 20 chars or 3 words", Toast.LENGTH_SHORT).show();

@@ -225,6 +225,8 @@ public class FirestoreHelperTest {
 
         assertTrue(latch.await(10, TimeUnit.SECONDS)); // Wait for async calls to complete
     }
+    public void testCheckFollowStatus() throws InterruptedException {
 
+    }
     // still need to test firestore mood
 }

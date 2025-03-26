@@ -42,13 +42,13 @@ public class FirestoreHelper {
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     if (queryDocumentSnapshots.isEmpty()) {
-                        Log.e("FollowersActivity", "User has no followers.");
+                        Log.d("FollowersActivity", "User has no followers.");
                         onSuccess.onSuccess(new ArrayList<>());
                         return;
                     }
                     ArrayList<User> userList = new ArrayList<>();
                     for (DocumentSnapshot document : queryDocumentSnapshots) {
-                        Log.e("FirestoreHelper", "Found user: " + document.getId());
+                        Log.d("FirestoreHelper", "Found user: " + document.getId());
                         String followUsername = document.getId(); // Each doc ID is a username
                         db.collection(FirestoreConstants.COLLECTION_USERS).document(followUsername).get()
                                 .addOnSuccessListener(userDoc -> {
@@ -174,6 +174,7 @@ public class FirestoreHelper {
                     if(!documentSnapshot.exists()){
                         documentSnapshot.getReference().set(user);
                         Toast.makeText(context, "Request Sent!", Toast.LENGTH_SHORT).show();
+                        Log.d("FirestoreHelper", "Request sent to " + otherUsername);
                     }
                 })
                 .addOnFailureListener(e -> {
@@ -195,25 +196,27 @@ public class FirestoreHelper {
             return;
         }
         db = FirebaseFirestore.getInstance();
+        //remove otherUser from users following list
         db.collection(FirestoreConstants.COLLECTION_USERS)
                 .document(username)
                 .collection(FirestoreConstants.COLLECTION_FOLLOWINGS)
                 .document(otherUsername)
                 .delete()
                 .addOnSuccessListener(aVoid -> {
-                    Log.e("FirestoreHelper", username + " unfollowed " + otherUsername);
+                    Log.d("FirestoreHelper", username + " unfollowed " + otherUsername);
                 })
                 .addOnFailureListener(e -> {
                     Log.e("FirestoreHelper", "Error unfollowing user", e);
                     Toast.makeText(context, "Failed to unfollow user", Toast.LENGTH_SHORT).show();
                 });
+        //remove current user from other user's followers list
         db.collection(FirestoreConstants.COLLECTION_USERS)
                 .document(otherUsername)
                 .collection(FirestoreConstants.COLLECTION_FOLLOWERS)
                 .document(username)
                 .delete()
                 .addOnSuccessListener(aVoid -> {
-                    Log.e("FirestoreHelper", username + " removed from " + otherUsername+" followers list");
+                    Log.d("FirestoreHelper", username + " removed from " + otherUsername+" followers list");
                 })
                 .addOnFailureListener(e -> {
                     Log.e("FirestoreHelper", "Error unfollowing user", e);
@@ -228,6 +231,7 @@ public class FirestoreHelper {
      * @param context context to use
      */
     public static void followUser(User currentUser, User otherUser, Context context) {
+        Log.d("FirestoreHelper", "followUser called. "+ currentUser.getUsername() + " is following " + otherUser.getUsername());
         String username = currentUser.getUsername();
         String otherUsername = otherUser.getUsername();
         if (username == null || otherUsername == null) {
@@ -235,60 +239,43 @@ public class FirestoreHelper {
             Toast.makeText(context, "Error: Invalid user data.", Toast.LENGTH_SHORT).show();
             return;
         }
-        // Add other user to current user's following list
+
         db = FirebaseFirestore.getInstance();
-        db.runTransaction(transaction -> {
-            transaction.set(db.collection(FirestoreConstants.COLLECTION_USERS)
-                    .document(username)
-                    .collection(FirestoreConstants.COLLECTION_FOLLOWINGS)
-                    .document(otherUsername), otherUser);
-
-            transaction.set(db.collection(FirestoreConstants.COLLECTION_USERS)
-                    .document(otherUsername)
-                    .collection(FirestoreConstants.COLLECTION_FOLLOWERS)
-                    .document(username), currentUser);
-
-            transaction.delete(db.collection(FirestoreConstants.COLLECTION_USERS)
-                    .document(username)
-                    .collection(FirestoreConstants.COLLECTION_REQUESTS)
-                    .document(otherUsername));
-
-            return null;
-        }).addOnSuccessListener(aVoid -> {
-            Log.e("FirestoreHelper", otherUsername + " followed " + username);
-        }).addOnFailureListener(e -> {
-            Log.e("FirestoreHelper", "Error following user", e);
-            Toast.makeText(context, "Failed to follow user", Toast.LENGTH_SHORT).show();
-        });
-
-//        db.collection(FirestoreConstants.COLLECTION_USERS)
-//                .document(username)//go to current users document
-//                .collection(FirestoreConstants.COLLECTION_FOLLOWINGS) //add other user to following list
-//                .document(otherUsername)
-//                .set(otherUser)
-//                .addOnSuccessListener(documentReference -> {
-//                    Log.e("FirestoreHelper", username + " followed " + otherUsername);
-//                })
-//                .addOnFailureListener(e -> {
-//                    Toast.makeText(context, "Failed to follow user", Toast.LENGTH_SHORT).show();
-//                });
-//        // Add current user to other user's followers list
-//        db.collection(FirestoreConstants.COLLECTION_USERS)
-//                .document(otherUsername)
-//                .collection(FirestoreConstants.COLLECTION_FOLLOWERS)
-//                .document(username)
-//                .set(currentUser)
-//                .addOnSuccessListener(documentReference -> {
-//                    Log.e("FirestoreHelper", username + " followed " + otherUsername);
-//                    })
-//                .addOnFailureListener(e -> {
-//                    Toast.makeText(context, "Failed to follow user", Toast.LENGTH_SHORT).show();
-//                });
-//        // Remove request from current user's requests list
-//        db.collection(FirestoreConstants.COLLECTION_USERS)
-//                .document(username)
-//                .collection(FirestoreConstants.COLLECTION_REQUESTS)
-//                .document(otherUsername)
-//                .delete();
+        db.collection(FirestoreConstants.COLLECTION_USERS)
+                .document(username)//go to current users document
+                .collection(FirestoreConstants.COLLECTION_FOLLOWINGS) //add other user to following list
+                .document(otherUsername)
+                .set(otherUser)
+                .addOnSuccessListener(documentReference -> {
+                    Log.d("FirestoreHelper", otherUsername + " added to " + username+"'s Following Collection");
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(context, "Failed to follow user", Toast.LENGTH_SHORT).show();
+                });
+        // Add current user to other user's followers list
+        db.collection(FirestoreConstants.COLLECTION_USERS)
+                .document(otherUsername)
+                .collection(FirestoreConstants.COLLECTION_FOLLOWERS)
+                .document(username)
+                .set(currentUser)
+                .addOnSuccessListener(documentReference -> {
+                    Log.d("FirestoreHelper", username + " added to " + otherUsername+"'s Followers Collection");
+                    })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(context, "Failed to follow user", Toast.LENGTH_SHORT).show();
+                });
+        // Remove request from current user's requests list
+        db.collection(FirestoreConstants.COLLECTION_USERS)
+                .document(otherUsername)
+                .collection(FirestoreConstants.COLLECTION_REQUESTS)
+                .document(username)
+                .delete()
+                .addOnSuccessListener(documentReference -> {
+                    Log.d("FirestoreHelper", "Request removed from " + otherUsername + "'s requests list");
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FirestoreHelper", "Error removing request", e);
+                    Toast.makeText(context, "Failed to follow user", Toast.LENGTH_SHORT).show();
+                });
+        }
     }
-}
