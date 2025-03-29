@@ -49,9 +49,9 @@ public class MoodEventHelperTest {
     private static final String username1 = "user1";
     private static final String followingUsername1 = "following1";
     private static final String followingUsername2 = "following2";
-    private static final User following1 = new User(followingUsername1, "");
-    private static final User following2 = new User(followingUsername2, "");
-    private static final User user1 = new User(username1, "");
+    private static final User following1 = new User(followingUsername1, "", 0 ,0, 0);
+    private static final User following2 = new User(followingUsername2, "", 0, 0 ,0);
+    private static final User user1 = new User(username1, "",0, 0, 0);
     private static final MoodEvent moodEvent1 = new MoodEvent(
             username1,
             "1",
@@ -257,8 +257,8 @@ public class MoodEventHelperTest {
         CompletableFuture<List<Comment>> future = new CompletableFuture<>();
         String moodEventId = "1";
 
-        User user2 = new User("user2", "");
-        User user3 = new User("user3", "");
+        User user2 = new User("user2", "", 0, 0, 0);
+        User user3 = new User("user3", "", 0, 0, 0);
 
         // Create test comments
         Comment comment1 = new Comment(moodEvent1.getId(), user1,"This is a great post!");

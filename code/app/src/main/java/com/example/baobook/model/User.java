@@ -10,6 +10,12 @@ public class User {
     private ArrayList<String> followers;
     private ArrayList<String> followings;
 
+    private Integer level;
+    private Integer exp;
+    private Integer expNeeded;
+
+
+
 
     /**
      * Default constructor initializing empty followers and followings lists.
@@ -27,11 +33,14 @@ public class User {
      * @param password the user's password
      */
 
-    public User(String username, String password) {
+    public User(String username, String password, Integer level, Integer exp, Integer expNeeded) {
         this.username = username;
         this.password = password;
         this.followers = new ArrayList<>();
         this.followings = new ArrayList<>();
+        this.level = level;
+        this.exp = exp;
+        this.expNeeded = expNeeded;
     }
     public User(String username) {
         this.username = username;
@@ -161,4 +170,41 @@ public class User {
         user.removeFollower(username);
         removeFollowing(user.getUsername());
     }
+
+    public Integer getLevel() {
+        if (this.level == null) {
+            return 0;
+        } else {
+            return level;
+        }
+    }
+
+    public void setLevel(Integer level) {
+        this.level = level;
+    }
+
+    public Integer getExp() {
+        if (this.exp == null) {
+            return 0;
+        } else {
+            return exp;
+        }
+    }
+
+    public void setExp(Integer exp) {
+        this.exp = exp;
+    }
+
+    public Integer getExpNeeded() {
+        if (this.expNeeded == null) {
+            return 10;
+        } else {
+            return expNeeded;
+        }
+    }
+
+    public void setExpNeeded(Integer expNeeded) {
+        this.expNeeded = expNeeded;
+    }
+
 }

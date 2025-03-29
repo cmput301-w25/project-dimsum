@@ -70,6 +70,9 @@ public class AuthHelper {
                     Map<String, Object> userData = new HashMap<>();
                     userData.put(FirestoreConstants.FIELD_USERNAME, username);
                     userData.put(FirestoreConstants.FIELD_PASSWORD, password);
+                    userData.put("level", 0);
+                    userData.put("exp", 0);
+                    userData.put("expNeeded", 10);
 
                     db.collection(FirestoreConstants.COLLECTION_USERS).document(username)
                             .set(userData)
@@ -117,6 +120,47 @@ public class AuthHelper {
 
                     // The passwords match. Update SharedPreferences.
                     loginSharedPreferences(username);
+                    Map<String, Object> updates = new HashMap<>();
+
+                    Long levelRaw = documentSnapshot.getLong("level");
+                    Long expRaw = documentSnapshot.getLong("exp");
+                    Long expNeededRaw = documentSnapshot.getLong("expNeeded");
+
+                    int levelVal = 0;
+                    int expVal = 0;
+                    int expNeededVal = 10;
+
+                    if (levelRaw != null) {
+                        levelVal = levelRaw.intValue();
+                    } else {
+                        updates.put("level", levelVal);
+                    }
+
+                    if (expRaw != null) {
+                        expVal = expRaw.intValue();
+                    } else {
+                        updates.put("exp", expVal);
+                    }
+
+                    if (expNeededRaw != null) {
+                        expNeededVal = expNeededRaw.intValue();
+                    } else {
+                        updates.put("expNeeded", expNeededVal);
+                    }
+
+                    // Save synced values to SharedPreferences
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putInt("level", levelVal);
+                    editor.putInt("exp", expVal);
+                    editor.putInt("expNeeded", expNeededVal);
+                    editor.apply();
+
+                    // If there were any missing fields, write them to Firestore
+                    if (!updates.isEmpty()) {
+                        db.collection(FirestoreConstants.COLLECTION_USERS)
+                                .document(username)
+                                .update(updates);
+                    }
                     onSuccess.onSuccess(null);
                 })
                 .addOnFailureListener(onFailure);

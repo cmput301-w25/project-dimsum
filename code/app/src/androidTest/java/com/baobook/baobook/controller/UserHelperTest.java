@@ -221,8 +221,8 @@ public class UserHelperTest {
     private void resetDatabase() {
         FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS).join();
         List<User> testUsers = Arrays.asList(
-                new User(username1, "password"),
-                new User(username2, "password")
+                new User(username1, "password", 0 ,0 ,0),
+                new User(username2, "password", 0 ,0 ,0)
         );
         for (User user : testUsers) {
             setUserInUsersCollection(user).join();

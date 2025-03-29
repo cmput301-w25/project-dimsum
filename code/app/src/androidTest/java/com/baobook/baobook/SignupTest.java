@@ -29,7 +29,7 @@ public class SignupTest {
     @Test
     public void SignupShouldShowErrorForEmptyCredentials() {
         // Simulate user clicking the login button with empty fields
-        onView(withId(R.id.button)).perform(click());
+        onView(withId(R.id.next_button)).perform(click());
 
         onView(withId(com.google.android.material.R.id.snackbar_text))
                 .check(matches(withText("Please enter all fields")))
