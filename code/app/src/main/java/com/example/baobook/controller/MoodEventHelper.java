@@ -249,7 +249,6 @@ public class MoodEventHelper {
      * @param onFailure Callback triggered on failure.
      */
     public void addComment(String moodEventId, Comment comment, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
-        if (moodEventId != null) {
             db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
                     .document(moodEventId)
                     .collection(FirestoreConstants.COLLECTION_COMMENTS)
@@ -265,7 +264,6 @@ public class MoodEventHelper {
                             onFailure.onFailure(e);
                         }
                     });
-        }
     }
 
     /**
@@ -285,6 +283,7 @@ public class MoodEventHelper {
                         Comment comment = doc.toObject(Comment.class);
                         comments.add(comment);
                     }
+                    Log.d("MoodEventHelper", "Loaded " + comments.size() + " comments");
                     onSuccess.onSuccess(comments);
                 })
                 .addOnFailureListener(onFailure);
