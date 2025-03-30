@@ -1,4 +1,4 @@
-val MAPS_API_KEY: String = project.findProperty("MAPS_API_KEY") as String? ?: ""
+val MAPS_API_KEY: String = project.findProperty("AIzaSyBXCTytxKMYaYFrgxUu5lUBy7NwwchvXGk") as String? ?: ""
 
 plugins {
     alias(libs.plugins.android.application)

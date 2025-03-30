@@ -9,6 +9,7 @@ import android.widget.SearchView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.baobook.adapter.UserArrayAdapter;
 import com.example.baobook.controller.FirestoreHelper;
 import com.example.baobook.model.User;
 

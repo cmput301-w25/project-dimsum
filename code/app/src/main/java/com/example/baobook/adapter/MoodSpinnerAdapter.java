@@ -1,4 +1,4 @@
-package com.example.baobook;
+package com.example.baobook.adapter;
 
 import android.content.Context;
 import android.view.View;

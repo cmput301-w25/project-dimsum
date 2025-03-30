@@ -9,13 +9,13 @@ import android.widget.ListView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.baobook.adapter.UserArrayAdapter;
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.controller.FirestoreHelper;
 import com.example.baobook.model.User;
 import com.example.baobook.util.UserSession;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Activity to display a list of followers of the current user.
@@ -24,8 +24,6 @@ public class FollowersActivity extends AppCompatActivity {
     private UserSession userSession;
     private ArrayList<User> followerList;
     private UserArrayAdapter adapter;
-    private ListView userList;
-    private Button backButton;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,8 +31,8 @@ public class FollowersActivity extends AppCompatActivity {
         userSession = new UserSession(this);
         followerList = new ArrayList<>();
         adapter = new UserArrayAdapter((Context) this, followerList, "FollowersActivity", null);
-        userList = findViewById(R.id.followers_list);
-        backButton = findViewById(R.id.back_button);
+        ListView userList = findViewById(R.id.followers_list);
+        Button backButton = findViewById(R.id.back_button);
         userList.setAdapter(adapter);
 
         loadFollowers();

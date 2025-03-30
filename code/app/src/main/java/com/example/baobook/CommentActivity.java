@@ -8,6 +8,7 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.baobook.adapter.CommentArrayAdapter;
 import com.example.baobook.model.Comment;
 import com.example.baobook.util.UserSession;
 import com.example.baobook.controller.MoodEventHelper;
@@ -18,13 +19,11 @@ import java.util.ArrayList;
  * User can see all posted comments and post new ones.
  */
 public class CommentActivity extends AppCompatActivity {
-    Button backButton, postCommentButton;
-    EditText commentInput;
-    ListView commentListView;
-    CommentArrayAdapter commentAdapter;
-    ArrayList<Comment> comments;
-    UserSession userSession;
-    MoodEventHelper MoodEventHelper;
+    private EditText commentInput;
+    private CommentArrayAdapter commentAdapter;
+    private ArrayList<Comment> comments;
+    private UserSession userSession;
+    private MoodEventHelper MoodEventHelper;
 
     private String moodEventId;
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,10 +33,10 @@ public class CommentActivity extends AppCompatActivity {
         comments = new ArrayList<>();
         commentAdapter = new CommentArrayAdapter(this, comments);
 
-        backButton = findViewById(R.id.back_button);
-        postCommentButton = findViewById(R.id.post_comment_button);
+        Button backButton = findViewById(R.id.back_button);
+        Button postCommentButton = findViewById(R.id.post_comment_button);
         commentInput = findViewById(R.id.comment_input);
-        commentListView = findViewById(R.id.comment_list_view);
+        ListView commentListView = findViewById(R.id.comment_list_view);
 
         commentListView.setAdapter(commentAdapter);
         moodEventId = getIntent().getStringExtra("MOOD_EVENT_ID");
@@ -53,10 +52,6 @@ public class CommentActivity extends AppCompatActivity {
             Toast.makeText(this, "Error loading comments", Toast.LENGTH_SHORT).show();
         });
 
-        backButton.setOnClickListener(v -> {
-            finish();
-        });
-
         postCommentButton.setOnClickListener(v -> {
             String commentText = commentInput.getText().toString();
             if (!commentText.isEmpty()) {
@@ -67,7 +62,8 @@ public class CommentActivity extends AppCompatActivity {
                 Toast.makeText(this, "Comment posted!", Toast.LENGTH_SHORT).show();
             }
         });
-
-
+        backButton.setOnClickListener(v -> {
+            finish();
+        });
     }
 }

@@ -23,8 +23,10 @@ import com.example.baobook.controller.MoodEventHelper;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.MoodFilterState;
-import com.example.baobook.model.MoodHistoryManager;
-import com.example.baobook.model.PendingActionManager;
+import com.example.baobook.controller.MoodHistoryManager;
+import com.example.baobook.model.PendingAction;
+import com.example.baobook.controller.PendingActionManager;
+import com.example.baobook.util.NetworkUtil;
 import com.example.baobook.util.UserSession;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -43,18 +45,12 @@ public class MoodHistory extends AppCompatActivity
         EditFragment.EditMoodEventDialogListener,
         FilterDialogFragment.OnFilterSaveListener {
 
-    private FloatingActionButton addButton;
-    private ListView moodList;
-
-    private Button openFilterButton, clearAllButton;
     private LinearLayout activeFiltersContainer;
 
-    private MoodEventHelper moodEventHelper = new MoodEventHelper();
+    private final MoodEventHelper moodEventHelper = new MoodEventHelper();
     private UserSession userSession;
 
-
     private MoodEventArrayAdapter moodArrayAdapter;
-    private Button homeButton, mapButton, profileButton;
 
     private final MoodFilterState filterState = new MoodFilterState();
 
@@ -90,13 +86,13 @@ public class MoodHistory extends AppCompatActivity
         userSession = new UserSession(this);
 
         // Initialize views
-        moodList = findViewById(R.id.mood_history_list);
-        addButton = findViewById(R.id.add_button);
-        homeButton = findViewById(R.id.home_button);
-        mapButton = findViewById(R.id.map_button);
-        profileButton = findViewById(R.id.profile_button);
-        openFilterButton = findViewById(R.id.open_filter_button);
-        clearAllButton = findViewById(R.id.clear_all_button);
+        ListView moodList = findViewById(R.id.mood_history_list);
+        FloatingActionButton addButton = findViewById(R.id.add_button);
+        Button homeButton = findViewById(R.id.home_button);
+        Button mapButton = findViewById(R.id.map_button);
+        Button profileButton = findViewById(R.id.profile_button);
+        Button openFilterButton = findViewById(R.id.open_filter_button);
+        Button clearAllButton = findViewById(R.id.clear_all_button);
         activeFiltersContainer = findViewById(R.id.active_filters_container);
 
         // Setup the list adapter

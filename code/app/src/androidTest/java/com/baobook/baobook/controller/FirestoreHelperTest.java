@@ -12,6 +12,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.example.baobook.BuildConfig;
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.controller.FirestoreHelper;
 import com.example.baobook.model.User;
@@ -46,7 +47,7 @@ public class FirestoreHelperTest {
         try {
             // 10.0.2.2 is the special IP address to connect to the 'localhost' of
             // the host computer from an Android emulator.
-            db.useEmulator("10.0.2.2", 8080);
+            db.useEmulator("10.0.0.59", 8080);
             FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS).join();
         } catch (IllegalStateException e) {
             // pass
