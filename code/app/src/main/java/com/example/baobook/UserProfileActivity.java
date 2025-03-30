@@ -43,6 +43,7 @@ public class UserProfileActivity extends AppCompatActivity implements
     TextView usernameText;
     private boolean isCurrentUser;
     private UserHelper userHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -204,6 +205,7 @@ public class UserProfileActivity extends AppCompatActivity implements
             startActivity(intent);
         });
     }
+
     @Override
     public void onEditMoodEvent(MoodEvent mood) {
         EditFragment fragment = new EditFragment(mood);
@@ -241,8 +243,31 @@ public class UserProfileActivity extends AppCompatActivity implements
                         // Notify adapter to refresh ListView
                         moodArrayAdapter.notifyDataSetChanged();
                         FirestoreHelper.firestoreMood(mood, this);
+                        refreshUserStats();
                     }
                 }
             });
+    private void refreshUserStats() {
+        db.collection("Users").document(username)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.exists()) {
+                        Long levelVal = snapshot.getLong("level");
+                        Long expVal = snapshot.getLong("exp");
+                        Long expNeededVal = snapshot.getLong("expNeeded");
+
+                        TextView levelText = findViewById(R.id.level);
+                        TextView expText = findViewById(R.id.exp);
+                        ImageView profileImage = findViewById(R.id.profile_image);
+
+                        levelText.setText("Level: " + levelVal);
+                        expText.setText("EXP: " + expVal + "/" + expNeededVal);
+
+                        if (levelVal != null && levelVal >= 1) {
+                            profileImage.setImageResource(userHelper.getProfilePicture(levelVal.intValue()));
+                        }
+                    }
+                });
+    }
 }
 
