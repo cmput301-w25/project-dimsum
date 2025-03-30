@@ -4,12 +4,12 @@ import android.app.DatePickerDialog;
 import android.app.Dialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
+import android.location.Location;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +25,10 @@ import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.Privacy;
 import com.example.baobook.model.SocialSetting;
 import com.example.baobook.util.MoodUtils;
+import com.example.baobook.util.LocationHelper;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.firebase.firestore.GeoPoint;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -43,6 +47,7 @@ public class EditFragment extends DialogFragment {
     private LocalTime selectedTime;
     private EditMoodEventDialogListener listener;
     private MoodEvent moodEvent;
+    private Location userLocation;
     private static final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.getDefault());
     private static final DateTimeFormatter timeFormat = DateTimeFormatter.ofPattern("HH:mm", Locale.getDefault());
 
@@ -64,7 +69,6 @@ public class EditFragment extends DialogFragment {
     public static boolean isValidDescription(String desc) {
         if (desc.isEmpty()) return true;
         return desc.length() <= 200;
-        //return desc.length() <= 20 && desc.trim().split("\\s+").length <= 3;
     }
 
     private int getSpinnerIndex(Spinner spinner, String value) {
@@ -102,6 +106,7 @@ public class EditFragment extends DialogFragment {
         EditText editDescription = view.findViewById(R.id.edit_description);
         Spinner editSocial = view.findViewById(R.id.social_spinner);
         SwitchCompat privacySwitch = view.findViewById(R.id.privacySwitch);
+        SwitchCompat locationSwitch = view.findViewById(R.id.locationSwitch);
 
         // Initialize the Spinner with MoodUtils
         MoodSpinnerAdapter adapter = new MoodSpinnerAdapter(
@@ -124,6 +129,13 @@ public class EditFragment extends DialogFragment {
             privacySwitch.setChecked(moodEvent.getPrivacy() == Privacy.PRIVATE);
             int socialPosition = getSpinnerIndex(editSocial, moodEvent.getSocial().toString());
             editSocial.setSelection(socialPosition);
+            locationSwitch.setChecked(moodEvent.getLocation() != null);
+
+            if (moodEvent.getLocation() != null) {
+                userLocation = new Location("");
+                userLocation.setLatitude(moodEvent.getLocation().getLatitude());
+                userLocation.setLongitude(moodEvent.getLocation().getLongitude());
+            }
         }
 
         editDate.setOnClickListener(v -> {
@@ -155,6 +167,27 @@ public class EditFragment extends DialogFragment {
             ).show();
         });
 
+        locationSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                LocationHelper.getCurrentLocation(requireContext(), new LocationHelper.LocationResultCallback() {
+                    @Override
+                    public void onLocationResult(double latitude, double longitude) {
+                        userLocation = new Location("");
+                        userLocation.setLatitude(latitude);
+                        userLocation.setLongitude(longitude);
+                    }
+
+                    @Override
+                    public void onLocationError(String error) {
+                        Toast.makeText(requireContext(), error, Toast.LENGTH_SHORT).show();
+                        locationSwitch.setChecked(false);
+                    }
+                });
+            } else {
+                userLocation = null;
+            }
+        });
+
         AlertDialog dialog = new AlertDialog.Builder(context)
                 .setView(view)
                 .setTitle("Edit Mood Event")
@@ -172,11 +205,18 @@ public class EditFragment extends DialogFragment {
                 Privacy newPrivacy = privacySwitch.isChecked() ? Privacy.PRIVATE : Privacy.PUBLIC;
 
                 if (!isValidDescription(newDescription)) {
-                    Toast.makeText(getContext(), "Trigger must be at most 20 chars or 3 words", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Trigger must be at most 200 chars", Toast.LENGTH_SHORT).show();
                     return; // Prevent dialog from closing
                 }
 
                 moodEvent.editMoodEvent(newMood, dateTime, newDescription, newSocial, newPrivacy);
+
+                if (userLocation != null) {
+                    moodEvent.setLocation(new GeoPoint(userLocation.getLatitude(), userLocation.getLongitude()));
+                } else {
+                    moodEvent.setLocation(null);
+                }
+
                 listener.onMoodEdited(moodEvent);
                 dialog.dismiss(); // Dismiss only when validation passes
             });
