@@ -17,7 +17,9 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Helper class for Firestore operations.
@@ -251,4 +253,42 @@ public class FirestoreHelper {
                     Toast.makeText(context, "Failed to follow user", Toast.LENGTH_SHORT).show();
                 });
         }
+
+    public static void updateUserExpAndLevel(String username, int expGain, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection(FirestoreConstants.COLLECTION_USERS).document(username)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (!documentSnapshot.exists()) {
+                        onFailure.onFailure(new Exception("User not found"));
+                        return;
+                    }
+
+                    int currentExp = documentSnapshot.getLong("exp").intValue();
+                    int expNeeded = documentSnapshot.getLong("expNeeded").intValue();
+                    int level = documentSnapshot.getLong("level").intValue();
+
+                    currentExp += expGain;
+
+                    while (currentExp >= expNeeded) {
+                        currentExp -= expNeeded;
+                        level += 1;
+                        expNeeded += expNeeded * 2;
+                    }
+
+                    Map<String, Object> updates = new HashMap<>();
+                    updates.put("exp", currentExp);
+                    updates.put("level", level);
+                    updates.put("expNeeded", expNeeded);
+
+                    db.collection(FirestoreConstants.COLLECTION_USERS).document(username)
+                            .update(updates)
+                            .addOnSuccessListener(onSuccess)
+                            .addOnFailureListener(onFailure);
+
+                })
+                .addOnFailureListener(onFailure);
     }
+
+
+}

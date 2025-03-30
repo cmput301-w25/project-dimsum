@@ -118,10 +118,13 @@ public class AuthHelperTest {
         CompletableFuture<Exception> future = new CompletableFuture<>();
         String username = "existingUser";
         String password = "password";
+        Integer level = 0;
+        Integer expNeeded = 100;
+        Integer exp = 0;
 
         // Add the user to Firestore.
         db.collection(FirestoreConstants.COLLECTION_USERS).document(username)
-                .set(new User(username, password))
+                .set(new User(username, password, level, exp, expNeeded))
                 .addOnSuccessListener(aVoid -> {
                     // Attempt to register a user with the same username.
                     authHelper.registerUser(username, "differentPassword",
@@ -142,10 +145,13 @@ public class AuthHelperTest {
         CompletableFuture<Void> future = new CompletableFuture<>();
         String username = "user";
         String password = "password";
+        Integer level = 0;
+        Integer expNeeded = 100;
+        Integer exp = 0;
 
         // Add the user to Firestore
         db.collection(FirestoreConstants.COLLECTION_USERS).document(username)
-                .set(new User(username, password))
+                .set(new User(username, password, level, exp, expNeeded))
                 .addOnSuccessListener(aVoid -> {
                     // Log in with correct credentials
                     authHelper.loginUser(username, password,
@@ -168,10 +174,13 @@ public class AuthHelperTest {
         CompletableFuture<Exception> future = new CompletableFuture<>();
         String username = "user";
         String password = "password";
+        Integer level = 0;
+        Integer expNeeded = 100;
+        Integer exp = 0;
 
         // Add the user to Firestore
         db.collection(FirestoreConstants.COLLECTION_USERS).document(username)
-                .set(new User(username, password))
+                .set(new User(username, password, level, exp, expNeeded))
                 .addOnSuccessListener(aVoid -> {
                     // Attempt to log in with the wrong password
                     authHelper.loginUser(username, "differentPassword",

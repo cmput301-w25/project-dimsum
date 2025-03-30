@@ -104,7 +104,7 @@ public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
                 moodImage.setImageResource(R.drawable.cat_image);
             }
 
-            GradientDrawable drawable = (GradientDrawable) rootLayout.getBackground();
+            GradientDrawable drawable = (GradientDrawable) rootLayout.getBackground().mutate();
             if (drawable != null) {
                 drawable.setStroke(5, MoodUtils.getMoodColor(moodString)); // Set border color
             }
