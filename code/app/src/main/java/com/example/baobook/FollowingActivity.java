@@ -8,6 +8,7 @@ import android.widget.ListView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.baobook.adapter.UserArrayAdapter;
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.controller.FirestoreHelper;
 import com.example.baobook.model.User;
@@ -24,8 +25,6 @@ public class FollowingActivity extends AppCompatActivity {
     private UserSession userSession;
     private ArrayList<User> followingList;
     private UserArrayAdapter adapter;
-    private ListView userList;
-    Button backButton;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,8 +32,8 @@ public class FollowingActivity extends AppCompatActivity {
         userSession = new UserSession(this);
         followingList = new ArrayList<>();
         adapter = new UserArrayAdapter(this, followingList, "FollowingActivity", null);
-        userList = findViewById(R.id.following_list);
-        backButton = findViewById(R.id.back_button);
+        ListView userList = findViewById(R.id.following_list);
+        Button backButton = findViewById(R.id.back_button);
         userList.setAdapter(adapter);
 
         loadFollowing();

@@ -5,16 +5,14 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.baobook.adapter.UserArrayAdapter;
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.controller.FirestoreHelper;
-import com.example.baobook.controller.UserHelper;
 import com.example.baobook.model.User;
 import com.example.baobook.util.UserSession;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 
@@ -27,7 +25,6 @@ public class FollowRequestsActivity extends AppCompatActivity implements UserArr
     private UserSession userSession;
     private ArrayList<User> requestedList;
     private UserArrayAdapter adapter;
-    private ListView userList;
     private User selectedUser;
 
     public void onCreate(Bundle savedInstanceState) {
@@ -36,7 +33,7 @@ public class FollowRequestsActivity extends AppCompatActivity implements UserArr
         userSession = new UserSession(this);
         requestedList = new ArrayList<>();
         adapter = new UserArrayAdapter(this, requestedList, "FollowRequestsActivity", this);
-        userList = findViewById(R.id.requests_list);
+        ListView userList = findViewById(R.id.requests_list);
         userList.setAdapter(adapter);
 
         loadFollowRequests();

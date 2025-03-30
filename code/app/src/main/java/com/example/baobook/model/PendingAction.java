@@ -1,6 +1,4 @@
-package com.example.baobook;
-
-import com.example.baobook.model.MoodEvent;
+package com.example.baobook.model;
 
 public class PendingAction {
     public enum ActionType { ADD, EDIT, DELETE }

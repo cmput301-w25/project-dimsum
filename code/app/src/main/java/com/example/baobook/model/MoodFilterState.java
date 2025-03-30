@@ -1,5 +1,7 @@
 package com.example.baobook.model;
 
+import com.example.baobook.controller.MoodHistoryManager;
+
 import java.util.ArrayList;
 
 public class MoodFilterState {

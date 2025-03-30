@@ -2,7 +2,10 @@
  * Manages mood history by storing, sorting, and filtering a list of MoodEvent objects.
  */
 
-package com.example.baobook.model;
+package com.example.baobook.controller;
+
+import com.example.baobook.model.Mood;
+import com.example.baobook.model.MoodEvent;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;

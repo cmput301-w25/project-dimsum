@@ -93,7 +93,7 @@ public class MoodEventHelper {
                                 List<MoodEvent> moodEvents = new ArrayList<>();
                                 for (QueryDocumentSnapshot doc : moodSnapshot) {
                                     MoodEvent moodEvent = doc.toObject(MoodEvent.class);
-                                    if(moodEvents.size()<=3){
+                                    if(moodEvents.size()<3){
                                         if(moodEvent.getPrivacy()== Privacy.PUBLIC){
                                             Log.d("MoodEventHelper", "Found public mood event from: " + moodEvent.getUsername());
                                             moodEvents.add(moodEvent);
@@ -249,16 +249,23 @@ public class MoodEventHelper {
      * @param onFailure Callback triggered on failure.
      */
     public void addComment(String moodEventId, Comment comment, OnSuccessListener<Void> onSuccess, OnFailureListener onFailure) {
-        db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
-                .document(moodEventId)
-                .collection(FirestoreConstants.COLLECTION_COMMENTS)
-                .add(comment)
-                .addOnSuccessListener(aVoid-> {
-                    onSuccess.onSuccess(null); // Correct call
-                    Log.d("MoodEventHelper", "Comment added successfully");
-                })
-                .addOnFailureListener(onFailure);
+            db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
+                    .document(moodEventId)
+                    .collection(FirestoreConstants.COLLECTION_COMMENTS)
+                    .add(comment)
+                    .addOnSuccessListener(aVoid -> {
+                        if (onSuccess != null) {
+                            onSuccess.onSuccess(null);
+                        }
+                        Log.d("MoodEventHelper", "Comment added successfully");
+                    })
+                    .addOnFailureListener(e -> {
+                        if (onFailure != null) {
+                            onFailure.onFailure(e);
+                        }
+                    });
     }
+
     /**
      * Loads comments for a given mood event.
      * @param moodEventId The ID of the mood event to load comments for.
@@ -276,6 +283,7 @@ public class MoodEventHelper {
                         Comment comment = doc.toObject(Comment.class);
                         comments.add(comment);
                     }
+                    Log.d("MoodEventHelper", "Loaded " + comments.size() + " comments");
                     onSuccess.onSuccess(comments);
                 })
                 .addOnFailureListener(onFailure);

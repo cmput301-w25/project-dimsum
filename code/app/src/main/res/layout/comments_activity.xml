@@ -37,15 +37,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Back"
-            android:background="@color/red"
-            android:layout_marginEnd="8dp"/>
+            android:backgroundTint="@color/red"
+            android:layout_margin="10dp"/>
 
         <Button
             android:id="@+id/post_comment_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@color/primary_blue"
+            android:backgroundTint="@color/primary_blue"
             android:text="Post"
+            android:layout_margin="10dp"
             />
     </LinearLayout>
 </LinearLayout>

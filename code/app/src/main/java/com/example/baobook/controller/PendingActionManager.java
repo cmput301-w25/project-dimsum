@@ -1,6 +1,6 @@
-package com.example.baobook.model;
+package com.example.baobook.controller;
 
-import com.example.baobook.PendingAction;
+import com.example.baobook.model.PendingAction;
 
 import java.util.ArrayList;
 import java.util.List;

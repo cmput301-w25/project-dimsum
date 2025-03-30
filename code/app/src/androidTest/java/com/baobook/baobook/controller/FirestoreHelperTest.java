@@ -12,6 +12,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.example.baobook.BuildConfig;
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.controller.FirestoreHelper;
 import com.example.baobook.model.User;
@@ -224,9 +225,6 @@ public class FirestoreHelperTest {
                 .addOnFailureListener(e -> fail("Failed to set initial follow state: " + e.getMessage()));
 
         assertTrue(latch.await(10, TimeUnit.SECONDS)); // Wait for async calls to complete
-    }
-    public void testCheckFollowStatus() throws InterruptedException {
-
     }
     // still need to test firestore mood
 }

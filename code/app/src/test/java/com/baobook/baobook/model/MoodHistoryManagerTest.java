@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
-import com.example.baobook.model.MoodHistoryManager;
+import com.example.baobook.controller.MoodHistoryManager;
 import com.example.baobook.model.Privacy;
 import com.example.baobook.model.SocialSetting;
 

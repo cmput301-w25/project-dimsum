@@ -104,33 +104,6 @@ public class FirestoreHelper {
         void onUsersFound(List<User> users);
     }
 
-    /** This might not be being used
-     * loads a users moods from firestore
-     * @param dataList list to add moods to
-     * @param adapter adapter to update
-     * @param context context to use
-     */
-//    public static void loadUserMoods(List<MoodEvent> dataList, MoodEventArrayAdapter adapter, Context context) {
-//        SharedPreferences prefs = context.getSharedPreferences("UserPrefs", MODE_PRIVATE);
-//        String username = prefs.getString("Username", null);
-//        db = FirebaseFirestore.getInstance();
-//        db.collection(FirestoreConstants.COLLECTION_USERS).document(username).collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
-//                .get()
-//                .addOnSuccessListener(queryDocumentSnapshots -> {
-//                    dataList.clear(); // Prevent duplicates
-//                    for (com.google.firebase.firestore.DocumentSnapshot document : queryDocumentSnapshots) {
-//                        MoodEvent mood = document.toObject(MoodEvent.class);
-//                        if (mood != null) {
-//                            dataList.add(mood);
-//                        }
-//                    }
-//                    adapter.notifyDataSetChanged(); // Refresh UI
-//                })
-//                .addOnFailureListener(e -> {
-//                    Toast.makeText(context, "Failed to load moods", Toast.LENGTH_SHORT).show();
-//                });
-//    }
-
     /**
      * adds a mood to firestore
      * @param mood mood to add

@@ -1,4 +1,4 @@
-package com.example.baobook;
+package com.example.baobook.util;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
