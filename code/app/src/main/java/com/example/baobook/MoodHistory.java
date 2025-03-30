@@ -246,7 +246,7 @@ public class MoodHistory extends AppCompatActivity
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                     result -> {
                         if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                            MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("moodEvent");
+                            MoodEvent mood = (MoodEvent) result.getData().getParcelableExtra("moodEvent");
                             if (mood != null) {
                                 Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
                                 filteredList.add(0, mood);
