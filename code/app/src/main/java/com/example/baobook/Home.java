@@ -25,17 +25,19 @@ import com.example.baobook.controller.MoodEventHelper;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.model.MoodFilterState;
-import com.example.baobook.model.MoodHistoryManager;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-//home activity where users will be able to see their following mood events and add new ones
+
+/**
+ * home activity where users will be able to see their following mood events, add new ones, and comment on existing ones.
+ * The User can access their User profile, the map, and search for other users from this page
+ */
+
 public class Home extends AppCompatActivity {
 
     // Firestore instance and reference

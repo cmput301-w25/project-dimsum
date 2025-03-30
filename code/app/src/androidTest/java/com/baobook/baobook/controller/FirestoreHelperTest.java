@@ -47,7 +47,7 @@ public class FirestoreHelperTest {
         try {
             // 10.0.2.2 is the special IP address to connect to the 'localhost' of
             // the host computer from an Android emulator.
-            db.useEmulator("10.0.0.59", 8080);
+            db.useEmulator("10.0.2.2", 8080);
             FirestoreTestUtils.clearFirestoreCollection(FirestoreConstants.COLLECTION_USERS).join();
         } catch (IllegalStateException e) {
             // pass
@@ -225,9 +225,6 @@ public class FirestoreHelperTest {
                 .addOnFailureListener(e -> fail("Failed to set initial follow state: " + e.getMessage()));
 
         assertTrue(latch.await(10, TimeUnit.SECONDS)); // Wait for async calls to complete
-    }
-    public void testCheckFollowStatus() throws InterruptedException {
-
     }
     // still need to test firestore mood
 }

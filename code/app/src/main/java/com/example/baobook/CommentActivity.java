@@ -1,5 +1,6 @@
 package com.example.baobook;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,6 +13,8 @@ import com.example.baobook.adapter.CommentArrayAdapter;
 import com.example.baobook.model.Comment;
 import com.example.baobook.util.UserSession;
 import com.example.baobook.controller.MoodEventHelper;
+import com.google.android.material.snackbar.Snackbar;
+
 import java.util.ArrayList;
 
 /**
@@ -58,10 +61,16 @@ public class CommentActivity extends AppCompatActivity {
                 Comment newComment = new Comment(moodEventId, userSession.getUser(), commentText);
                 comments.add(newComment);
                 commentAdapter.notifyDataSetChanged();
-                MoodEventHelper.addComment(moodEventId, newComment, null, null);
-                Toast.makeText(this, "Comment posted!", Toast.LENGTH_SHORT).show();
+
+                MoodEventHelper.addComment(moodEventId, newComment,
+                        aVoid -> Snackbar.make(v, "Comment posted!", Snackbar.LENGTH_SHORT).show(),
+                        e -> Snackbar.make(v, "Failed to post comment: " + e.getMessage(), Snackbar.LENGTH_SHORT).show()
+                );
+            } else {
+                Toast.makeText(this, "Comment cannot be empty", Toast.LENGTH_SHORT).show();
             }
         });
+
         backButton.setOnClickListener(v -> {
             finish();
         });
