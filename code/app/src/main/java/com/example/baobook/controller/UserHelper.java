@@ -2,6 +2,7 @@ package com.example.baobook.controller;
 
 import android.util.Pair;
 
+import com.example.baobook.R;
 import com.example.baobook.constant.FirestoreConstants;
 import com.example.baobook.model.User;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -160,4 +161,20 @@ public class UserHelper {
             onSuccess.onSuccess(null);
         }).addOnFailureListener(onFailure);
     }
+
+    public int getProfilePicture(Integer level) {
+        if (level >= 7) {
+            level = 6;
+        }
+        int[] pictures = {
+                R.drawable.baobun2,
+                R.drawable.baobun3,
+                R.drawable.baobun4,
+                R.drawable.baobun5,
+                R.drawable.baobun6,
+                R.drawable.baobun7
+        };
+        return pictures[level-1];
+    }
+
 }

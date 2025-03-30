@@ -9,7 +9,6 @@
     android:background="@drawable/mood_item_border"
     android:clickable="true"
     android:focusable="true"
-    android:backgroundTint="@color/white"
     android:foreground="?android:attr/selectableItemBackground">
 
     <TextView

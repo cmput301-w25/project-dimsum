@@ -7,14 +7,15 @@
     android:layout_height="match_parent"
     android:id="@+id/Profilehistory"
     android:background="@color/red">
+
     <LinearLayout
         android:id="@+id/username_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:padding="16dp"
         android:background="@color/white"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="16dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <Button
@@ -25,20 +26,20 @@
             android:backgroundTint="@color/red"
             android:text="Log out"
             android:textColor="@android:color/white"
-            app:layout_constraintStart_toStartOf="parent"/>
+            app:layout_constraintStart_toStartOf="parent" />
 
         <ImageView
             android:id="@+id/logo_image"
             android:layout_width="300dp"
             android:layout_height="100dp"
             android:src="@drawable/baobooklogo" />
+
         <ImageView
             android:id="@+id/profile_image"
             android:layout_width="150dp"
             android:layout_height="150dp"
             android:src="@drawable/baobun"
-            app:layout_constraintTop_toBottomOf="@id/logo_image"
-            />
+            app:layout_constraintTop_toBottomOf="@id/logo_image" />
 
         <!-- Username Text -->
         <TextView
@@ -49,9 +50,9 @@
             android:textColor="@android:color/black"
             android:textSize="32sp"
             android:textStyle="bold"
-            app:layout_constraintTop_toBottomOf="@id/profile_image"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintTop_toBottomOf="@id/profile_image" />
 
     </LinearLayout>
 
@@ -129,6 +130,33 @@
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Bottom nav: home, map, add, profile -->
+    <TextView
+        android:id="@+id/level"
+        android:layout_width="150dp"
+        android:layout_height="40dp"
+        android:backgroundTint="@color/primary_blue"
+        android:text="Stats"
+        android:textSize="35dp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/requests_button"
+        tools:layout_editor_absoluteY="619dp" />
+    <TextView
+        android:id="@+id/exp"
+        android:layout_width="150dp"
+        android:layout_height="35dp"
+        android:backgroundTint="@color/primary_blue"
+        android:text="Exp"
+        android:textSize="25dp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/level"
+        tools:layout_editor_absoluteY="619dp" />
+
     <Button
         android:id="@+id/home_button"
         android:layout_width="wrap_content"

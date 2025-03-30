@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,6 +23,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**class where user can view their profile including their own mood history. Has options to view each mood,
  * delete, and edit mood events. User can still add a mood, and go to the home moodHistory
@@ -61,18 +64,50 @@ public class UserProfileActivity extends AppCompatActivity implements
         Button followButton = findViewById(R.id.follow_button);
         Button requestsButton = findViewById(R.id.requests_button);
         Button moodHistoryButton = findViewById(R.id.mood_history_button);
+        TextView level = findViewById(R.id.level);
+        TextView exp = findViewById(R.id.exp);
+        ImageView profilePciture = findViewById(R.id.profile_image);
+
+        db = FirebaseFirestore.getInstance();
+        db.collection("Users").document(username)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.exists()) {
+                        Map<String, Object> updates = new HashMap<>();
+
+                        Long levelVal = snapshot.getLong("level");
+                        Long expVal = snapshot.getLong("exp");
+                        Long expNeededVal = snapshot.getLong("expNeeded");
+
+                        // Update UI
+                        level.setText("Level: " + levelVal);
+                        exp.setText("EXP: " + expVal + "/" + expNeededVal);
+
+                        // If any field was missing, write defaults back to Firestore
+                        if (!updates.isEmpty()) {
+                            db.collection("Users").document(username).update(updates);
+                        }
+                    }
+                });
+
+
 
         if(isCurrentUser){
             followButton.setVisibility(View.GONE);
             followingButton.setOnClickListener(v -> startActivity(new Intent(this, FollowingActivity.class)));
             followersButton.setOnClickListener(v -> startActivity(new Intent(this, FollowersActivity.class)));
             requestsButton.setOnClickListener(v -> startActivity(new Intent(this, FollowRequestsActivity.class)));
+            if (session.getLevel() >= 1) {
+                profilePciture.setImageResource(userHelper.getProfilePicture(session.getLevel()));
+
+            }
         }else{
             followButton.setVisibility(Button.VISIBLE);
             moodHistoryButton.setVisibility(View.GONE);
             followersButton.setVisibility(Button.GONE);
             followingButton.setVisibility(Button.GONE);
             requestsButton.setVisibility(Button.GONE);
+            exp.setVisibility(View.GONE);
             User otherUser = new User();
             otherUser.setUsername(otherUsername);
 
@@ -107,6 +142,26 @@ public class UserProfileActivity extends AppCompatActivity implements
                     },
                     e -> Log.e("FollowCheck", "Error checking follow status: " + e.getMessage())
             );
+
+            db.collection("Users").document(otherUsername)
+                    .get()
+                    .addOnSuccessListener(snapshot -> {
+                        if (snapshot.exists()) {
+                            Long levelVal = snapshot.getLong("level");
+                            Long expVal = snapshot.getLong("exp");
+                            Long expNeededVal = snapshot.getLong("expNeeded");
+
+                            level.setText("Level: " + levelVal);
+                            level.setVisibility(View.VISIBLE); // show level text
+                            // Set PFP based on level
+                            if (levelVal != null && levelVal >= 1) {
+                                profilePciture.setImageResource(userHelper.getProfilePicture(levelVal.intValue()));
+                            }
+                        }
+                    })
+                    .addOnFailureListener(e -> Log.e("UserProfile", "Error loading user data", e));
+
+
         }
         // Floating Action Button to add a new mood
         FloatingActionButton addButton = findViewById(R.id.add_button);
