@@ -16,7 +16,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
 
 import com.example.baobook.model.Mood;
-
+//A custom dialog fragment that allows users to apply filters to mood events.
 public class FilterDialogFragment extends DialogFragment {
 
     public interface OnFilterSaveListener {
