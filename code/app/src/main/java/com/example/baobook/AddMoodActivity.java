@@ -106,7 +106,6 @@ public class AddMoodActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.add_mood_event_fragment);
-
         UserSession session = new UserSession(this);
         String username = session.getUsername();
 
@@ -330,17 +329,22 @@ public class AddMoodActivity extends AppCompatActivity {
                                                             session.setLevel(newLevel);
                                                             session.setExp(newExp);
                                                             session.setExpNeeded(expNeeded);
+
+                                                            Toast.makeText(this, "Mood event saved!", Toast.LENGTH_SHORT).show();
+                                                            Intent resultIntent = new Intent();
+                                                            resultIntent.putExtra("moodEvent", moodEvent);
+                                                            resultIntent.putExtra("xpGained", true);  // or include XP value
+                                                            resultIntent.putExtra("leveledUp", newExp == 0);
+                                                            resultIntent.putExtra("newLevel", newLevel);
+                                                            setResult(RESULT_OK, resultIntent);
+                                                            finish();
                                                         }
                                                     });
                                         },
                                         error -> Log.e("XP", "Failed to add XP", error)
                                 );
 
-                                Toast.makeText(this, "Mood event saved!", Toast.LENGTH_SHORT).show();
-                                Intent resultIntent = new Intent();
-                                resultIntent.putExtra("moodEvent", moodEvent);
-                                setResult(RESULT_OK, resultIntent);
-                                finish();
+
                             },
                             e -> Toast.makeText(this, "Failed to save mood event", Toast.LENGTH_SHORT).show()
                     );
@@ -349,7 +353,7 @@ public class AddMoodActivity extends AppCompatActivity {
                     PendingActionManager.addAction(new PendingAction(PendingAction.ActionType.ADD, moodEvent));
                     Toast.makeText(this, "Saved offline. Will sync later.", Toast.LENGTH_SHORT).show();
                     Intent resultIntent = new Intent();
-                    resultIntent.putExtra("MoodEvent", moodEvent); // ✅ Capital M
+                    resultIntent.putExtra("MoodEvent", moodEvent);
                     setResult(RESULT_OK, resultIntent);
                     finish();
 

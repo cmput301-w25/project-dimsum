@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.baobook.model.User;
 import com.example.baobook.util.UserSession;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
@@ -237,8 +238,10 @@ public class UserProfileActivity extends AppCompatActivity implements
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Intent data = result.getData(); // ✅ Fix: capture result.getData() in a variable
+
                     // Get the new mood event from AddMoodActivity
-                    MoodEvent mood = (MoodEvent) result.getData().getSerializableExtra("MoodEvent");
+                    MoodEvent mood = (MoodEvent) data.getSerializableExtra("MoodEvent");
                     if (mood != null) {
                         // Add mood to static list
                         dataList.add(mood);
@@ -246,10 +249,18 @@ public class UserProfileActivity extends AppCompatActivity implements
                         moodArrayAdapter.notifyDataSetChanged();
                         FirestoreHelper.firestoreMood(mood, this);
                         refreshUserStats();
+                    }
 
+                    if (data.getBooleanExtra("xpGained", false)) {
+                        Snackbar.make(findViewById(android.R.id.content), "You gained 5 XP!", Snackbar.LENGTH_SHORT).show();
+                    }
+                    if (data.getBooleanExtra("leveledUp", false)) {
+                        int level = data.getIntExtra("newLevel", -1);
+                        Snackbar.make(findViewById(android.R.id.content), "🎉 You leveled up to Level " + level + "!", Snackbar.LENGTH_LONG).show();
                     }
                 }
             });
+
     private void refreshUserStats() {
         String userToLoad = isCurrentUser ? username : getIntent().getStringExtra("userID");
 
