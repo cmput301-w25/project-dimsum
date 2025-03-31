@@ -135,11 +135,20 @@ public class MapsActivity extends FragmentActivity
         mMap.setOnMarkerClickListener(marker -> {
             MoodEvent event = (MoodEvent) marker.getTag();
 
-            if (event != null) {
-                // Todo: replace this with a MoodEventDetailsFragment (without editing options) because we will show following MoodEvents as well.
-                MoodEventOptionsFragment fragment = new MoodEventOptionsFragment(event);
 
-                fragment.show(getSupportFragmentManager(), "MoodDetails");
+
+            if (event != null) {
+                // If the event is authored by the current user, use the editable mood event details fragment.
+                if (event.getUsername().equals(userSession.getUsername())) {
+                    MoodEventOptionsFragment fragment = new MoodEventOptionsFragment(event);
+                    fragment.show(getSupportFragmentManager(), "MoodDetailsEditable");
+                }
+
+                // Else, use the non-editable one.
+                else {
+                    MoodEventDetailsFragment fragment = new MoodEventDetailsFragment(event);
+                    fragment.show(getSupportFragmentManager(), "MoodDetails");
+                }
             }
             return true; // prevent default info window
         });

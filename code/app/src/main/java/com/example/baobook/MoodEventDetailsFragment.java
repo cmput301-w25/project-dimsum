@@ -1,8 +1,8 @@
 package com.example.baobook;
 
 /*
-This fragment pops up when u tap on a moond and it gives an option whether to delete or edit said mood.
-After User has selected the option it will do the task accordingly (with the help of other classes).
+This fragment pops up when you tap on a mood authored by another user.
+It simply displays the full details of the mood event.
  */
 
 import android.app.AlertDialog;
@@ -26,42 +26,17 @@ import androidx.fragment.app.DialogFragment;
 
 import com.example.baobook.model.MoodEvent;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.Locale;
 
-public class MoodEventOptionsFragment extends DialogFragment {
-    private static final String TAG = "MoodOptionsFragment";
+public class MoodEventDetailsFragment extends DialogFragment {
+    private static final String TAG = "MoodDetailsFragment";
 
     private final MoodEvent moodEvent;
-    private MoodEventOptionsDialogListener listener;
 
-    public interface MoodEventOptionsDialogListener {
-        void onEditMoodEvent(MoodEvent mood);
-        void onDeleteMoodEvent(MoodEvent mood);
-    }
-
-    public MoodEventOptionsFragment(MoodEvent clickedMood) {
+    public MoodEventDetailsFragment(MoodEvent clickedMood) {
         this.moodEvent = clickedMood;
-        Log.d(TAG, "MoodEventOptionsFragment created with mood: " + clickedMood.getMood());
-    }
-
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        try {
-            if (context instanceof MoodEventOptionsDialogListener) {
-                listener = (MoodEventOptionsDialogListener) context;
-                Log.d(TAG, "Listener attached successfully");
-            } else {
-                throw new RuntimeException(context + " must implement MoodEventOptionsDialogListener");
-            }
-        } catch (RuntimeException e) {
-            Log.e(TAG, "Error attaching listener: " + e.getMessage());
-            Toast.makeText(getActivity(), "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
+        Log.d(TAG, "MoodDetailsFragment created with mood: " + clickedMood.getMood());
     }
 
     @NonNull
@@ -73,7 +48,7 @@ public class MoodEventOptionsFragment extends DialogFragment {
 
         try {
             LayoutInflater inflater = LayoutInflater.from(requireContext());
-            View view = inflater.inflate(R.layout.mood_event_details_editable, null);
+            View view = inflater.inflate(R.layout.mood_event_details, null);
             Log.d(TAG, "Dialog layout inflated");
 
             ImageView moodImage = view.findViewById(R.id.mood_image);
@@ -82,9 +57,6 @@ public class MoodEventOptionsFragment extends DialogFragment {
             TextView moodTrigger = view.findViewById(R.id.mood_trigger);
             TextView moodDate = view.findViewById(R.id.mood_date);
             TextView moodTime = view.findViewById(R.id.mood_time);
-
-            Button editButton = view.findViewById(R.id.button_edit_mood);
-            Button deleteButton = view.findViewById(R.id.button_delete_mood);
 
             moodState.setText(moodEvent.getMood().toString());
             moodSocial.setText(moodEvent.getSocial().toString());
@@ -102,29 +74,9 @@ public class MoodEventOptionsFragment extends DialogFragment {
                 moodImage.setImageResource(R.drawable.cat_image);
             }
 
-            editButton.setOnClickListener(v -> {
-                Log.d(TAG, "Edit button clicked");
-                if (listener != null) {
-                    listener.onEditMoodEvent(moodEvent);
-                    dismiss();
-                } else {
-                    Log.e(TAG, "Listener is null when edit button clicked");
-                }
-            });
-
-            deleteButton.setOnClickListener(v -> {
-                Log.d(TAG, "Delete button clicked");
-                if (listener != null) {
-                    listener.onDeleteMoodEvent(moodEvent);
-                    dismiss();
-                } else {
-                    Log.e(TAG, "Listener is null when delete button clicked");
-                }
-            });
-
             dialog = builder.setView(view)
                     .setTitle("Mood Event Details")
-                    .setNegativeButton("Cancel", null)
+                    .setNegativeButton("Close", null)
                     .create();
             Log.d(TAG, "Dialog created successfully");
 
