@@ -66,6 +66,12 @@ public class MoodHistory extends AppCompatActivity
         connectivityReceiver = new ConnectivityReceiver();
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         registerReceiver(connectivityReceiver, filter);
+        if (NetworkUtil.isNetworkAvailable(this)) {
+            PendingActionManager.syncPendingActions(this, () -> {
+                Log.d("MoodHistory", "Synced pending actions");
+                loadMoodsFromFirestore(); // Refresh list
+            });
+        }
     }
 
     @Override
