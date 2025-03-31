@@ -4,8 +4,11 @@
 
 package com.example.baobook.controller;
 
+import android.location.Location;
+
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
+import com.google.firebase.firestore.GeoPoint;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -106,40 +109,19 @@ public class MoodHistoryManager {
 
         // 1) Filter by mood (if not null)
         if (filterMood != null) {
-            ArrayList<MoodEvent> toRemove = new ArrayList<>();
-            for (MoodEvent me : temp) {
-                if (me.getMood() != filterMood) {
-                    toRemove.add(me);
-                }
-            }
-            temp.removeAll(toRemove);
+            temp.removeIf(moodEvent -> moodEvent.getMood() != filterMood);
         }
 
         // 2) Filter by last 7 days
         if (filterRecentWeek) {
             OffsetDateTime oneWeekAgo = OffsetDateTime.now().minusWeeks(1);
-            ArrayList<MoodEvent> toRemove = new ArrayList<>();
-            for (MoodEvent me : temp) {
-                OffsetDateTime dateTime = me.getDateTime();
-                if (dateTime.isBefore(oneWeekAgo)) {
-                    toRemove.add(me);
-                }
-            }
-            temp.removeAll(toRemove);
+            temp.removeIf(moodEvent -> moodEvent.getDateTime().isBefore(oneWeekAgo));
         }
 
         // 3) Filter by single word in description (partial match on tokens)
         if (filterWord != null && !filterWord.trim().isEmpty()) {
             String lower = filterWord.toLowerCase();
-            ArrayList<MoodEvent> toRemove = new ArrayList<>();
-            for (MoodEvent me : temp) {
-                String desc = (me.getDescription() == null) ? "" : me.getDescription().toLowerCase();
-                // If none of the words in the description match partially, mark for removal
-                if (descriptionContainsWord(desc, lower)) {
-                    toRemove.add(me);
-                }
-            }
-            temp.removeAll(toRemove);
+            temp.removeIf(moodEvent -> !descriptionContainsWord(moodEvent.getDescription().toLowerCase(), lower));
         }
 
         // Sort descending by date/time
@@ -157,40 +139,69 @@ public class MoodHistoryManager {
 
         // 1) Filter by mood (if not null)
         if (filterMood != null) {
-            ArrayList<MoodEvent> toRemove = new ArrayList<>();
-            for (MoodEvent me : temp) {
-                if (me.getMood() != filterMood) {
-                    toRemove.add(me);
-                }
-            }
-            temp.removeAll(toRemove);
+            temp.removeIf(moodEvent -> moodEvent.getMood() != filterMood);
         }
 
         // 2) Filter by last 7 days
         if (filterRecentWeek) {
             OffsetDateTime oneWeekAgo = OffsetDateTime.now().minusWeeks(1);
-            ArrayList<MoodEvent> toRemove = new ArrayList<>();
-            for (MoodEvent me : temp) {
-                OffsetDateTime dateTime = me.getDateTime();
-                if (dateTime.isBefore(oneWeekAgo)) {
-                    toRemove.add(me);
-                }
-            }
-            temp.removeAll(toRemove);
+            temp.removeIf(moodEvent -> moodEvent.getDateTime().isBefore(oneWeekAgo));
         }
 
         // 3) Filter by single word in description (partial match on tokens)
         if (filterWord != null && !filterWord.trim().isEmpty()) {
             String lower = filterWord.toLowerCase();
-            ArrayList<MoodEvent> toRemove = new ArrayList<>();
-            for (MoodEvent me : temp) {
-                String desc = (me.getDescription() == null) ? "" : me.getDescription().toLowerCase();
-                // If none of the words in the description match partially, mark for removal
-                if (descriptionContainsWord(desc, lower)) {
-                    toRemove.add(me);
-                }
-            }
-            temp.removeAll(toRemove);
+            temp.removeIf(moodEvent -> !descriptionContainsWord(moodEvent.getDescription().toLowerCase(), lower));
+        }
+
+        // Sort descending by date/time
+        temp.sort(Comparator.comparing(MoodEvent::getDateTime).reversed());
+
+        return temp;
+    }
+
+    /**
+     * This method is used in the Map activity.
+     */
+    public static ArrayList<MoodEvent> getFilteredList(ArrayList<MoodEvent> moodEvents,
+                                                       Mood filterMood,
+                                                       boolean filterRecentWeek,
+                                                       boolean within5Km,
+                                                       Location userLocation,
+                                                       String filterWord) {
+        // Start with a copy of the entire list
+        ArrayList<MoodEvent> temp = new ArrayList<>(moodEvents);
+
+        // 1) Filter by mood (if not null)
+        if (filterMood != null) {
+            temp.removeIf(moodEvent -> moodEvent.getMood() != filterMood);
+        }
+
+        // 2) Filter by last 7 days
+        if (filterRecentWeek) {
+            OffsetDateTime oneWeekAgo = OffsetDateTime.now().minusWeeks(1);
+            temp.removeIf(moodEvent -> moodEvent.getDateTime().isBefore(oneWeekAgo));
+        }
+
+        // 3) Filter by single word in description (partial match on tokens)
+        if (filterWord != null && !filterWord.trim().isEmpty()) {
+            String lower = filterWord.toLowerCase();
+            temp.removeIf(moodEvent -> !descriptionContainsWord(moodEvent.getDescription().toLowerCase(), lower));
+        }
+
+        // 4) Filter by location within 5 km of the user.
+        if (within5Km) {
+            temp.removeIf(moodEvent -> {
+                GeoPoint geoPoint = moodEvent.getLocation();
+                if (geoPoint == null) return true; // Remove if no location
+
+                Location eventLocation = new Location("");
+                eventLocation.setLatitude(geoPoint.getLatitude());
+                eventLocation.setLongitude(geoPoint.getLongitude());
+
+                float distance = userLocation.distanceTo(eventLocation);
+                return distance > 5000;
+            });
         }
 
         // Sort descending by date/time
@@ -204,16 +215,16 @@ public class MoodHistoryManager {
      *
      * @param description the mood event description
      * @param word        the keyword to search for
-     * @return true if the description matches criteria
+     * @return True if the description contains the word. False otherwise.
      */
     private static boolean descriptionContainsWord(String description, String word) {
         String[] tokens = description.split("\\s+");
         for (String token : tokens) {
             if (token.contains(word) || (levenshteinDistance(token, word) <= 1)) {
-                return false;
+                return true;
             }
         }
-        return true;
+        return false;
     }
 
     /**
