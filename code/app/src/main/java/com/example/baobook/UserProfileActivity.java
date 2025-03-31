@@ -267,6 +267,7 @@ public class UserProfileActivity extends AppCompatActivity implements
                         int level = data.getIntExtra("newLevel", -1);
                         Snackbar.make(findViewById(android.R.id.content), "🎉 You leveled up to Level " + level + "!", Snackbar.LENGTH_LONG).show();
                     }
+                    restartActivity();
                 }
             });
 
@@ -299,6 +300,13 @@ public class UserProfileActivity extends AppCompatActivity implements
                         Toast.makeText(this, "Refreshing stats...", Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+    private void restartActivity() {
+        Intent intent = getIntent();
+        finish();
+        overridePendingTransition(0, 0);
+        startActivity(intent);
+        overridePendingTransition(0, 0);
     }
 }
 
