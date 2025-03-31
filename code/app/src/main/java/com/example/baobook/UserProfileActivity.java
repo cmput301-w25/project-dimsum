@@ -246,6 +246,7 @@ public class UserProfileActivity extends AppCompatActivity implements
                         moodArrayAdapter.notifyDataSetChanged();
                         FirestoreHelper.firestoreMood(mood, this);
                         refreshUserStats();
+
                     }
                 }
             });
@@ -274,6 +275,8 @@ public class UserProfileActivity extends AppCompatActivity implements
                         if (levelVal != null && levelVal >= 1) {
                             profileImage.setImageResource(userHelper.getProfilePicture(levelVal.intValue()));
                         }
+                        Log.d("ProfileRefresh", "Refreshing user stats...");
+                        Toast.makeText(this, "Refreshing stats...", Toast.LENGTH_SHORT).show();
                     }
                 });
     }

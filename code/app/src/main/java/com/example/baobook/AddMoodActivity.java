@@ -288,9 +288,10 @@ public class AddMoodActivity extends AppCompatActivity {
                     PendingActionManager.addAction(new PendingAction(PendingAction.ActionType.ADD, moodEvent));
                     Toast.makeText(this, "Saved offline. Will sync later.", Toast.LENGTH_SHORT).show();
                     Intent resultIntent = new Intent();
-                    resultIntent.putExtra("moodEvent", moodEvent);
+                    resultIntent.putExtra("MoodEvent", moodEvent); // ✅ Capital M
                     setResult(RESULT_OK, resultIntent);
                     finish();
+
                 }
 
 
