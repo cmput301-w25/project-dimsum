@@ -17,7 +17,7 @@ import com.example.baobook.model.User;
 
 import java.util.ArrayList;
 import java.util.List;
-
+// This activity allows users to search for other users by username using a SearchView.
 public class SearchActivity extends AppCompatActivity {
     SearchView searchView;
     ListView listView;
