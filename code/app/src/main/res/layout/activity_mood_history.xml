@@ -7,29 +7,70 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <View
+        android:id="@+id/top_background"
+        android:layout_width="0dp"
+        android:layout_height="73dp"
+        android:background="@color/beige"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+    <View
+        android:id="@+id/nav_background"
+        android:layout_width="0dp"
+        android:layout_height="70dp"
+        android:background="@color/red"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
     <!-- Button: opens filter dialog -->
     <Button
         android:id="@+id/open_filter_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:backgroundTint="@color/red"
         android:text="Filter"
-        android:backgroundTint="@color/beige"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_margin="8dp"/>
-
+        app:layout_constraintStart_toStartOf="@+id/top_background"
+        app:layout_constraintTop_toTopOf="parent" />
+    <!-- ImageButton: refreshes the list for any changes while offline -->
     <!-- "Clear All" to remove all filters -->
+
+    <!-- Horizontal area for "chips" to show each active filter -->
+
+    <Button
+        android:id="@+id/syncButton"
+        android:layout_width="100dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:backgroundTint="@color/red"
+        android:ellipsize="none"
+        android:maxLines="1"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:text="Sync"
+        android:textAllCaps="true"
+
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="@+id/top_background"
+        app:layout_constraintTop_toTopOf="@+id/top_background" />
+
     <Button
         android:id="@+id/clear_all_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Clear All"
+        android:layout_margin="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="44dp"
         android:backgroundTint="@color/red"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="8dp"/>
+        android:text="Clear All"
+        app:layout_constraintEnd_toStartOf="@+id/syncButton"
+        app:layout_constraintHorizontal_bias="0.619"
+        app:layout_constraintStart_toEndOf="@+id/open_filter_button"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Horizontal area for "chips" to show each active filter -->
     <HorizontalScrollView
         android:id="@+id/active_filters_scroll"
         android:layout_width="0dp"
@@ -69,20 +110,23 @@
         android:contentDescription="Home"
         android:scaleType="fitXY"
         android:src="@drawable/home_icon"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:layout_editor_absoluteY="659dp" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
 
     <ImageButton
         android:id="@+id/map_button"
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:layout_marginStart="56dp"
+        android:layout_marginBottom="8dp"
         android:background="@android:color/transparent"
         android:contentDescription="Map"
         android:scaleType="fitCenter"
         android:src="@drawable/map_icon"
-        app:layout_constraintStart_toEndOf="@+id/home_button"
-        app:layout_constraintTop_toTopOf="@+id/home_button" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/home_button" />
+
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_button"
@@ -93,18 +137,14 @@
         android:contentDescription="Add"
         app:backgroundTint="@color/beige"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/profile_button"
-        app:layout_constraintHorizontal_bias="0.494"
-        app:layout_constraintStart_toEndOf="@+id/map_button"
-        app:layout_constraintTop_toTopOf="@+id/map_button"
-        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintStart_toEndOf="@id/map_button"
+        app:layout_constraintEnd_toStartOf="@id/profile_button"
         app:srcCompat="@android:drawable/ic_input_add" />
 
     <ImageButton
         android:id="@+id/profile_button"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:layout_margin="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:background="@android:color/transparent"
@@ -112,8 +152,7 @@
         android:scaleType="fitCenter"
         android:src="@drawable/profile_icon"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/add_button"
-        app:layout_constraintVertical_bias="1.0" />
+        app:layout_constraintEnd_toEndOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

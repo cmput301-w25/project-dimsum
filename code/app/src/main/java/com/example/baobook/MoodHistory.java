@@ -4,6 +4,7 @@ import static androidx.core.content.ContextCompat.registerReceiver;
 
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -101,7 +102,23 @@ public class MoodHistory extends AppCompatActivity
         ImageButton profileButton = findViewById(R.id.profile_button);
         Button openFilterButton = findViewById(R.id.open_filter_button);
         Button clearAllButton = findViewById(R.id.clear_all_button);
+        Button SyncButton = findViewById(R.id.syncButton);
+
+
         activeFiltersContainer = findViewById(R.id.active_filters_container);
+
+        //hide status bar at the top
+        getWindow().setNavigationBarColor(getResources().getColor(android.R.color.transparent));
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        );
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
 
         // Setup the list adapter
         moodArrayAdapter = new MoodEventArrayAdapter(this, filteredList);
@@ -110,6 +127,11 @@ public class MoodHistory extends AppCompatActivity
         // Load data from Firestore -> push into manager
         loadMoodsFromFirestore();
 
+        SyncButton.setOnClickListener(v -> {
+            filterState.clear();
+            loadMoodsFromFirestore();
+            Toast.makeText(this, "Mood History Synced", Toast.LENGTH_SHORT).show();
+        });
         // Add new mood
         addButton.setOnClickListener(v -> {
             Intent intent = new Intent(MoodHistory.this, AddMoodActivity.class);

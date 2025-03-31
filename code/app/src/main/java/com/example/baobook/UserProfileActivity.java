@@ -155,16 +155,24 @@ public class UserProfileActivity extends AppCompatActivity implements
                             Long expVal = snapshot.getLong("exp");
                             Long expNeededVal = snapshot.getLong("expNeeded");
 
-                            level.setText("Level: " + levelVal);
-                            level.setVisibility(View.VISIBLE); // show level text
-                            // Set PFP based on level
+                            level.setText("Level: " + (levelVal != null ? levelVal : "N/A"));
+                            level.setVisibility(View.VISIBLE); // Show level
+
+                            // Only show EXP if both values exist
+                            if (expVal != null && expNeededVal != null) {
+                                exp.setText("EXP: " + expVal + "/" + expNeededVal);
+                                exp.setVisibility(View.VISIBLE);
+                            } else {
+                                exp.setVisibility(View.GONE); // Hide if incomplete
+                            }
+
+                            // Set profile image if level is valid
                             if (levelVal != null && levelVal >= 1) {
                                 profilePciture.setImageResource(userHelper.getProfilePicture(levelVal.intValue()));
                             }
                         }
                     })
                     .addOnFailureListener(e -> Log.e("UserProfile", "Error loading user data", e));
-
 
         }
         // Floating Action Button to add a new mood

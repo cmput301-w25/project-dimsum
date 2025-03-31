@@ -11,6 +11,9 @@
         <item name="colorOnSecondary">@color/black</item>
         <!-- Status bar color. -->
         <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!-- Font for App -->
+        <item name="android:fontFamily">@font/fredokaone_regular</item>
+        <item name="fontFamily">@font/fredokaone_regular</item>
         <!-- Customize your theme here. -->
     </style>
 </resources>

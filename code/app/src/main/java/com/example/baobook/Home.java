@@ -1,6 +1,7 @@
 package com.example.baobook;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -86,15 +87,25 @@ public class Home extends AppCompatActivity {
 
         // Enable edge-to-edge display
         EdgeToEdge.enable(this);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            getWindow().setDecorFitsSystemWindows(false);
+            getWindow().setNavigationBarColor(getResources().getColor(R.color.red, getTheme()));
+        } else {
+            getWindow().setNavigationBarColor(getResources().getColor(R.color.red));
+        }
+        //hide status bar at the top
+        getWindow().setNavigationBarColor(getResources().getColor(android.R.color.transparent));
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        );
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
 
-        // Apply system bar insets
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            if (v != null) {
-                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            }
-            return insets;
-        });
 
         // Floating Action Button to add a new mood
         FloatingActionButton addButton = findViewById(R.id.add_button);
