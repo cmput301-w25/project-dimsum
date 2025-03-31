@@ -11,9 +11,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Filter"
+        android:backgroundTint="@color/red"
+        android:layout_margin="8dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_margin="8dp"/>
+        app:layout_constraintStart_toStartOf="parent"/>
 
     <!-- "Clear All" to remove all filters -->
     <Button
@@ -21,19 +22,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Clear All"
+        android:backgroundTint="@color/red"
+        android:layout_margin="8dp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="8dp"/>
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- Horizontal area for "chips" to show each active filter -->
     <HorizontalScrollView
         android:id="@+id/active_filters_scroll"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_margin="8dp"
         app:layout_constraintTop_toBottomOf="@id/open_filter_button"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="8dp">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
             android:id="@+id/active_filters_container"
@@ -43,56 +45,76 @@
     </HorizontalScrollView>
 
     <!-- Google Map Fragment -->
-
-    <!-- Home Button -->
     <androidx.fragment.app.FragmentContainerView
         android:id="@+id/map"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/home_button"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/active_filters_scroll"
-        app:layout_constraintVertical_bias="0.0" />
+        app:layout_constraintBottom_toTopOf="@id/home_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <Button
+    <!-- Home Button -->
+    <ImageButton
         android:id="@+id/home_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Home"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
         android:layout_marginStart="10dp"
+        android:layout_marginBottom="8dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="Home"
+        android:scaleType="fitXY"
+        android:src="@drawable/home_icon"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <!-- Map Button -->
-    <Button
+
+    <!-- Add Mood Button -->
+
+    <ImageButton
         android:id="@+id/map_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Map"
-        android:layout_marginStart="10dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginStart="56dp"
+        android:layout_marginBottom="8dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="Map"
+        android:scaleType="fitCenter"
+        android:src="@drawable/map_icon"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/home_button" />
 
-    <!-- Add Mood Button (FAB style) -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:clickable="true"
+        android:layout_width="55dp"
+        android:layout_height="54dp"
+        android:layout_margin="8dp"
+        android:layout_marginBottom="16dp"
+        android:contentDescription="Add"
+        app:backgroundTint="@color/beige"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/map_button"
-        app:layout_constraintEnd_toStartOf="@id/profile_button"
+        app:layout_constraintEnd_toStartOf="@+id/profile_button"
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toEndOf="@+id/map_button"
+        app:layout_constraintTop_toBottomOf="@+id/map"
+        app:layout_constraintVertical_bias="0.0"
         app:srcCompat="@android:drawable/ic_input_add" />
 
+
     <!-- Profile Button -->
-    <Button
+    <ImageButton
         android:id="@+id/profile_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Profile"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_margin="8dp"
+        android:layout_marginEnd="24dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="Profile"
+        android:scaleType="fitCenter"
+        android:src="@drawable/profile_icon"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

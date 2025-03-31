@@ -157,48 +157,57 @@
         app:layout_constraintTop_toBottomOf="@id/level"
         tools:layout_editor_absoluteY="619dp" />
 
-    <Button
+    <ImageButton
         android:id="@+id/home_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Home"
-        android:backgroundTint="@color/beige"
-        android:textColor="@android:color/black"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_margin="8dp"/>
-
-    <Button
-        android:id="@+id/map_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginStart="10dp"
         android:layout_marginBottom="8dp"
-        android:backgroundTint="@color/beige"
-        android:text="Map"
-        android:textColor="@android:color/black"
+        android:background="@android:color/transparent"
+        android:contentDescription="Home"
+        android:scaleType="fitXY"
+        android:src="@drawable/home_icon"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageButton
+        android:id="@+id/map_button"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginStart="56dp"
+        android:layout_marginBottom="8dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="Map"
+        android:scaleType="fitCenter"
+        android:src="@drawable/map_icon"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/home_button" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="55dp"
+        android:layout_height="54dp"
         android:layout_margin="8dp"
-        android:backgroundTint="@color/beige"
+        android:layout_marginBottom="16dp"
+        android:contentDescription="Add"
+        app:backgroundTint="@color/beige"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/map_button"
         app:layout_constraintEnd_toStartOf="@+id/profile_button"
-        app:srcCompat="@android:drawable/ic_input_add"/>
-    <Button
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toEndOf="@+id/map_button"
+        app:srcCompat="@android:drawable/ic_input_add" />
+
+    <ImageButton
         android:id="@+id/profile_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="profile"
-        android:textColor="@android:color/black"
-        android:backgroundTint="@color/beige"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginEnd="24dp"
+        android:layout_marginBottom="8dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="Profile"
+        android:scaleType="fitCenter"
+        android:src="@drawable/profile_icon"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:layout_margin="8dp"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

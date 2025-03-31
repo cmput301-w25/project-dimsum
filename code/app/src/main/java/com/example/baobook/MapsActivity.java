@@ -1,6 +1,9 @@
 package com.example.baobook;
 
 import android.Manifest;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -19,6 +22,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -41,6 +45,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.baobook.databinding.ActivityMapsBinding;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.GeoPoint;
 
 import java.util.ArrayList;
@@ -69,6 +74,21 @@ public class MapsActivity extends FragmentActivity
 
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1001;
 
+    private final ActivityResultLauncher<Intent> addMoodLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+                    result -> {
+                        if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                            MoodEvent mood = (MoodEvent) result.getData().getParcelableExtra("moodEvent");
+                            if (mood != null) {
+                                Toast.makeText(this, "Mood added!", Toast.LENGTH_SHORT).show();
+                                allMoodEvents.add(0, mood);
+                                filteredList.add(0, mood);
+                                renderMoodEventsOnMap();
+                            }
+                        }
+                    }
+            );
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,12 +99,12 @@ public class MapsActivity extends FragmentActivity
         setContentView(binding.getRoot());
 
         // Initialize views
-        Button homeButton = findViewById(R.id.home_button);
-        Button profileButton = findViewById(R.id.profile_button);
+        ImageButton homeButton = findViewById(R.id.home_button);
+        ImageButton profileButton = findViewById(R.id.profile_button);
         Button openFilterButton = findViewById(R.id.open_filter_button);
         Button clearAllButton = findViewById(R.id.clear_all_button);
         activeFiltersContainer = findViewById(R.id.active_filters_container);
-
+        FloatingActionButton addButton = findViewById(R.id.add_button);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
@@ -96,6 +116,11 @@ public class MapsActivity extends FragmentActivity
         homeButton.setOnClickListener(v -> {
             Intent intent = new Intent(MapsActivity.this, Home.class);
             startActivity(intent);
+        });
+        // Add Button
+        addButton.setOnClickListener(v -> {
+            Intent intent = new Intent(MapsActivity.this, AddMoodActivity.class);
+            addMoodLauncher.launch(intent);
         });
         // Profile button
         profileButton.setOnClickListener(v -> {

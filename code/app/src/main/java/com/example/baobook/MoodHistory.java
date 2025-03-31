@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.utils.widget.ImageFilterButton;
 import androidx.core.content.ContextCompat;
 
 import com.example.baobook.controller.MoodEventHelper;
@@ -94,9 +96,9 @@ public class MoodHistory extends AppCompatActivity
         // Initialize views
         ListView moodList = findViewById(R.id.mood_history_list);
         FloatingActionButton addButton = findViewById(R.id.add_button);
-        Button homeButton = findViewById(R.id.home_button);
-        Button mapButton = findViewById(R.id.map_button);
-        Button profileButton = findViewById(R.id.profile_button);
+        ImageButton homeButton = findViewById(R.id.home_button);
+        ImageButton mapButton = findViewById(R.id.map_button);
+        ImageButton profileButton = findViewById(R.id.profile_button);
         Button openFilterButton = findViewById(R.id.open_filter_button);
         Button clearAllButton = findViewById(R.id.clear_all_button);
         activeFiltersContainer = findViewById(R.id.active_filters_container);

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -104,14 +105,14 @@ public class Home extends AppCompatActivity {
         });
 
         // Map button
-        Button mapButton = findViewById(R.id.map_button);
+        ImageButton mapButton = findViewById(R.id.map_button);
         mapButton.setOnClickListener(v -> {
             Intent intent = new Intent(Home.this, MapsActivity.class);
             startActivity(intent);
         });
 
         // Profile button
-        Button profileButton = findViewById(R.id.profile_button);
+        ImageButton profileButton = findViewById(R.id.profile_button);
         profileButton.setOnClickListener(v -> {
             Intent intent = new Intent(Home.this, UserProfileActivity.class);
             startActivity(intent);
