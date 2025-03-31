@@ -17,15 +17,19 @@ Facebook Clone
 
 ## Key Features
 
-- [Feature 1]: Update your friends about your mood along with pictures, who you're with, etc.
-- [Feature 2]: A wide range of filters to organize your mood updates!
-- [Feature 3]: Your personalized mood profile!
+-Mood Tracking & Updates – Log your mood with details like date, time, location, companions, and even a picture.
+
+-Social Connectivity – Follow friends, accept requests, view their mood updates, and comment on their posts.
+
+-Gamification & Rewards – Level up by posting frequently and unlock exclusive Dimsum characters.
 
 ## Setup Instructions
 
-1. [Step 1]: Launch the app, create an account and login.
-2. [Step 2]: Update your mood.
-3. [Step 3]: Click on profile and view full mood history.
+[Step 1]: Launch the app, create an account with a username and password, and log in.
+
+[Step 2]: Click the "+" icon to update your mood. Add details like date, time, mood, companions, location, and a picture, then click "Save."
+
+[Step 3]: Click on "Profile," then "View Full Mood History." Use filters to organize your mood updates, clear filters when needed, and navigate back using the back gesture/button. You can also search for friends, send follow requests, view their posts and locations on the map, comment on their updates, and accept follow requests from your profile. Keep posting to level up and unlock exclusive Dimsum characters. Don't forget to log out when done!
 
 ## Documentation
 
