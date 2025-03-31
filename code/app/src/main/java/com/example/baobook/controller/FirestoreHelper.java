@@ -271,7 +271,7 @@ public class FirestoreHelper {
                     currentExp += expGain;
 
                     while (currentExp >= expNeeded) {
-                        currentExp -= expNeeded;
+                        currentExp = 0;
                         level += 1;
                         expNeeded += expNeeded * 2;
                     }

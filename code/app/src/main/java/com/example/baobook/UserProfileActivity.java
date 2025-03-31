@@ -43,6 +43,7 @@ public class UserProfileActivity extends AppCompatActivity implements
     TextView usernameText;
     private boolean isCurrentUser;
     private UserHelper userHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,26 +70,7 @@ public class UserProfileActivity extends AppCompatActivity implements
         ImageView profilePciture = findViewById(R.id.profile_image);
 
         db = FirebaseFirestore.getInstance();
-        db.collection("Users").document(username)
-                .get()
-                .addOnSuccessListener(snapshot -> {
-                    if (snapshot.exists()) {
-                        Map<String, Object> updates = new HashMap<>();
 
-                        Long levelVal = snapshot.getLong("level");
-                        Long expVal = snapshot.getLong("exp");
-                        Long expNeededVal = snapshot.getLong("expNeeded");
-
-                        // Update UI
-                        level.setText("Level: " + levelVal);
-                        exp.setText("EXP: " + expVal + "/" + expNeededVal);
-
-                        // If any field was missing, write defaults back to Firestore
-                        if (!updates.isEmpty()) {
-                            db.collection("Users").document(username).update(updates);
-                        }
-                    }
-                });
 
 
 
@@ -98,9 +80,30 @@ public class UserProfileActivity extends AppCompatActivity implements
             followersButton.setOnClickListener(v -> startActivity(new Intent(this, FollowersActivity.class)));
             requestsButton.setOnClickListener(v -> startActivity(new Intent(this, FollowRequestsActivity.class)));
             if (session.getLevel() >= 1) {
+
                 profilePciture.setImageResource(userHelper.getProfilePicture(session.getLevel()));
 
             }
+            db.collection("Users").document(username)
+                    .get()
+                    .addOnSuccessListener(snapshot -> {
+                        if (snapshot.exists()) {
+                            Map<String, Object> updates = new HashMap<>();
+
+                            Long levelVal = snapshot.getLong("level");
+                            Long expVal = snapshot.getLong("exp");
+                            Long expNeededVal = snapshot.getLong("expNeeded");
+
+                            // Update UI
+                            level.setText("Level: " + levelVal);
+                            exp.setText("EXP: " + expVal + "/" + expNeededVal);
+
+                            // If any field was missing, write defaults back to Firestore
+                            if (!updates.isEmpty()) {
+                                db.collection("Users").document(username).update(updates);
+                            }
+                        }
+                    });
         }else{
             followButton.setVisibility(Button.VISIBLE);
             moodHistoryButton.setVisibility(View.GONE);
@@ -204,6 +207,7 @@ public class UserProfileActivity extends AppCompatActivity implements
             startActivity(intent);
         });
     }
+
     @Override
     public void onEditMoodEvent(MoodEvent mood) {
         EditFragment fragment = new EditFragment(mood);
@@ -241,8 +245,40 @@ public class UserProfileActivity extends AppCompatActivity implements
                         // Notify adapter to refresh ListView
                         moodArrayAdapter.notifyDataSetChanged();
                         FirestoreHelper.firestoreMood(mood, this);
+                        refreshUserStats();
+
                     }
                 }
             });
+    private void refreshUserStats() {
+        String userToLoad = isCurrentUser ? username : getIntent().getStringExtra("userID");
+
+        db.collection("Users").document(userToLoad)
+                .get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.exists()) {
+                        Long levelVal = snapshot.getLong("level");
+                        Long expVal = snapshot.getLong("exp");
+                        Long expNeededVal = snapshot.getLong("expNeeded");
+
+                        TextView levelText = findViewById(R.id.level);
+                        TextView expText = findViewById(R.id.exp);
+                        ImageView profileImage = findViewById(R.id.profile_image);
+
+                        levelText.setText("Level: " + levelVal);
+                        if (isCurrentUser) {
+                            expText.setText("EXP: " + expVal + "/" + expNeededVal);
+                        } else {
+                            expText.setVisibility(View.GONE); // hide EXP for other users
+                        }
+
+                        if (levelVal != null && levelVal >= 1) {
+                            profileImage.setImageResource(userHelper.getProfilePicture(levelVal.intValue()));
+                        }
+                        Log.d("ProfileRefresh", "Refreshing user stats...");
+                        Toast.makeText(this, "Refreshing stats...", Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
 }
 

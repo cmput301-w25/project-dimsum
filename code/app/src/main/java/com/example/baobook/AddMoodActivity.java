@@ -22,7 +22,10 @@ import android.Manifest;
 import android.location.Location;
 
 
+import com.example.baobook.controller.FirestoreHelper;
+
 import com.example.baobook.adapter.MoodSpinnerAdapter;
+
 import com.example.baobook.controller.MoodEventHelper;
 import com.example.baobook.model.PendingAction;
 import com.example.baobook.controller.PendingActionManager;
@@ -33,7 +36,11 @@ import com.google.android.gms.location.LocationServices;
 import com.example.baobook.util.LocationHelper;
 import com.example.baobook.util.NetworkUtil;
 import com.google.android.material.snackbar.Snackbar;
+
+import com.google.firebase.firestore.FirebaseFirestore;
+
 import com.google.firebase.firestore.GeoPoint;
+
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import java.io.ByteArrayOutputStream;
@@ -299,6 +306,36 @@ public class AddMoodActivity extends AppCompatActivity {
                 if (NetworkUtil.isNetworkAvailable(this)) {
                     moodEventHelper.publishMood(moodEvent,
                             aVoid -> {
+                                FirestoreHelper.updateUserExpAndLevel(username, 5, // Gain 5 XP
+                                        unused -> {
+                                            // Fetch updated user data to show toast
+                                            FirebaseFirestore.getInstance().collection("Users")
+                                                    .document(username)
+                                                    .get()
+                                                    .addOnSuccessListener(snapshot -> {
+                                                        if (snapshot.exists()) {
+                                                            int newExp = snapshot.getLong("exp").intValue();
+                                                            int newLevel = snapshot.getLong("level").intValue();
+                                                            int expNeeded = snapshot.getLong("expNeeded").intValue();
+
+                                                            Toast.makeText(this, "You gained 5 XP!", Toast.LENGTH_SHORT).show();
+
+                                                            if (newExp == 0) {
+                                                                // If EXP reset to 0, a level-up occurred!
+                                                                Toast.makeText(this, "🎉 You leveled up to Level " + newLevel + "!", Toast.LENGTH_LONG).show();
+                                                            }
+
+                                                            // Optionally update session
+
+                                                            session.setLevel(newLevel);
+                                                            session.setExp(newExp);
+                                                            session.setExpNeeded(expNeeded);
+                                                        }
+                                                    });
+                                        },
+                                        error -> Log.e("XP", "Failed to add XP", error)
+                                );
+
                                 Toast.makeText(this, "Mood event saved!", Toast.LENGTH_SHORT).show();
                                 Intent resultIntent = new Intent();
                                 resultIntent.putExtra("moodEvent", moodEvent);
@@ -312,9 +349,10 @@ public class AddMoodActivity extends AppCompatActivity {
                     PendingActionManager.addAction(new PendingAction(PendingAction.ActionType.ADD, moodEvent));
                     Toast.makeText(this, "Saved offline. Will sync later.", Toast.LENGTH_SHORT).show();
                     Intent resultIntent = new Intent();
-                    resultIntent.putExtra("moodEvent", moodEvent);
+                    resultIntent.putExtra("MoodEvent", moodEvent); // ✅ Capital M
                     setResult(RESULT_OK, resultIntent);
                     finish();
+
                 }
 
 
