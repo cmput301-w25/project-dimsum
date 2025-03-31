@@ -36,4 +36,4 @@ Facebook Clone
 - [[Wiki Link]](https://github.com/cmput301-w25/project-dimsum/wiki)
 - [[Scrum Board]](https://github.com/orgs/cmput301-w25/projects/50)
 - [[UI Mockups (.png)]](https://github.com/cmput301-w25/project-dimsum/blob/main/_static/UI%20mockups%20project%20part%204.png) [[UI Mockups (Figma)]](https://www.figma.com/design/1b7dAlKlSO313xXMOJRUdT/301-Project?node-id=0-1&p=f&t=57DvF6milSheNCOQ-0) 
-- [[UML]](https://github.com/cmput301-w25/project-dimsum/blob/main/_static/ProjPt3.drawio.png)
+- [[UML]](https://github.com/cmput301-w25/project-dimsum/blob/main/_static/ProjPt4.drawio.png)
