@@ -52,10 +52,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static com.example.baobook.util.MoodUtils.getMoodColor;
-
 public class MapsActivity extends FragmentActivity
-        implements OnMapReadyCallback, FilterDialogFragment.OnFilterSaveListener,
+        implements OnMapReadyCallback, MapFilterDialogFragment.OnFilterSaveListener,
         MoodEventOptionsFragment.MoodEventOptionsDialogListener,
         EditFragment.EditMoodEventDialogListener {
 
@@ -142,8 +140,8 @@ public class MapsActivity extends FragmentActivity
         });
         // Filter button -> open dialog
         openFilterButton.setOnClickListener(v -> {
-            FilterDialogFragment dialog = new FilterDialogFragment(this);
-            dialog.setExistingFilters(filterState.getMood(), filterState.isRecentWeek(), filterState.getWord());
+            MapFilterDialogFragment dialog = new MapFilterDialogFragment(this);
+            dialog.setExistingFilters(filterState.getMood(), filterState.isRecentWeek(), filterState.isWithin5km(), filterState.getWord());
             dialog.show(getSupportFragmentManager(), "FilterDialog");
         });
         // Clear All -> remove filters
@@ -157,6 +155,10 @@ public class MapsActivity extends FragmentActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
+        // Enable zoom options
+        mMap.getUiSettings().setZoomControlsEnabled(true);   // Show +/- buttons
+        mMap.getUiSettings().setZoomGesturesEnabled(true);   // Allow pinch-to-zoom
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -173,11 +175,20 @@ public class MapsActivity extends FragmentActivity
         mMap.setOnMarkerClickListener(marker -> {
             MoodEvent event = (MoodEvent) marker.getTag();
 
-            if (event != null) {
-                // Todo: replace this with a MoodEventDetailsFragment (without editing options) because we will show following MoodEvents as well.
-                MoodEventOptionsFragment fragment = new MoodEventOptionsFragment(event);
 
-                fragment.show(getSupportFragmentManager(), "MoodDetails");
+
+            if (event != null) {
+                // If the event is authored by the current user, use the editable mood event details fragment.
+                if (event.getUsername().equals(userSession.getUsername())) {
+                    MoodEventOptionsFragment fragment = new MoodEventOptionsFragment(event);
+                    fragment.show(getSupportFragmentManager(), "MoodDetailsEditable");
+                }
+
+                // Else, use the non-editable one.
+                else {
+                    MoodEventDetailsFragment fragment = new MoodEventDetailsFragment(event);
+                    fragment.show(getSupportFragmentManager(), "MoodDetails");
+                }
             }
             return true; // prevent default info window
         });
@@ -213,7 +224,6 @@ public class MapsActivity extends FragmentActivity
 
                     try {
                         List<MoodEvent> followingEvents = followingMoodEvents.get();
-                        filterBy5kmRadius(followingEvents);
                         allMoodEvents.addAll(followingEvents);
                         filteredList.addAll(followingEvents);
                     } catch (Exception e) {
@@ -225,20 +235,6 @@ public class MapsActivity extends FragmentActivity
 
                     runOnUiThread(this::renderMoodEventsOnMap);
                 });
-    }
-
-    private void filterBy5kmRadius(List<MoodEvent> moodEvents) {
-        moodEvents.removeIf(moodEvent -> {
-            GeoPoint geoPoint = moodEvent.getLocation();
-            if (geoPoint == null) return true; // Remove if no location
-
-            Location eventLocation = new Location("");
-            eventLocation.setLatitude(geoPoint.getLatitude());
-            eventLocation.setLongitude(geoPoint.getLongitude());
-
-            float distance = currentLocation.distanceTo(eventLocation);
-            return distance > 5000;
-        });
     }
 
     @Override
@@ -289,7 +285,7 @@ public class MapsActivity extends FragmentActivity
      * and rebuilds the filter “chips”.
      */
     private void applyFilters() {
-        ArrayList<MoodEvent> moodEvents = filterState.applyFilters(allMoodEvents);
+        ArrayList<MoodEvent> moodEvents = filterState.applyFilters(allMoodEvents, currentLocation);
 
         filteredList.clear();
         filteredList.addAll(moodEvents);
@@ -342,6 +338,7 @@ public class MapsActivity extends FragmentActivity
     private void rebuildActiveFiltersChips() {
         Mood mood = filterState.getMood();
         boolean isRecentWeek = filterState.isRecentWeek();
+        boolean isWithin5km = filterState.isWithin5km();
         String word = filterState.getWord();
 
         activeFiltersContainer.removeAllViews();
@@ -359,6 +356,15 @@ public class MapsActivity extends FragmentActivity
             activeFiltersContainer.addView(
                     createChip("Last 7 days", v -> {
                         filterState.setRecentWeek(false);
+                        applyFilters();
+                    })
+            );
+        }
+
+        if (isWithin5km) {
+            activeFiltersContainer.addView(
+                    createChip("Within 5 km", v -> {
+                        filterState.setWithin5km(false);
                         applyFilters();
                     })
             );
@@ -393,9 +399,10 @@ public class MapsActivity extends FragmentActivity
     }
 
     @Override
-    public void onFilterSave(Mood mood, boolean lastWeek, String word) {
+    public void onFilterSave(Mood mood, boolean lastWeek, boolean within5km, String word) {
         filterState.setMood(mood);
         filterState.setRecentWeek(lastWeek);
+        filterState.setWithin5km(within5km);
         filterState.setWord(word);
         applyFilters();
     }

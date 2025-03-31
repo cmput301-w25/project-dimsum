@@ -55,5 +55,18 @@
         android:gravity="end"
         android:orientation="horizontal"
         android:paddingTop="16dp">
+
+        <Button
+            android:id="@+id/button_edit_mood"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Edit" />
+
+        <Button
+            android:id="@+id/button_delete_mood"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Delete"
+            android:layout_marginStart="8dp"/>
     </LinearLayout>
 </LinearLayout>
