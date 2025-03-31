@@ -4,6 +4,7 @@ import android.Manifest;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
@@ -34,7 +35,9 @@ import com.example.baobook.model.MoodFilterState;
 import com.example.baobook.util.MoodUtils;
 import com.example.baobook.util.UserSession;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -175,8 +178,6 @@ public class MapsActivity extends FragmentActivity
         mMap.setOnMarkerClickListener(marker -> {
             MoodEvent event = (MoodEvent) marker.getTag();
 
-
-
             if (event != null) {
                 // If the event is authored by the current user, use the editable mood event details fragment.
                 if (event.getUsername().equals(userSession.getUsername())) {
@@ -193,6 +194,26 @@ public class MapsActivity extends FragmentActivity
             return true; // prevent default info window
         });
 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED) {
+                    // Permission granted, enable location layer and center map
+                    if (mMap != null) {
+                        mMap.setMyLocationEnabled(true);
+                        centerMapOnUserLocation();
+                    }
+                }
+            } else {
+                // Permission denied, show a message or disable location features
+                Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private void loadMoodEvents() {
@@ -232,7 +253,6 @@ public class MapsActivity extends FragmentActivity
                                 Toast.makeText(this, "Failed to load following moods.", Toast.LENGTH_SHORT).show()
                         );
                     }
-
                     runOnUiThread(this::renderMoodEventsOnMap);
                 });
     }
@@ -256,28 +276,29 @@ public class MapsActivity extends FragmentActivity
         });
     }
     private void centerMapOnUserLocation() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+
+            FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+            // Use the new Priority-based API (non-deprecated)
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                    .addOnSuccessListener(this, location -> {
+                        if (location != null && mMap != null) {
+                            LatLng userLatLng = new LatLng(location.getLatitude(), location.getLongitude());
+                            currentLocation = location;
+                            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 15f));
+                        } else {
+                            // Fallback if location is null (e.g., GPS off, no recent fix)
+                            Toast.makeText(this, "Could not get current location", Toast.LENGTH_SHORT).show();
+                            // Optionally set a default location (e.g., last known city)
+                        }
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e("MapActivity", "Location error", e);
+                        Toast.makeText(this, "Failed to get location: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    });
         }
-        fusedLocationClient.getLastLocation()
-                .addOnSuccessListener(this, location -> {
-                    if (location != null) {
-                        LatLng userLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-                        currentLocation = location;
-                        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLatLng, 16f));
-                        Marker userMarker = mMap.addMarker(new MarkerOptions().position(userLatLng).title("You are here"));
-                        if (userMarker != null) userMarker.showInfoWindow();
-                    } else {
-                        Toast.makeText(this, "Could not get current location", Toast.LENGTH_SHORT).show();
-                    }
-                });
     }
 
     /**
