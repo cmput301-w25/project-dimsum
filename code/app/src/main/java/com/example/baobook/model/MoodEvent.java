@@ -13,6 +13,12 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
+
+/**
+ * Represents a mood event created by a user.
+ * A MoodEvent contains details like the mood, time, location, privacy setting, description, and an optional image.
+ * Implements {@link Parcelable} for easy transmission between Android components.
+ */
 public class MoodEvent implements Parcelable {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -33,6 +39,19 @@ public class MoodEvent implements Parcelable {
 
     public MoodEvent() {}
 
+    /**
+     * Constructs a MoodEvent with the specified parameters.
+     *
+     * @param username    the user who created the event
+     * @param id          unique ID for the event
+     * @param mood        mood being recorded
+     * @param dateTime    date and time of the mood
+     * @param description optional text description
+     * @param social      social setting of the mood
+     * @param base64image base64-encoded image string
+     * @param privacy     privacy level of the event
+     */
+
     public MoodEvent(String username, String id, Mood mood, OffsetDateTime dateTime,
                      String description, SocialSetting social, String base64image, Privacy privacy) {
         this.username = username;
@@ -46,6 +65,10 @@ public class MoodEvent implements Parcelable {
         this.privacy = privacy;
     }
 
+    /**
+     * Constructs a MoodEvent with an additional location.
+     */
+
     public MoodEvent(String username, String id, Mood mood, OffsetDateTime dateTime,
                      String description, SocialSetting social, String base64image, Privacy privacy,
                      GeoPoint location) {
@@ -57,9 +80,19 @@ public class MoodEvent implements Parcelable {
     public String getId() { return id; }
     public Mood getMood() { return mood; }
 
+    /**
+     * Returns the mood event's timestamp as {@link OffsetDateTime}.
+     *
+     * @return event date and time
+     */
+
     @Exclude
     public OffsetDateTime getDateTime() { return dateTime; }
 
+
+    /**
+     * Sets the mood event's timestamp and updates the epoch time for Firestore.
+     */
     @Exclude
     public void setDateTime(OffsetDateTime dateTime) {
         this.dateTime = dateTime;
@@ -89,6 +122,17 @@ public class MoodEvent implements Parcelable {
     public void setPrivacy(Privacy privacy) { this.privacy = privacy; }
     public void setId(String id) { this.id = id; }
 
+
+
+    /**
+     * Updates this MoodEvent's editable fields.
+     *
+     * @param mood        new mood
+     * @param dateTime    new date and time
+     * @param description new description
+     * @param social      new social setting
+     * @param privacy     new privacy setting
+     */
     public void editMoodEvent(Mood mood, OffsetDateTime dateTime, String description,
                               SocialSetting social, Privacy privacy) {
         setMood(mood);
@@ -98,6 +142,12 @@ public class MoodEvent implements Parcelable {
         setPrivacy(privacy);
     }
 
+
+    /**
+     * Updates this MoodEvent with another MoodEvent's data.
+     *
+     * @param updatedMoodEvent the updated event to copy from
+     */
     public void updateMoodEvent(MoodEvent updatedMoodEvent) {
         setMood(updatedMoodEvent.getMood());
         setDateTime(updatedMoodEvent.getDateTime());
@@ -165,6 +215,12 @@ public class MoodEvent implements Parcelable {
             dest.writeByte((byte) 0);
         }
     }
+
+    /**
+     * Converts the MoodEvent to its JSON string representation.
+     *
+     * @return JSON string of the MoodEvent or a fallback if serialization fails
+     */
 
     @Override
     public String toString() {
