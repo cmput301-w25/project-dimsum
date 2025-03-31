@@ -1,4 +1,4 @@
-val MAPS_API_KEY: String = project.findProperty("MAPS_API_KEY") as String? ?: ""
+val MAPS_API_KEY: String = project.findProperty("AIzaSyBXCTytxKMYaYFrgxUu5lUBy7NwwchvXGk") as String? ?: ""
 
 plugins {
     alias(libs.plugins.android.application)
@@ -46,6 +46,7 @@ android {
 
 dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    testImplementation(libs.ext.junit)
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation(libs.play.services.location)
     androidTestImplementation("androidx.test.uiautomator:uiautomator:2.2.0")

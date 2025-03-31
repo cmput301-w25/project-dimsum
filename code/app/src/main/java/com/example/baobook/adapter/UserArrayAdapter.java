@@ -1,4 +1,4 @@
-package com.example.baobook;
+package com.example.baobook.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -11,6 +11,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.example.baobook.R;
 import com.example.baobook.model.User;
 
 import java.util.ArrayList;

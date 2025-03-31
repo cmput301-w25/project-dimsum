@@ -3,8 +3,11 @@ package com.example.baobook;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -21,16 +24,20 @@ import com.example.baobook.controller.FirestoreHelper;
 import com.example.baobook.controller.MoodEventHelper;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
+import com.example.baobook.model.MoodFilterState;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-//home activity where users will be able to see their following mood events and add new ones
+
+/**
+ * home activity where users will be able to see their following mood events, add new ones, and comment on existing ones.
+ * The User can access their User profile, the map, and search for other users from this page
+ */
+
 public class Home extends AppCompatActivity {
 
     // Firestore instance and reference
@@ -40,7 +47,10 @@ public class Home extends AppCompatActivity {
     private FirestoreHelper firestoreHelper = new FirestoreHelper();
     private MoodEventArrayAdapter moodArrayAdapter;
     private ArrayList<MoodEvent> moodEventsList = new ArrayList<>();
-    private Mood currentFilter = null;
+    private ArrayList<MoodEvent> fullFollowingMoodEvents = new ArrayList<>();
+    private MoodFilterState filterState = new MoodFilterState();
+    private LinearLayout activeFiltersContainer;
+
 
     // ActivityResultLauncher to handle the result from AddMoodActivity
     private final ActivityResultLauncher<Intent> addMoodLauncher =
@@ -69,6 +79,9 @@ public class Home extends AppCompatActivity {
         ListView moodEventsListView = findViewById(R.id.mood_events_list);
         moodArrayAdapter = new MoodEventArrayAdapter(this, moodEventsList);
         moodEventsListView.setAdapter(moodArrayAdapter);
+
+        activeFiltersContainer = findViewById(R.id.active_filters_container);
+
 
         // Enable edge-to-edge display
         EdgeToEdge.enable(this);
@@ -111,72 +124,121 @@ public class Home extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Filter button
-        MaterialButton filterButton = findViewById(R.id.btn_filter);
-        filterButton.setOnClickListener(v -> showFilterDialog());
 
-        // Load recent mood events from followed users
+
+        MaterialButton filterButton = findViewById(R.id.btn_filter);
+        filterButton.setOnClickListener(v -> {
+            FilterDialogFragment dialog = new FilterDialogFragment((mood, lastWeek, word) -> {
+                filterState.setMood(mood);
+                filterState.setRecentWeek(lastWeek);
+                filterState.setWord(word);
+                loadAllFollowingMoodEvents(); // now load all data to filter from
+            });
+            dialog.setExistingFilters(filterState.getMood(), filterState.isRecentWeek(), filterState.getWord());
+            dialog.show(getSupportFragmentManager(), "FilterDialog");
+        });
+
+        Button clearFilters = findViewById(R.id.clear_all_button);
+        clearFilters.setOnClickListener(v -> {
+            filterState.clear();
+            applyFilters();
+            Toast.makeText(this, "All filters cleared", Toast.LENGTH_SHORT).show();
+        });
+
         loadRecentFollowingMoodEvents();
     }
 
-    private void showFilterDialog() {
-        String[] emotions = {"Happiness", "Sadness", "Disgust", "Fear", "Surprise", "Anger", "Shame", "Confusion", "Clear Filter"};
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Filter by Emotional State");
-        builder.setItems(emotions, (dialog, which) -> {
-            if (which == emotions.length - 1) {
-                // Clear filter
-                currentFilter = null;
-            } else {
-                try {
-                    currentFilter = Mood.fromString(emotions[which]);
-                } catch (IllegalArgumentException e) {
-                    Toast.makeText(this, "Invalid mood selection", Toast.LENGTH_SHORT).show();
-                    return;
+    private void loadAllFollowingMoodEvents() {
+        String username = getSharedPreferences("UserSession", MODE_PRIVATE).getString("username", null);
+        if (username == null) return;
+
+        moodEventHelper.getAllFollowingMoodEvents(
+                username,
+                moodEvents -> {
+                    fullFollowingMoodEvents.clear();
+                    fullFollowingMoodEvents.addAll(moodEvents);
+                    applyFilters();
+                },
+                e -> {
+                    Log.e("Home", "Failed to load all following mood events", e);
+                    Toast.makeText(this, "Failed to load mood events", Toast.LENGTH_SHORT).show();
                 }
-            }
-            loadRecentFollowingMoodEvents();
-        });
-        builder.show();
+        );
     }
 
     private void loadRecentFollowingMoodEvents() {
-        // Get the current user's username from SharedPreferences
-        String username = getSharedPreferences("UserSession", MODE_PRIVATE)
-                .getString("username", null);
+        String username = getSharedPreferences("UserSession", MODE_PRIVATE).getString("username", null);
+        if (username == null) return;
 
-        Log.d("Home", "Loading recent following mood events for user: " + username);
-
-        if (username != null) {
-            moodEventHelper.getRecentFollowingMoodEvents(
+        moodEventHelper.getRecentFollowingMoodEvents(
                 username,
                 moodEvents -> {
-                    Log.d("Home", "Received " + moodEvents.size() + " mood events");
                     moodEventsList.clear();
-                    
-                    // Apply filter if set
-                    if (currentFilter != null) {
-                        for (MoodEvent event : moodEvents) {
-                            if (event.getMood() == currentFilter) {
-                                moodEventsList.add(event);
-                            }
-                        }
-                    } else {
-                        moodEventsList.addAll(moodEvents);
-                    }
-                    
-                    Log.d("Home", "Updated moodEventsList. New size: " + moodEventsList.size());
+                    moodEventsList.addAll(moodEvents);
                     moodArrayAdapter.notifyDataSetChanged();
+                    rebuildActiveFiltersChips();
                 },
                 e -> {
-                    Log.e("Home", "Failed to load mood events", e);
-                    Toast.makeText(this, "Failed to load mood events: " + e.getMessage(), 
-                        Toast.LENGTH_SHORT).show();
+                    Log.e("Home", "Failed to load recent following mood events", e);
+                    Toast.makeText(this, "Failed to load recent mood events", Toast.LENGTH_SHORT).show();
                 }
-            );
-        } else {
-            Log.e("Home", "Username is null in SharedPreferences");
+        );
+    }
+
+
+    private void applyFilters() {
+        if (filterState.getMood() == null && !filterState.isRecentWeek() && (filterState.getWord() == null || filterState.getWord().isEmpty())) {
+            // No filters → revert to recent 3-per-user
+            loadRecentFollowingMoodEvents();
+            return;
         }
+
+        // Filters are active → use all data
+        moodEventsList.clear();
+        moodEventsList.addAll(filterState.applyFilters(new ArrayList<>(fullFollowingMoodEvents)));
+        moodArrayAdapter.notifyDataSetChanged();
+        rebuildActiveFiltersChips();
+    }
+
+    private void rebuildActiveFiltersChips() {
+        activeFiltersContainer.removeAllViews();
+
+        Mood mood = filterState.getMood();
+        boolean recent = filterState.isRecentWeek();
+        String word = filterState.getWord();
+
+        if (mood != null) addFilterChip("Mood: " + mood.toString(), () -> {
+            filterState.setMood(null);
+            applyFilters();
+        });
+
+        if (recent) addFilterChip("Last 7 Days", () -> {
+            filterState.setRecentWeek(false);
+            applyFilters();
+        });
+
+        if (word != null && !word.isEmpty()) addFilterChip("Word: " + word, () -> {
+            filterState.setWord(null);
+            applyFilters();
+        });
+    }
+
+    private void addFilterChip(String label, Runnable onRemove) {
+        LinearLayout layout = new LinearLayout(this);
+        layout.setOrientation(LinearLayout.HORIZONTAL);
+
+        TextView text = new TextView(this);
+        text.setText(label + "  ");
+        layout.addView(text);
+
+        TextView remove = new TextView(this);
+        remove.setText("X");
+        remove.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+        remove.setOnClickListener(v -> onRemove.run());
+        layout.addView(remove);
+
+        layout.setPadding(16, 8, 16, 8);
+        activeFiltersContainer.addView(layout);
     }
 
     @Override

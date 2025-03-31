@@ -19,14 +19,28 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.Manifest;
+import android.location.Location;
+
 
 import com.example.baobook.controller.FirestoreHelper;
+
+import com.example.baobook.adapter.MoodSpinnerAdapter;
+
 import com.example.baobook.controller.MoodEventHelper;
-import com.example.baobook.model.PendingActionManager;
+import com.example.baobook.model.PendingAction;
+import com.example.baobook.controller.PendingActionManager;
 import com.example.baobook.model.Privacy;
 import com.example.baobook.util.MoodUtils;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.example.baobook.util.LocationHelper;
+import com.example.baobook.util.NetworkUtil;
 import com.google.android.material.snackbar.Snackbar;
+
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import com.google.firebase.firestore.GeoPoint;
+
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import java.io.ByteArrayOutputStream;
@@ -35,6 +49,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
@@ -58,9 +73,12 @@ public class AddMoodActivity extends AppCompatActivity {
     private ImageButton cameraButton;
     private Bitmap capturedImage;
     private StorageReference storageRef;
+
     private MoodEventHelper moodEventHelper = new MoodEventHelper();
     private LocalDateTime selectedDateTime = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()); // Combines date and time
     private LocalDateTime currentDateTime = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()); // Combines date and time
+    private Location userLocation;
+    private final int LOCATION_PERMISSION_REQUEST_CODE = 1002;
     private final ActivityResultLauncher<String> requestPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (!isGranted) {
@@ -97,6 +115,7 @@ public class AddMoodActivity extends AppCompatActivity {
         TextView textTime = findViewById(R.id.text_time);
         TextView editDescription = findViewById(R.id.edit_description);
         SwitchCompat privateSwitch = findViewById(R.id.privacySwitch);
+        SwitchCompat locationSwitch = findViewById(R.id.locationSwitch);
 
 
         capImage = findViewById(R.id.captured_image);
@@ -110,6 +129,9 @@ public class AddMoodActivity extends AppCompatActivity {
 
 
         }*/
+
+
+
 
         MoodEvent currentEvent = (MoodEvent) getIntent().getSerializableExtra("moodEvent");
         if (currentEvent != null && currentEvent.getBase64image() != null) {  // Check if current moodEvent is not null first
@@ -206,6 +228,39 @@ public class AddMoodActivity extends AppCompatActivity {
                 privateSwitch.setText("Make post private?");
             }
         });
+
+        //location switch
+        locationSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this,
+                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                            LOCATION_PERMISSION_REQUEST_CODE);
+                } else {
+                    LocationHelper.getCurrentLocation(this, new LocationHelper.LocationResultCallback() {
+                        @Override
+                        public void onLocationResult(double latitude, double longitude) {
+                            userLocation = new Location("");
+                            userLocation.setLatitude(latitude);
+                            userLocation.setLongitude(longitude);
+                        }
+
+                        @Override
+                        public void onLocationError(String error) {
+                            Toast.makeText(AddMoodActivity.this, error, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
+            } else {
+                userLocation = null;
+            }
+        });
+
+
+
+
+
         // Save Button
         findViewById(R.id.save_button).setOnClickListener(v -> {
             try {
@@ -216,7 +271,7 @@ public class AddMoodActivity extends AppCompatActivity {
                 SocialSetting social = SocialSetting.fromString(editSocial.getSelectedItem().toString());
                 Privacy privacy = privateSwitch.isChecked() ? Privacy.PRIVATE : Privacy.PUBLIC;
                 if (!isValidDescription(description)) {
-                    Toast.makeText(this, "Trigger must be at most 20 chars or 3 words", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Trigger must be at most 200 chars", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -242,6 +297,12 @@ public class AddMoodActivity extends AppCompatActivity {
                 // If a photo is captured, upload it first
                 // Create the MoodEvent with the generated ID
                 MoodEvent moodEvent = new MoodEvent(username, id, mood, selectedDateTime.atOffset(ZoneOffset.UTC), description, social, base64Image,privacy);
+
+
+                if (userLocation != null) {
+                    moodEvent.setLocation(new GeoPoint(userLocation.getLatitude(), userLocation.getLongitude()));
+                }
+
                 if (NetworkUtil.isNetworkAvailable(this)) {
                     moodEventHelper.publishMood(moodEvent,
                             aVoid -> {

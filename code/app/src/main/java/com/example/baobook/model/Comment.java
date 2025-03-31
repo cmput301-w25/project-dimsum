@@ -4,9 +4,9 @@ package com.example.baobook.model;
  * Represents a comment on a MoodEvent.
  */
 public class Comment {
-    String moodEventId;
-    User Author;
-    String text;
+    private String moodEventId;
+    private User Author;
+    private String text;
 
     public Comment(String moodEventId, User Author, String text) {
         this.moodEventId = moodEventId;

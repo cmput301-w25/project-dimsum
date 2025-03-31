@@ -87,10 +87,6 @@ public class UserProfileActivityTest {
         Espresso.onView(ViewMatchers.withId(R.id.follow_button))
                 .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
     }
-
-
-
-
 }
 
 

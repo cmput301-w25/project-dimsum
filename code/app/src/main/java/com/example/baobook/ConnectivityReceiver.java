@@ -5,7 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.example.baobook.controller.MoodEventHelper;
-import com.example.baobook.model.PendingActionManager;
+import com.example.baobook.model.PendingAction;
+import com.example.baobook.controller.PendingActionManager;
+import com.example.baobook.util.NetworkUtil;
 
 public class ConnectivityReceiver extends BroadcastReceiver {
     @Override
