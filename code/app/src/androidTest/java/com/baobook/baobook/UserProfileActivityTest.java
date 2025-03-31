@@ -1,6 +1,8 @@
 package com.baobook.baobook;
 
 import android.content.Intent;
+import android.os.SystemClock;
+
 import androidx.test.core.app.ActivityScenario;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.espresso.Espresso;
@@ -87,6 +89,7 @@ public class UserProfileActivityTest {
         Espresso.onView(ViewMatchers.withId(R.id.follow_button))
                 .check(ViewAssertions.matches(ViewMatchers.withEffectiveVisibility(ViewMatchers.Visibility.GONE)));
     }
+
 }
 
 

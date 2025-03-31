@@ -44,6 +44,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.GeoPoint;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
@@ -133,7 +134,6 @@ public class MoodHistoryTest {
         // Click save button
         onView(withId(R.id.save_button)).perform(click());
         SystemClock.sleep(500);
-
         // Verify the mood was added
         onView(withId(R.id.clear_all_button)).perform(click());
         SystemClock.sleep(500);
@@ -155,11 +155,12 @@ public class MoodHistoryTest {
 
         // Define a sample social setting
         SocialSetting socialSetting = SocialSetting.ALONE; // Ensure this is a valid enum or object
+        GeoPoint dummyLocation = new GeoPoint(0.0, 0.0);
 
         // Seed data with just two moods
         MoodEvent[] moods = {
-                new MoodEvent("idk", "1", Mood.FEAR, OffsetDateTime.now(), "Bad", socialSetting, "", Privacy.PUBLIC),
-                new MoodEvent("idk", "2", Mood.SADNESS, OffsetDateTime.now(), "Bad", socialSetting, "", Privacy.PUBLIC)
+                new MoodEvent("idk", "1", Mood.FEAR, OffsetDateTime.now(), "Bad", socialSetting, "", Privacy.PUBLIC, dummyLocation),
+                new MoodEvent("idk", "2", Mood.SADNESS, OffsetDateTime.now(), "Bad", socialSetting, "", Privacy.PUBLIC, dummyLocation)
         };
 
         for (MoodEvent mood : moods) {
