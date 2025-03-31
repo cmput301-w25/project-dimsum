@@ -12,7 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.baobook.controller.AuthHelper;
 import com.google.android.material.snackbar.Snackbar;
-
+//  This activity handles user registration by collecting a username and password.
 public class SignupActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
