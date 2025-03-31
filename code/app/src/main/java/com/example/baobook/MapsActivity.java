@@ -54,7 +54,7 @@ import com.google.firebase.firestore.GeoPoint;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-
+//  This activity displays a Google Map with mood event markers submitted by the user and people they follow.
 public class MapsActivity extends FragmentActivity
         implements OnMapReadyCallback, MapFilterDialogFragment.OnFilterSaveListener,
         MoodEventOptionsFragment.MoodEventOptionsDialogListener,
