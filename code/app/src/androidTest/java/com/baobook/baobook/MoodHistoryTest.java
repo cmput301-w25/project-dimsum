@@ -4,6 +4,7 @@ import static androidx.test.espresso.Espresso.onView;
 import static androidx.test.espresso.action.ViewActions.clearText;
 import static androidx.test.espresso.action.ViewActions.click;
 import static androidx.test.espresso.action.ViewActions.closeSoftKeyboard;
+import static androidx.test.espresso.action.ViewActions.longClick;
 import static androidx.test.espresso.action.ViewActions.pressImeActionButton;
 import static androidx.test.espresso.action.ViewActions.typeText;
 import static androidx.test.espresso.assertion.ViewAssertions.doesNotExist;
@@ -16,6 +17,8 @@ import static androidx.test.espresso.matcher.ViewMatchers.withId;
 import static androidx.test.espresso.matcher.ViewMatchers.withSpinnerText;
 import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static org.hamcrest.CoreMatchers.containsString;
+
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.rule.GrantPermissionRule;
 
 import android.app.Activity;
@@ -34,12 +37,16 @@ import androidx.test.espresso.UiController;
 import androidx.test.espresso.ViewAction;
 import androidx.test.espresso.matcher.ViewMatchers;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
+
+import com.example.baobook.LoginActivity;
 import com.example.baobook.R;
 import com.example.baobook.model.Mood;
 import com.example.baobook.model.MoodEvent;
 import com.example.baobook.MoodHistory;
 import com.example.baobook.model.Privacy;
 import com.example.baobook.model.SocialSetting;
+import com.example.baobook.model.User;
+import com.example.baobook.util.UserSession;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
 import com.google.firebase.firestore.CollectionReference;
@@ -71,15 +78,49 @@ public class MoodHistoryTest {
     public GrantPermissionRule permissionRule = GrantPermissionRule.grant(android.Manifest.permission.CAMERA);
 
     @Rule
-    public ActivityScenarioRule<MoodHistory> scenario = new ActivityScenarioRule<MoodHistory>(MoodHistory.class);
+    public ActivityScenarioRule<LoginActivity> activityRule = new ActivityScenarioRule<>(LoginActivity.class);
 
     @BeforeClass
-    public static void setup() {
-        // Specific address for emulated device to access our localHost
+    public static void setupClass() {
+        // Set Firestore emulator address
         String androidLocalhost = "10.0.2.2";
-
         int portNumber = 8080;
         FirebaseFirestore.getInstance().useEmulator(androidLocalhost, portNumber);
+    }
+
+    @Before
+    public void cleanAndSeedDatabase() throws Exception {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        CollectionReference userRef = db.collection("Users");
+
+        // Clear existing users
+        Task<QuerySnapshot> task = userRef.get();
+        QuerySnapshot snapshot = Tasks.await(task);
+        if (snapshot != null) {
+            for (QueryDocumentSnapshot doc : snapshot) {
+                Task<Void> deleteTask = userRef.document(doc.getId()).delete();
+                Tasks.await(deleteTask);
+            }
+        }
+
+        // Seed new users using username as document ID
+        User[] users = {
+                new User("alice", "1234", 1, 0, 10),
+                new User("bob", "1234", 2, 0, 10)
+        };
+
+        for (User user : users) {
+            Task<?> addTask = userRef.document(user.getUsername()).set(user);
+            Tasks.await(addTask);
+        }
+
+        // Set alice as the "logged-in" user
+        Intents.init();
+        UserSession session = new UserSession(ApplicationProvider.getApplicationContext());
+        session.setUsername("alice");
+        session.setLevel(0);
+        session.setExp(0);
+        session.setExpNeeded(10);
     }
 
     @After
@@ -110,8 +151,16 @@ public class MoodHistoryTest {
 
     @Test
     public void AddMoodEvent() {
-        Intents.init();
+        //Intents.init();
         // Click the add mood button
+        onView(withId(R.id.usernameInput)).perform(typeText("alice"));
+        SystemClock.sleep(500);
+        onView(withId(R.id.passwordInput)).perform(typeText("1234"));
+        SystemClock.sleep(500);
+        onView(withId(R.id.loginButton)).perform(click());
+        SystemClock.sleep(500);
+        onView(withId(R.id.profile_button)).perform(click());
+        SystemClock.sleep(500);
         onView(withId(R.id.add_button)).perform(click());
         SystemClock.sleep(500);
 
@@ -134,10 +183,15 @@ public class MoodHistoryTest {
         // Click save button
         onView(withId(R.id.save_button)).perform(click());
         SystemClock.sleep(500);
+
+        onView(withId(R.id.mood_history_button)).perform(click());
+        SystemClock.sleep(500);
+
+
         // Verify the mood was added
         onView(withId(R.id.clear_all_button)).perform(click());
         SystemClock.sleep(500);
-        onView(withText("😊 Happiness")).perform(click());
+        onView(withText("😊 Happiness")).perform(longClick());
         SystemClock.sleep(500);
         onView(withId(R.id.button_edit_mood)).perform(click());
         SystemClock.sleep(500);
@@ -148,36 +202,20 @@ public class MoodHistoryTest {
         onView(withId(R.id.edit_description)).check(matches(withText("test")));
     }
 
-    @Before
-    public void seedDatabase() {
-        FirebaseFirestore db = FirebaseFirestore.getInstance();
-        CollectionReference moodRef = db.collection("MoodEvents");
 
-        // Define a sample social setting
-        SocialSetting socialSetting = SocialSetting.ALONE; // Ensure this is a valid enum or object
-        GeoPoint dummyLocation = new GeoPoint(0.0, 0.0);
-
-        // Seed data with just two moods
-        MoodEvent[] moods = {
-                new MoodEvent("idk", "1", Mood.FEAR, OffsetDateTime.now(), "Bad", socialSetting, "", Privacy.PUBLIC, dummyLocation),
-                new MoodEvent("idk", "2", Mood.SADNESS, OffsetDateTime.now(), "Bad", socialSetting, "", Privacy.PUBLIC, dummyLocation)
-        };
-
-        for (MoodEvent mood : moods) {
-            moodRef.add(mood)
-                    .addOnSuccessListener(documentReference -> {
-                        Log.d("Firestore", "Seeded MoodEvent with ID: " + documentReference.getId());
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e("Firestore", "Error seeding mood", e);
-                    });
-        }
-
-        SystemClock.sleep(2000); // Optional: give Firestore some time to process
-    }
 
     @Test
     public void EditMoodEvent() {
+
+
+        onView(withId(R.id.usernameInput)).perform(typeText("alice"));
+        SystemClock.sleep(500);
+        onView(withId(R.id.passwordInput)).perform(typeText("1234"));
+        SystemClock.sleep(500);
+        onView(withId(R.id.loginButton)).perform(click());
+        SystemClock.sleep(500);
+        onView(withId(R.id.profile_button)).perform(click());
+        SystemClock.sleep(500);
         onView(withId(R.id.add_button)).perform(click());
         SystemClock.sleep(500);
 
@@ -196,10 +234,12 @@ public class MoodHistoryTest {
         // Click save button
         onView(withId(R.id.save_button)).perform(click());
         SystemClock.sleep(500);
+        onView(withId(R.id.mood_history_button)).perform(click());
+        SystemClock.sleep(500);
         // Clear filters and select Fear
         onView(withId(R.id.clear_all_button)).perform(click());
         SystemClock.sleep(1000);
-        onView(withText("😨 Fear")).perform(click());
+        onView(withText("😨 Fear")).perform(longClick());
 
         // Click edit mood button
         SystemClock.sleep(500);
@@ -223,7 +263,7 @@ public class MoodHistoryTest {
         // Verify changes
         onView(withId(R.id.clear_all_button)).perform(click());
         SystemClock.sleep(500);
-        onView(withText("😊 Happiness")).perform(click());
+        onView(withText("😊 Happiness")).perform(longClick());
         SystemClock.sleep(500);
         onView(withId(R.id.button_edit_mood)).perform(click());
         SystemClock.sleep(500);
@@ -235,7 +275,14 @@ public class MoodHistoryTest {
 
     @Test
     public void deleteMood() {
-
+        onView(withId(R.id.usernameInput)).perform(typeText("alice"));
+        SystemClock.sleep(500);
+        onView(withId(R.id.passwordInput)).perform(typeText("1234"));
+        SystemClock.sleep(500);
+        onView(withId(R.id.loginButton)).perform(click());
+        SystemClock.sleep(500);
+        onView(withId(R.id.profile_button)).perform(click());
+        SystemClock.sleep(500);
         onView(withId(R.id.add_button)).perform(click());
         SystemClock.sleep(500);
 
@@ -254,11 +301,13 @@ public class MoodHistoryTest {
         // Click save button
         onView(withId(R.id.save_button)).perform(click());
         SystemClock.sleep(500);
+        onView(withId(R.id.mood_history_button)).perform(click());
+        SystemClock.sleep(500);
 
 
         onView(withId(R.id.clear_all_button)).perform(click());
         SystemClock.sleep(1000);
-        onView(withText("😊 Happiness")).perform(click());
+        onView(withText("😊 Happiness")).perform(longClick());
 
         SystemClock.sleep(500);
         onView(withId(R.id.button_delete_mood)).perform(click());
@@ -294,6 +343,14 @@ public class MoodHistoryTest {
 
     @Test
     public void AddError() {
+        onView(withId(R.id.usernameInput)).perform(typeText("alice"));
+        SystemClock.sleep(500);
+        onView(withId(R.id.passwordInput)).perform(typeText("1234"));
+        SystemClock.sleep(500);
+        onView(withId(R.id.loginButton)).perform(click());
+        SystemClock.sleep(500);
+        onView(withId(R.id.profile_button)).perform(click());
+        SystemClock.sleep(500);
         onView(withId(R.id.add_button)).perform(click());
         SystemClock.sleep(500);
         onView(withId(R.id.text_time)).perform(click());
