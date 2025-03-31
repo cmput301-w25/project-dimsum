@@ -82,25 +82,32 @@ public class MoodEventHelper {
 
                     Log.d("MoodEventHelper", "Querying mood events for " + followingUsernames.size() + " followed users");
 
-                    // Get mood events from all followed users, limit to 3
+                    // Get mood events from all followed users
                     db.collection(FirestoreConstants.COLLECTION_MOOD_EVENTS)
                             .whereIn(FirestoreConstants.FIELD_USERNAME, followingUsernames)
                             .orderBy("timestamp", Query.Direction.DESCENDING)
-                            .limit(15) //increased limit to 15 to get more mood events to filter through
                             .get()
                             .addOnSuccessListener(moodSnapshot -> {
                                 Log.d("MoodEventHelper", "Got mood events. Size: " + moodSnapshot.size());
                                 List<MoodEvent> moodEvents = new ArrayList<>();
+                                
+                                // Create a map to track the number of events per user
+                                java.util.Map<String, Integer> eventsPerUser = new java.util.HashMap<>();
+                                
                                 for (QueryDocumentSnapshot doc : moodSnapshot) {
                                     MoodEvent moodEvent = doc.toObject(MoodEvent.class);
-                                    if(moodEvents.size()<3){
-                                        if(moodEvent.getPrivacy()== Privacy.PUBLIC){
-                                            Log.d("MoodEventHelper", "Found public mood event from: " + moodEvent.getUsername());
+                                    String eventUsername = moodEvent.getUsername();
+                                    
+                                    // Only add if we haven't reached 3 events for this user
+                                    if (eventsPerUser.getOrDefault(eventUsername, 0) < 3) {
+                                        if (moodEvent.getPrivacy() == Privacy.PUBLIC) {
+                                            Log.d("MoodEventHelper", "Found public mood event from: " + eventUsername);
                                             moodEvents.add(moodEvent);
+                                            eventsPerUser.put(eventUsername, eventsPerUser.getOrDefault(eventUsername, 0) + 1);
                                         }
-                                        Log.d("MoodEventHelper","Found private mood event from: " + moodEvent.getUsername());
                                     }
                                 }
+                                
                                 onSuccess.onSuccess(moodEvents);
                             })
                             .addOnFailureListener(e -> {
