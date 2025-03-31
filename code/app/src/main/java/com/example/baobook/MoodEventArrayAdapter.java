@@ -26,6 +26,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Locale;
 
+// Adapter used to display MoodEvent items in a ListView. Each mood item shows details like
+//username, mood type (with emoji and color), timestamp, description, social situation, and an optional image.
+
 public class MoodEventArrayAdapter extends ArrayAdapter<MoodEvent> {
 
     private MoodEventOptionsFragment.MoodEventOptionsDialogListener listener;
