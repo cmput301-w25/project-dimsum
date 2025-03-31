@@ -44,7 +44,7 @@
         android:layout_width="100dp"
         android:layout_height="48dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="8dp"
         android:backgroundTint="@color/red"
         android:ellipsize="none"
         android:maxLines="1"
@@ -67,7 +67,7 @@
         android:backgroundTint="@color/red"
         android:text="Clear All"
         app:layout_constraintEnd_toStartOf="@+id/syncButton"
-        app:layout_constraintHorizontal_bias="0.619"
+        app:layout_constraintHorizontal_bias="0.581"
         app:layout_constraintStart_toEndOf="@+id/open_filter_button"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -118,7 +118,7 @@
         android:id="@+id/map_button"
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:layout_marginStart="56dp"
+        android:layout_marginStart="52dp"
         android:layout_marginBottom="8dp"
         android:background="@android:color/transparent"
         android:contentDescription="Map"
@@ -127,18 +127,18 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/home_button" />
 
-
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/add_button"
         android:layout_width="55dp"
         android:layout_height="54dp"
         android:layout_margin="8dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="8dp"
         android:contentDescription="Add"
         app:backgroundTint="@color/beige"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/profile_button"
+        app:layout_constraintHorizontal_bias="0.515"
         app:layout_constraintStart_toEndOf="@id/map_button"
-        app:layout_constraintEnd_toStartOf="@id/profile_button"
         app:srcCompat="@android:drawable/ic_input_add" />
 
     <ImageButton
