@@ -2,7 +2,9 @@ package com.example.baobook;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SearchView;
@@ -35,6 +37,19 @@ public class SearchActivity extends AppCompatActivity {
         users = new ArrayList<>();
         adapter = new UserArrayAdapter((Context) this, (ArrayList<User>) users, "SearchActivity",null);
         listView.setAdapter(adapter);
+
+        //hide status bar at the top
+        getWindow().setNavigationBarColor(getResources().getColor(android.R.color.transparent));
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        );
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
 
         searchView.setQueryHint("Search users");
 

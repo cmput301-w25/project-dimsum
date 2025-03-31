@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -155,16 +156,24 @@ public class UserProfileActivity extends AppCompatActivity implements
                             Long expVal = snapshot.getLong("exp");
                             Long expNeededVal = snapshot.getLong("expNeeded");
 
-                            level.setText("Level: " + levelVal);
-                            level.setVisibility(View.VISIBLE); // show level text
-                            // Set PFP based on level
+                            level.setText("Level: " + (levelVal != null ? levelVal : "N/A"));
+                            level.setVisibility(View.VISIBLE); // Show level
+
+                            // Only show EXP if both values exist
+                            if (expVal != null && expNeededVal != null) {
+                                exp.setText("EXP: " + expVal + "/" + expNeededVal);
+                                exp.setVisibility(View.VISIBLE);
+                            } else {
+                                exp.setVisibility(View.GONE); // Hide if incomplete
+                            }
+
+                            // Set profile image if level is valid
                             if (levelVal != null && levelVal >= 1) {
                                 profilePciture.setImageResource(userHelper.getProfilePicture(levelVal.intValue()));
                             }
                         }
                     })
                     .addOnFailureListener(e -> Log.e("UserProfile", "Error loading user data", e));
-
 
         }
         // Floating Action Button to add a new mood
@@ -182,21 +191,21 @@ public class UserProfileActivity extends AppCompatActivity implements
             startActivity(intent);
             finish();
         });
-        Button home = findViewById(R.id.home_button);
+        ImageButton home = findViewById(R.id.home_button);
         home.setOnClickListener(v-> {
             // Launch Home activity
             Intent intent = new Intent(UserProfileActivity.this, Home.class);
             startActivity(intent);
             finish();
         });
-        Button maps = findViewById(R.id.map_button);
+        ImageButton maps = findViewById(R.id.map_button);
         maps.setOnClickListener(v-> {
             // Launch MapsActivity
             Intent intent = new Intent(UserProfileActivity.this, MapsActivity.class);
             startActivity(intent);
             finish();
         });
-        Button profileButton = findViewById(R.id.profile_button);
+        ImageButton profileButton = findViewById(R.id.profile_button);
         profileButton.setOnClickListener(v -> {
             // Launch UserProfileActivity
             Intent intent = new Intent(UserProfileActivity.this, UserProfileActivity.class);

@@ -4,11 +4,13 @@ import static androidx.core.content.ContextCompat.registerReceiver;
 
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -17,6 +19,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.utils.widget.ImageFilterButton;
 import androidx.core.content.ContextCompat;
 
 import com.example.baobook.controller.MoodEventHelper;
@@ -66,6 +69,12 @@ public class MoodHistory extends AppCompatActivity
         connectivityReceiver = new ConnectivityReceiver();
         IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
         registerReceiver(connectivityReceiver, filter);
+        if (NetworkUtil.isNetworkAvailable(this)) {
+            PendingActionManager.syncPendingActions(this, () -> {
+                Log.d("MoodHistory", "Synced pending actions");
+                loadMoodsFromFirestore(); // Refresh list
+            });
+        }
     }
 
     @Override
@@ -88,12 +97,28 @@ public class MoodHistory extends AppCompatActivity
         // Initialize views
         ListView moodList = findViewById(R.id.mood_history_list);
         FloatingActionButton addButton = findViewById(R.id.add_button);
-        Button homeButton = findViewById(R.id.home_button);
-        Button mapButton = findViewById(R.id.map_button);
-        Button profileButton = findViewById(R.id.profile_button);
+        ImageButton homeButton = findViewById(R.id.home_button);
+        ImageButton mapButton = findViewById(R.id.map_button);
+        ImageButton profileButton = findViewById(R.id.profile_button);
         Button openFilterButton = findViewById(R.id.open_filter_button);
         Button clearAllButton = findViewById(R.id.clear_all_button);
+        Button SyncButton = findViewById(R.id.syncButton);
+
+
         activeFiltersContainer = findViewById(R.id.active_filters_container);
+
+        //hide status bar at the top
+        getWindow().setNavigationBarColor(getResources().getColor(android.R.color.transparent));
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+        );
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
 
         // Setup the list adapter
         moodArrayAdapter = new MoodEventArrayAdapter(this, filteredList);
@@ -102,6 +127,11 @@ public class MoodHistory extends AppCompatActivity
         // Load data from Firestore -> push into manager
         loadMoodsFromFirestore();
 
+        SyncButton.setOnClickListener(v -> {
+            filterState.clear();
+            loadMoodsFromFirestore();
+            Toast.makeText(this, "Mood History Synced", Toast.LENGTH_SHORT).show();
+        });
         // Add new mood
         addButton.setOnClickListener(v -> {
             Intent intent = new Intent(MoodHistory.this, AddMoodActivity.class);
